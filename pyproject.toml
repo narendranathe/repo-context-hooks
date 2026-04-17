@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "repohandoff"
+version = "0.1.0"
+description = "Deterministic context continuity protocol for Codex and Claude repositories."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Narendranath Edara" }]
+dependencies = []
+
+[project.scripts]
+graphify = "graphify.cli:main"
+repohandoff = "graphify.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["graphify*"]
+
+[tool.setuptools.package-data]
+graphify = ["bundle/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

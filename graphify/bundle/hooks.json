@@ -1,0 +1,62 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"__REPO_ROOT__/.claude/scripts/repo_specs_memory.py\" session-start",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "python \"__REPO_ROOT__/.claude/scripts/session_context.py\" session-start",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"__REPO_ROOT__/.claude/scripts/repo_specs_memory.py\" pre-compact",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"__REPO_ROOT__/.claude/scripts/repo_specs_memory.py\" post-compact",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "python \"__REPO_ROOT__/.claude/scripts/session_context.py\" post-compact",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"__REPO_ROOT__/.claude/scripts/repo_specs_memory.py\" session-end",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
