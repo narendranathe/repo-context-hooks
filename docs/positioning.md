@@ -1,36 +1,35 @@
-# RepoHandoff Positioning
+# repo-context-hooks Positioning
 
 ## One-Line Pitch
 
-RepoHandoff is the reliability layer for coding-agent sessions: it preserves operational context before, during, and after compaction.
+Hook-based repo context continuity for coding agents.
 
 ## Problem
 
-Agent sessions degrade over time:
+Agent sessions degrade at the edges:
 
+- startup lacks project state
 - compaction drops tactical context
-- new sessions repeat discovery
-- next-work state gets stale or lost
-- teams over-invest in memory infrastructure when they need deterministic workflow continuity
+- handoffs lose next-work clarity
 
-## Product Thesis
+## Thesis
 
-Execution continuity should be deterministic and repository-local.
+Repository context should be durable, reviewable, and operational.
 
-## Differentiation
+## Product Claim
 
-- Memory platforms optimize retrieval.
-- RepoHandoff optimizes lifecycle reliability.
+`repo-context-hooks` turns repo context into infrastructure using hooks, repo docs, and deterministic checkpoints.
 
 ## Core Value
 
-- deterministic lifecycle hooks (`SessionStart`, `PreCompact`, `PostCompact`, `SessionEnd`)
-- dual-document operating contract (`README.md` + `specs/README.md`)
-- issue-aware startup context
-- zero external infrastructure dependency
+- lifecycle hooks at the right moments
+- repo-local engineering memory
+- startup context loading
+- no external memory backend
 
-## Messaging for Community
+## Messaging Guardrails
 
-- "Not another memory DB. A handoff protocol for real repositories."
-- "Compaction-safe continuity for Codex and Claude."
-- "Ship context as code: hooks + docs + deterministic checkpoints."
+- Do say: "repo-local continuity"
+- Do say: "hook-based context handoff"
+- Do not say: "solves AI memory"
+- Do not say: "knowledge graph platform"

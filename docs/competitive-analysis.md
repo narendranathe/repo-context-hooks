@@ -1,33 +1,33 @@
-# Competitive Analysis and USP
+# Competitive Analysis
 
-## Similar Existing Projects
+## Adjacent Projects
 
-1. `thedotmack/claude-mem`  
-   GitHub: https://github.com/thedotmack/claude-mem  
-   Focus: persistent memory archive, capture/compress/retrieve across sessions.
+### `thedotmack/claude-mem`
 
-2. `mem0ai/mem0` and OpenMemory  
-   GitHub: https://github.com/mem0ai/mem0  
-   Product: https://mem0.ai/openmemory  
-   Focus: long-term memory infrastructure and MCP memory delivery.
+- Focus: session capture, compression, and retrieval
+- Difference: stronger on memory archive behavior than repo-operating workflow
 
-3. Claude Code lifecycle hooks (platform capability, not a product)  
-   Docs: https://code.claude.com/docs/en/hooks  
-   Focus: event mechanism only.
+### `mem0ai/mem0` and OpenMemory
 
-## Self-Critique
+- Focus: long-term memory infrastructure
+- Difference: stronger on cross-session memory systems than repo-local hook workflows
 
-If RepoHandoff were positioned as "another memory layer", it would be low differentiation versus mature products above.
+### Claude Code Hooks
 
-## Revised USP
+- Focus: lifecycle primitives provided by the platform
+- Difference: capability only, not a packaged workflow
 
-RepoHandoff is **not** a memory store. It is a deterministic, repository-local handoff protocol:
+## Honest Take
 
-- lifecycle orchestration (`SessionStart`, `PreCompact`, `PostCompact`, `SessionEnd`)
-- dual-document contract (`README.md` + `specs/README.md`)
-- issue-aware startup context and compaction checkpoints
-- no database, no external service dependency
+This project is not novel because hooks exist or because memory tools exist.
 
-## Value Proposition
+Its value is packaging the workflow many teams actually need:
 
-Teams with strict repo workflows get repeatable context continuity without adding a new memory backend or hosted platform.
+- load project state on session start
+- checkpoint tactical context before compact
+- restore continuity after compact
+- keep the source of truth in the repo
+
+## Positioning Rule
+
+Describe `repo-context-hooks` as a deterministic repo workflow, not as a universal memory solution.
