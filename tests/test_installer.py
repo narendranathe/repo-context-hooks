@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from graphify.installer import install_repo_hooks, install_skills, platform_skill_dir
+from repo_context_hooks.installer import (
+    install_repo_hooks,
+    install_skills,
+    platform_skill_dir,
+)
 
 
 def test_platform_skill_dir() -> None:
