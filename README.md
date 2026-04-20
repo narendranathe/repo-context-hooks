@@ -17,57 +17,81 @@ Agent sessions usually fail in predictable ways:
 
 Claude Code's hooks model points to the right primitives. This package turns that pattern into a reusable, repo-local workflow.
 
-## What This Is
+## How It Works
 
-- lifecycle hooks for session start, compact, and session end
-- a dual-document contract: `README.md` for users, `specs/README.md` for engineering memory
-- bundled skills for loading context and checkpointing work
-- zero external database or hosted service requirement
+`repo-context-hooks` treats repository context as an operational contract instead of a prompt artifact.
 
-## What This Is Not
+At session start, the hooks load project memory and current priorities. Before compaction, the hooks checkpoint tactical state into the repo. After compaction, the condensed context is reloaded so the next turn has continuity instead of drift. At session end, the repo gets one more continuity note for the next agent or session.
 
-- not a vector memory layer
-- not a hosted memory service
-- not a knowledge graph database
-- not Claude-only, even if Claude Code inspired the first version
+## Repo Contract
 
-## Install
+The repo stays the source of truth:
+
+- `README.md` explains the project to users and contributors
+- `specs/README.md` carries engineering memory, constraints, decisions, failures, and next work
+- hooks and skills keep those layers synchronized enough to survive handoffs
+
+## Before / After
+
+Before this workflow, new agent sessions often re-discover the repo, repeat old decisions, and lose the next useful action after compaction.
+
+After this workflow, sessions start with more structure, compaction preserves tactical state, and handoffs become more deterministic.
+
+## What `install` Actually Does
+
+1. Installs bundled skills into:
+   - `~/.codex/skills`
+   - `~/.claude/skills`
+2. Copies helper scripts into:
+   - `.claude/scripts/repo_specs_memory.py`
+   - `.claude/scripts/session_context.py`
+3. Merges lifecycle hook entries into:
+   - `.claude/settings.json`
+4. Assumes the repo maintains:
+   - `README.md`
+   - `specs/README.md`
+
+Install commands:
 
 ```bash
 python -m pip install -e .
 repo-context-hooks install --platform codex
-```
-
-Compatibility aliases:
-
-```bash
 repohandoff install --platform codex
 graphify install --platform codex
 ```
 
-## What `install` Does
+## Technical Details
 
-1. Installs bundled skills into the target agent home directory
-2. Copies helper scripts into `.claude/scripts`
-3. Merges lifecycle hook entries into `.claude/settings.json`
-4. Bootstraps `specs/README.md` continuity for the current repo
+- Primary CLI: `repo-context-hooks`
+- Compatibility aliases: `repohandoff`, `graphify`
+- Supported agent targets today: Codex and Claude
+- Expected repo contract: `README.md` plus `specs/README.md`
+- Architecture notes: [docs/architecture.md](docs/architecture.md)
+- Minimal example: [examples/minimal-repo/](examples/minimal-repo/)
+- Multi-project example: [examples/multi-project/](examples/multi-project/)
 
-## Repo Contract
+## Honest Critique
 
-- `README.md`: user-facing project explanation and contribution guide
-- `specs/README.md`: engineering memory, decisions, constraints, failures, and next work
+- This is not a vector memory layer.
+- This is not a hosted memory service.
+- This does not replace repo discipline.
+- Poor `specs/README.md` hygiene reduces the value quickly.
+- Teams that need cross-repo semantic memory may still want another tool alongside this one.
 
-## Who This Helps
+## Examples
 
-- developers using Claude Code or Codex in long-running repos
-- teams onboarding new agents into partially complete projects
-- engineers who want deterministic continuity without extra infrastructure
+- [Minimal repo example](examples/minimal-repo/)
+- [Multi-project example](examples/multi-project/)
+- [Architecture notes](docs/architecture.md)
 
 ## Development
 
 ```bash
-python -m pytest -q --basetemp .pytest-tmp
+python -m pip install -e .
+python -m pytest -q --basetemp .pytest-tmp-readme-full
 ```
+
+Pull requests are welcome when they improve reliability, clarity, or the repo contract without turning the project into a vague memory platform.
 
 ## License
 
