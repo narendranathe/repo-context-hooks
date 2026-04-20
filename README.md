@@ -47,7 +47,7 @@ After this workflow, sessions start with more structure, compaction preserves ta
    - `.claude/scripts/session_context.py`
 3. Merges lifecycle hook entries into:
    - `.claude/settings.json`
-4. Assumes the repo maintains:
+4. Requires the repo to already have:
    - `README.md`
    - `specs/README.md`
 

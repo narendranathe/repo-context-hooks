@@ -26,8 +26,13 @@ def test_readme_has_required_sections() -> None:
         "## Development",
         "## License",
     ]
+    positions = []
     for section in expected_sections:
-        assert section in text, f"missing section: {section}"
+        position = text.find(section)
+        assert position != -1, f"missing section: {section}"
+        positions.append(position)
+
+    assert positions == sorted(positions), "README sections are out of order"
 
 
 def test_readme_includes_install_and_alias_commands() -> None:
@@ -71,9 +76,10 @@ def test_readme_contains_honest_critique() -> None:
 def test_readme_links_to_supporting_docs() -> None:
     text = readme_text()
     expected_links = [
-        "docs/architecture.md",
-        "examples/minimal-repo/",
-        "examples/multi-project/",
+        ("docs/architecture.md", ROOT / "docs" / "architecture.md"),
+        ("examples/minimal-repo/", ROOT / "examples" / "minimal-repo"),
+        ("examples/multi-project/", ROOT / "examples" / "multi-project"),
     ]
-    for link in expected_links:
-        assert link in text, f"missing supporting link: {link}"
+    for link_text, link_path in expected_links:
+        assert link_text in text, f"missing supporting link: {link_text}"
+        assert link_path.exists(), f"missing supporting path: {link_path}"
