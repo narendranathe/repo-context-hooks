@@ -4,6 +4,7 @@ This document is the public backlog seed for future GitHub issues. Every platfor
 
 ## Replit
 
+- Issue: [#2](https://github.com/narendranathe/repo-context-hooks/issues/2)
 - Goal: translate the repo contract into a workspace agent flow that can reopen a project with useful next-step context.
 - Tier: provisional until the platform continuity surface is verified.
 - Open question: which workspace surfaces can host checked-in continuity guidance without inventing fake hook parity?
@@ -15,6 +16,7 @@ This document is the public backlog seed for future GitHub issues. Every platfor
 
 ## Lovable
 
+- Issue: [#3](https://github.com/narendranathe/repo-context-hooks/issues/3)
 - Goal: export the repo contract into a GitHub-synced builder workflow without losing reviewable source-of-truth docs.
 - Tier: provisional until the platform continuity surface is verified.
 - Open question: how much continuity can stay repo-native when most orchestration happens in a hosted product surface?
@@ -26,6 +28,7 @@ This document is the public backlog seed for future GitHub issues. Every platfor
 
 ## Ollama
 
+- Issue: [#4](https://github.com/narendranathe/repo-context-hooks/issues/4)
 - Goal: support local-model workflows that still benefit from checked-in instructions, specs memory, and restart-from-repo handoffs.
 - Tier: provisional until the platform continuity surface is verified.
 - Open question: what installer or template shape is realistic for local runtime setups without overcommitting on automation?
@@ -37,6 +40,7 @@ This document is the public backlog seed for future GitHub issues. Every platfor
 
 ## OpenClaw
 
+- Issue: [#5](https://github.com/narendranathe/repo-context-hooks/issues/5)
 - Goal: investigate whether its orchestration model can consume the same continuity contract used by Claude, Cursor, and Codex.
 - Tier: provisional until the platform continuity surface is verified.
 - Open question: what platform adapter boundary is needed before this becomes more than a naming exercise?
@@ -48,6 +52,7 @@ This document is the public backlog seed for future GitHub issues. Every platfor
 
 ## Kimi
 
+- Issue: [#6](https://github.com/narendranathe/repo-context-hooks/issues/6)
 - Goal: evaluate whether repo-native continuity can map onto its coding workflow in a way that is honest and useful.
 - Tier: provisional until the platform continuity surface is verified.
 - Open question: what instruction, tool, or session surfaces are available for carrying forward checked-in task state?

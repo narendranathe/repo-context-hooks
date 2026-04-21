@@ -1,6 +1,14 @@
 # Platform Issue Drafts
 
-These issue bodies are ready to post once GitHub authentication is refreshed. They mirror the planned-platform roadmap but are formatted for issue creation.
+These issue bodies were used to create the initial planned-platform backlog. They remain here as editable source text for future issue revisions.
+
+Created issues:
+
+- Replit: [#2](https://github.com/narendranathe/repo-context-hooks/issues/2)
+- Lovable: [#3](https://github.com/narendranathe/repo-context-hooks/issues/3)
+- Ollama: [#4](https://github.com/narendranathe/repo-context-hooks/issues/4)
+- OpenClaw: [#5](https://github.com/narendranathe/repo-context-hooks/issues/5)
+- Kimi: [#6](https://github.com/narendranathe/repo-context-hooks/issues/6)
 
 ## Platform: Replit adapter discovery
 
