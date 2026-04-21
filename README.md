@@ -23,6 +23,8 @@ Claude Code's hooks model points to the right primitives. This package turns tha
 
 At session start, the hooks load project memory and current priorities. Before compaction, the hooks checkpoint tactical state into the repo. After compaction, the condensed context is reloaded so the next turn has continuity instead of drift. At session end, the repo gets one more continuity note for the next agent or session.
 
+![Lifecycle flow diagram showing SessionStart, PreCompact, PostCompact, and SessionEnd](assets/diagrams/lifecycle-flow.svg)
+
 ## Repo Contract
 
 The repo stays the source of truth:
@@ -31,11 +33,15 @@ The repo stays the source of truth:
 - `specs/README.md` carries engineering memory, constraints, decisions, failures, and next work
 - hooks and skills keep those layers synchronized enough to survive handoffs
 
+![Repo contract diagram showing README.md, specs/README.md, and hooks plus skills](assets/diagrams/repo-contract.svg)
+
 ## Before / After
 
 Before this workflow, new agent sessions often re-discover the repo, repeat old decisions, and lose the next useful action after compaction.
 
 After this workflow, sessions start with more structure, compaction preserves tactical state, and handoffs become more deterministic.
+
+![Before and after continuity comparison showing context drift versus deterministic handoff](assets/diagrams/before-after-continuity.svg)
 
 ## What `install` Actually Does
 

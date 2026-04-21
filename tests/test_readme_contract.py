@@ -83,3 +83,15 @@ def test_readme_links_to_supporting_docs() -> None:
     for link_text, link_path in expected_links:
         assert link_text in text, f"missing supporting link: {link_text}"
         assert link_path.exists(), f"missing supporting path: {link_path}"
+
+
+def test_readme_embeds_required_diagrams() -> None:
+    text = readme_text()
+    expected_assets = [
+        "assets/diagrams/lifecycle-flow.svg",
+        "assets/diagrams/repo-contract.svg",
+        "assets/diagrams/before-after-continuity.svg",
+    ]
+    for asset in expected_assets:
+        assert asset in text, f"missing diagram embed: {asset}"
+        assert (ROOT / asset).exists(), f"missing diagram file: {asset}"
