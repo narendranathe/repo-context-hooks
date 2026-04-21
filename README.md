@@ -73,6 +73,8 @@ graphify install --platform codex
 - Supported agent targets today: Codex and Claude
 - Expected repo contract: `README.md` plus `specs/README.md`
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
+- Animation support plan: [docs/demo/animation-plan.md](docs/demo/animation-plan.md)
+- The README stays static-SVG-first so optional motion can be derived from SVG sources without becoming a README dependency.
 - Minimal example: [examples/minimal-repo/](examples/minimal-repo/)
 - Multi-project example: [examples/multi-project/](examples/multi-project/)
 

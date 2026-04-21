@@ -85,6 +85,15 @@ def test_readme_links_to_supporting_docs() -> None:
         assert link_path.exists(), f"missing supporting path: {link_path}"
 
 
+def test_readme_links_animation_support_doc_without_mandating_motion() -> None:
+    text = readme_text()
+    animation_doc = ROOT / "docs" / "demo" / "animation-plan.md"
+
+    assert "docs/demo/animation-plan.md" in text, "missing animation-plan link"
+    assert "static-SVG-first" in text, "missing static-SVG-first guidance"
+    assert animation_doc.exists(), f"missing animation support doc: {animation_doc}"
+
+
 def test_readme_embeds_required_diagrams() -> None:
     text = readme_text()
     expected_assets = [
