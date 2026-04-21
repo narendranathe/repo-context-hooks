@@ -1,34 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 240" role="img" aria-labelledby="title desc">
-  <title id="title">repo-context-hooks lifecycle flow</title>
-  <desc id="desc">SessionStart, PreCompact, PostCompact, and SessionEnd shown as a left-to-right continuity lifecycle.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 360" role="img" aria-labelledby="title desc">
+  <title id="title">repo-context-hooks interrupted-task lifecycle flow</title>
+  <desc id="desc">A concrete continuity story where a bugfix is interrupted by compact, a checkpoint is written to specs/README.md, and the next session resumes from repo state.</desc>
   <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#eff6ff" />
+    </linearGradient>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155" />
     </marker>
     <style>
-      .label { font: 700 18px Arial, sans-serif; fill: #0f172a; }
-      .caption { font: 13px Arial, sans-serif; fill: #475569; }
+      .eyebrow { font: 700 12px Arial, sans-serif; letter-spacing: 1.2px; text-transform: uppercase; fill: #475569; }
+      .title { font: 700 22px Arial, sans-serif; fill: #0f172a; }
+      .body { font: 14px Arial, sans-serif; fill: #334155; }
+      .small { font: 13px Arial, sans-serif; fill: #475569; }
+      .phase { font: 700 15px Arial, sans-serif; fill: #0f172a; }
     </style>
   </defs>
 
-  <rect width="920" height="240" rx="24" fill="#f8fafc" />
+  <rect width="1040" height="360" rx="28" fill="url(#bg)" />
+  <text class="eyebrow" x="64" y="54">Concrete continuity story</text>
+  <text class="title" x="64" y="86">Bugfix interrupted by compact</text>
+  <text class="body" x="64" y="116">The repo keeps the thread of work alive even when the session does not.</text>
 
-  <rect x="40" y="72" width="180" height="68" rx="16" fill="#e0f2fe" stroke="#0284c7" stroke-width="2" />
-  <rect x="260" y="72" width="180" height="68" rx="16" fill="#fef3c7" stroke="#d97706" stroke-width="2" />
-  <rect x="480" y="72" width="180" height="68" rx="16" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" />
-  <rect x="700" y="72" width="180" height="68" rx="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2" />
+  <rect x="60" y="150" width="220" height="148" rx="20" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+  <text class="phase" x="84" y="184">SessionStart</text>
+  <text class="body" x="84" y="214">Open failing PR note</text>
+  <text class="body" x="84" y="238">Inspect regression on</text>
+  <text class="body" x="84" y="258">the settings merge path</text>
+  <text class="small" x="84" y="286">Task context comes from checked-in repo docs.</text>
 
-  <text class="label" x="130" y="112" text-anchor="middle">SessionStart</text>
-  <text class="label" x="350" y="112" text-anchor="middle">PreCompact</text>
-  <text class="label" x="570" y="112" text-anchor="middle">PostCompact</text>
-  <text class="label" x="790" y="112" text-anchor="middle">SessionEnd</text>
+  <rect x="310" y="150" width="220" height="148" rx="20" fill="#fff7ed" stroke="#d97706" stroke-width="2" />
+  <text class="phase" x="334" y="184">PreCompact</text>
+  <text class="body" x="334" y="214">Checkpoint written to specs/README.md</text>
+  <text class="body" x="334" y="238">with bug state and next step</text>
+  <text class="body" x="334" y="262">before the session gets compacted</text>
+  <text class="small" x="334" y="286">The interrupted task is saved before context shrinks.</text>
 
-  <path d="M220 106 H260" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
-  <path d="M440 106 H480" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
-  <path d="M660 106 H700" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="560" y="150" width="220" height="148" rx="20" fill="#eef2ff" stroke="#6366f1" stroke-width="2" />
+  <text class="phase" x="584" y="184">PostCompact</text>
+  <text class="body" x="584" y="214">Reload the repo summary</text>
+  <text class="body" x="584" y="238">instead of replaying</text>
+  <text class="body" x="584" y="262">the whole conversation</text>
+  <text class="small" x="584" y="286">Continuity comes from files the team can review.</text>
 
-  <text class="caption" x="130" y="176" text-anchor="middle">load repo state</text>
-  <text class="caption" x="350" y="176" text-anchor="middle">checkpoint tactical work</text>
-  <text class="caption" x="570" y="176" text-anchor="middle">reload condensed context</text>
-  <text class="caption" x="790" y="176" text-anchor="middle">capture final handoff</text>
+  <rect x="810" y="150" width="170" height="148" rx="20" fill="#ecfdf5" stroke="#16a34a" stroke-width="2" />
+  <text class="phase" x="834" y="184">Next Session</text>
+  <text class="body" x="834" y="214">Next session resumes</text>
+  <text class="body" x="834" y="238">from repo state</text>
+  <text class="body" x="834" y="262">and lands on the next fix</text>
+  <text class="small" x="834" y="286">The handoff is smaller and clearer.</text>
+
+  <path d="M280 224 H310" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M530 224 H560" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M780 224 H810" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
 </svg>

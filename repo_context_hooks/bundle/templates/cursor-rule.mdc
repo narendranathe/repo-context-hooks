@@ -1,0 +1,9 @@
+---
+description: Repo context continuity
+alwaysApply: true
+---
+
+- Treat README.md as the user-facing source of truth.
+- Treat specs/README.md as engineering continuity memory.
+- Read AGENTS.md before making major changes.
+- Cursor does not expose Claude-style lifecycle hooks, so continuity here is rule-driven rather than lifecycle-native.

@@ -1,25 +1,32 @@
 # Architecture
 
-## Core Flow
+`repo-context-hooks` is a repo-native continuity layer for coding agents.
 
-1. `SessionStart` loads project memory and next-work context
-2. `PreCompact` checkpoints the latest tactical state into `specs/README.md`
-3. `PostCompact` reloads the condensed project context
-4. `SessionEnd` captures a final continuity note
+## Core Model
 
-## Source Of Truth
+The repository is the memory boundary. Instead of treating continuity as hidden session state, the project stores the useful parts of the work where the next session can inspect them:
 
-The repo owns the context:
+- `README.md` carries the public product story
+- `specs/README.md` carries engineering memory, active constraints, and next-step context
+- platform-specific automation helps move that state forward between sessions
 
-- user-facing intent lives in `README.md`
-- engineering memory lives in `specs/README.md`
-- hook automation keeps those files current enough for the next agent
+## Phase 1 Continuity Surfaces
 
-## Why This Works
+Phase 1 is intentionally built around three platforms: Claude, Cursor, and Codex.
 
-The system avoids hidden state. A new agent can inspect the repo and understand:
+Claude is the strongest path because it exposes lifecycle primitives that can automate more of the continuity loop. Cursor and Codex matter for a different reason: they prove that platform adapters expose different continuity surfaces while still relying on the same checked-in repo contract.
 
-- what the product is
-- what constraints matter
-- what changed recently
-- what should happen next
+That distinction is important. The architecture is not trying to flatten every platform into the same hook model. It is trying to preserve a stable repo-native contract while the surrounding automation changes.
+
+## Interrupt And Resume Flow
+
+The continuity loop follows a practical task story:
+
+1. an agent starts work from checked-in repo context
+2. the session is interrupted by compact, handoff, or context loss
+3. useful tactical state is written back into `specs/README.md`
+4. the next session resumes from repo state instead of replaying the entire task from memory
+
+## Why The Repo Contract Matters
+
+A continuity system is only trustworthy if teammates can inspect it. By keeping the continuity contract in git, teams can review what the agent is carrying forward, refine what belongs in public docs versus engineering memory, and recover from bad assumptions without depending on opaque memory infrastructure.

@@ -1,96 +1,82 @@
 # repo-context-hooks
 
-Hook-based repo context continuity for coding agents.
+Repo-native continuity for coding agents.
 
-`repo-context-hooks` preserves repository context across session start, compaction, and handoff using repo-local hooks, specs memory, and installable skills.
-
-It is built for teams and solo developers who want agents to continue work from the repo's actual state instead of relying on fragile chat memory.
-
-## Why This Exists
-
-Agent sessions usually fail in predictable ways:
-
-- a new session re-discovers the repo from scratch
-- auto-compact drops tactical decisions
-- next-work context goes stale
-- issue context disappears between sessions
-
-Claude Code's hooks model points to the right primitives. This package turns that pattern into a reusable, repo-local workflow.
-
-## How It Works
-
-`repo-context-hooks` treats repository context as an operational contract instead of a prompt artifact.
-
-At session start, the hooks load project memory and current priorities. Before compaction, the hooks checkpoint tactical state into the repo. After compaction, the condensed context is reloaded so the next turn has continuity instead of drift. At session end, the repo gets one more continuity note for the next agent or session.
-
-![Lifecycle flow diagram showing SessionStart, PreCompact, PostCompact, and SessionEnd](assets/diagrams/lifecycle-flow.svg)
-
-## Repo Contract
-
-The repo stays the source of truth:
-
-- `README.md` explains the project to users and contributors
-- `specs/README.md` carries engineering memory, constraints, decisions, failures, and next work
-- hooks and skills keep those layers synchronized enough to survive handoffs
-
-![Repo contract diagram showing README.md, specs/README.md, and hooks plus skills](assets/diagrams/repo-contract.svg)
-
-## Before / After
-
-Before this workflow, new agent sessions often re-discover the repo, repeat old decisions, and lose the next useful action after compaction.
-
-After this workflow, sessions start with more structure, compaction preserves tactical state, and handoffs become more deterministic.
-
-![Before and after continuity comparison showing context drift versus deterministic handoff](assets/diagrams/before-after-continuity.svg)
-
-## What `install` Actually Does
-
-1. Installs bundled skills into:
-   - `~/.codex/skills`
-   - `~/.claude/skills`
-2. Copies helper scripts into:
-   - `.claude/scripts/repo_specs_memory.py`
-   - `.claude/scripts/session_context.py`
-3. Merges lifecycle hook entries into:
-   - `.claude/settings.json`
-4. Requires the repo to already have:
-   - `README.md`
-   - `specs/README.md`
-
-Install commands:
+`repo-context-hooks` keeps interrupted work, next-step context, and handoff notes in the repository instead of leaving them trapped in chat history. The goal is simple: a new session should be able to reopen the repo, understand the work in progress, and continue without rediscovering everything from scratch.
 
 ```bash
 python -m pip install -e .
+repo-context-hooks install --platform claude
 repo-context-hooks install --platform codex
-repohandoff install --platform codex
-graphify install --platform codex
 ```
 
-## Technical Details
+Phase 1 is intentionally narrow: Claude is the native path, while Cursor and Codex are useful but partial integrations.
 
-- Primary CLI: `repo-context-hooks`
-- Compatibility aliases: `repohandoff`, `graphify`
-- Supported agent targets today: Codex and Claude
-- Expected repo contract: `README.md` plus `specs/README.md`
-- Architecture notes: [docs/architecture.md](docs/architecture.md)
-- Optional animation guidance for demos and launch assets: [docs/demo/animation-plan.md](docs/demo/animation-plan.md)
-- The README stays static-SVG-first, with motion treated as an optional layer that can be derived from SVG sources without becoming a README dependency.
-- Minimal example: [examples/minimal-repo/](examples/minimal-repo/)
-- Multi-project example: [examples/multi-project/](examples/multi-project/)
+## Why Repo-Native Continuity
 
-## Honest Critique
+Coding sessions rarely fail because the model forgot a fact. They fail because the useful state of the work never made it back into the repo.
 
-- This is not a vector memory layer.
-- This is not a hosted memory service.
-- This does not replace repo discipline.
-- Poor `specs/README.md` hygiene reduces the value quickly.
-- Teams that need cross-repo semantic memory may still want another tool alongside this one.
+When that happens, the next session has to reconstruct:
 
-## Examples
+- what changed
+- what was interrupted
+- what tradeoffs were already decided
+- what should happen next
 
+`repo-context-hooks` narrows that problem to a repo contract teams can inspect in git. Product intent stays public in `README.md`. Engineering continuity stays in `specs/README.md`. The agent workflow becomes easier to review, critique, and resume.
+
+## How It Works
+
+The continuity loop is repo-first:
+
+1. start from checked-in project context
+2. capture useful tactical state before an interruption or compact event
+3. reload from repo state instead of relying on fragile session memory
+4. leave the next session a cleaner handoff than the one you inherited
+
+The mechanism depends on platform surfaces that vary by agent. Claude can automate more of the loop. Cursor and Codex still benefit from the same repo contract, but through narrower continuity surfaces.
+
+![Lifecycle flow diagram showing an interrupted bugfix, a checkpoint written to specs/README.md, and the next session resuming from repo state](assets/diagrams/lifecycle-flow.svg)
+
+## Tested In Phase 1
+
+The public support story in this phase is intentionally narrow and explicit. These are the platforms tested in Phase 1:
+
+- Claude (`native`): strongest support for repo hooks, session transitions, and continuity checkpoints.
+- Cursor (`partial`): supports the repo contract and instruction surfaces, but not full Claude-style lifecycle parity.
+- Codex (`partial`): supports repo-native continuity through repo docs and skills, but not native lifecycle hooks.
+
+## Platform Support
+
+The support tiers are `native`, `partial`, and `planned`.
+
+See [docs/platforms.md](docs/platforms.md) for the support matrix, platform-specific caveats, and the current claim boundary. The short version is that we do not claim universal agent support, and we do not claim hook parity for Cursor or Codex.
+
+## Concrete Stories
+
+The visuals in this repo are about specific interrupted-work situations, not abstract architecture theater.
+
+### Interrupted Task Recovery
+
+A compact event lands in the middle of a bugfix. The useful checkpoint is written back into the repo so the next session can resume with context instead of re-explaining the problem.
+
+![Repo contract diagram showing the open PR story in README.md, handoff notes in specs/README.md, and a Cursor or Codex session re-entering with repo context](assets/diagrams/repo-contract.svg)
+
+### Before And After Handoffs
+
+Without a checked-in continuity contract, teams repeat themselves. With one, the next session can reopen the repo and keep moving.
+
+![Before and after continuity comparison showing repeated bug explanation versus resuming from checked-in continuity](assets/diagrams/before-after-continuity.svg)
+
+## See Also
+
+- [Platform support](docs/platforms.md)
+- [Architecture](docs/architecture.md)
+- [Competitive analysis](docs/competitive-analysis.md)
+- [Planned platform roadmap](docs/launch/platform-roadmap.md)
+- [Animation plan](docs/demo/animation-plan.md)
 - [Minimal repo example](examples/minimal-repo/)
 - [Multi-project example](examples/multi-project/)
-- [Architecture notes](docs/architecture.md)
 
 ## Development
 
@@ -99,7 +85,7 @@ python -m pip install -e .
 python -m pytest -q --basetemp .pytest-tmp-readme-full
 ```
 
-Pull requests are welcome when they improve reliability, clarity, or the repo contract without turning the project into a vague memory platform.
+Pull requests are welcome when they make the repo contract clearer, more durable, or easier to adopt without widening the product claims beyond what the implementation supports.
 
 ## License
 

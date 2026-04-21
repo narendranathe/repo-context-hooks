@@ -2,7 +2,7 @@
 
 ## One-Line Pitch
 
-Hook-based repo context continuity for coding agents.
+Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor and Codex in Phase 1.
 
 ## Problem
 
@@ -18,7 +18,7 @@ Repository context should be durable, reviewable, and operational.
 
 ## Product Claim
 
-`repo-context-hooks` turns repo context into infrastructure using hooks, repo docs, and deterministic checkpoints.
+`repo-context-hooks` turns repo context into infrastructure using checked-in docs, deterministic checkpoints, and the strongest available platform surfaces for each supported agent.
 
 ## Core Value
 
@@ -26,6 +26,8 @@ Repository context should be durable, reviewable, and operational.
 - repo-local engineering memory
 - startup context loading
 - no external memory backend
+- native support on Claude
+- partial support on Cursor and Codex
 
 ## Messaging Guardrails
 
