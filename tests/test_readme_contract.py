@@ -86,11 +86,29 @@ def test_readme_links_to_supporting_docs() -> None:
 
 
 def test_readme_links_animation_support_doc_without_mandating_motion() -> None:
-    text = readme_text()
+    text = readme_text().lower()
     animation_doc = ROOT / "docs" / "demo" / "animation-plan.md"
+    doc_text = animation_doc.read_text(encoding="utf-8").lower()
 
-    assert "docs/demo/animation-plan.md" in text, "missing animation-plan link"
-    assert "static-SVG-first" in text, "missing static-SVG-first guidance"
+    expected_readme_snippets = [
+        "docs/demo/animation-plan.md",
+        "static-svg-first",
+        "optional layer",
+        "derived from svg sources",
+    ]
+    for snippet in expected_readme_snippets:
+        assert snippet in text, f"missing animation guidance snippet: {snippet}"
+
+    expected_doc_snippets = [
+        "assets/diagrams/",
+        "short gifs",
+        "mp4 clips",
+        "use motion to clarify flow",
+        "do not make README rendering depend on animated assets".lower(),
+    ]
+    for snippet in expected_doc_snippets:
+        assert snippet in doc_text, f"missing animation plan detail: {snippet}"
+
     assert animation_doc.exists(), f"missing animation support doc: {animation_doc}"
 
 
