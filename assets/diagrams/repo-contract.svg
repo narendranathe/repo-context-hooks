@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 280" role="img" aria-labelledby="title desc">
+  <title id="title">repo-context-hooks repo contract</title>
+  <desc id="desc">README.md and specs/README.md are connected to hooks and skills that keep continuity operational.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155" />
+    </marker>
+    <style>
+      .title { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .body { font: 13px Arial, sans-serif; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect width="920" height="280" rx="24" fill="#f8fafc" />
+
+  <rect x="60" y="52" width="250" height="74" rx="16" fill="#ffffff" stroke="#334155" stroke-width="2" />
+  <rect x="60" y="156" width="250" height="74" rx="16" fill="#fff7ed" stroke="#c2410c" stroke-width="2" />
+  <rect x="560" y="104" width="280" height="74" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2" />
+
+  <text class="title" x="185" y="92" text-anchor="middle">README.md</text>
+  <text class="body" x="185" y="112" text-anchor="middle">user-facing project intent</text>
+
+  <text class="title" x="185" y="196" text-anchor="middle">specs/README.md</text>
+  <text class="body" x="185" y="216" text-anchor="middle">engineering memory and next work</text>
+
+  <text class="title" x="700" y="142" text-anchor="middle">Hooks + Skills</text>
+  <text class="body" x="700" y="162" text-anchor="middle">sync and reload continuity</text>
+
+  <path d="M310 92 C420 92, 450 110, 560 128" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M310 194 C420 194, 450 176, 560 154" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
+</svg>

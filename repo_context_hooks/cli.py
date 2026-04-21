@@ -8,8 +8,8 @@ from .installer import PLATFORMS, install_repo_hooks, install_skills
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="graphify",
-        description="Install Graphify context-handoff skills and lifecycle hooks.",
+        prog="repo-context-hooks",
+        description="Install repo context continuity skills and lifecycle hooks.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 

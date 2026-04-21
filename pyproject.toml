@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "repohandoff"
+name = "repo-context-hooks"
 version = "0.1.0"
-description = "Deterministic context continuity protocol for Codex and Claude repositories."
+description = "Hook-based repo context continuity for coding agents."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
@@ -13,18 +13,19 @@ authors = [{ name = "Narendranath Edara" }]
 dependencies = []
 
 [project.scripts]
-graphify = "graphify.cli:main"
-repohandoff = "graphify.cli:main"
+repo-context-hooks = "repo_context_hooks.cli:main"
+repohandoff = "repo_context_hooks.cli:main"
+graphify = "repo_context_hooks.cli:main"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["graphify*"]
+include = ["repo_context_hooks*"]
 
 [tool.setuptools.package-data]
-graphify = ["bundle/**/*"]
+repo_context_hooks = ["bundle/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
