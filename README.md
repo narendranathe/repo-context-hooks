@@ -64,6 +64,8 @@ The support tiers are `native`, `partial`, and `planned`.
 
 See [docs/platforms.md](docs/platforms.md) for the support matrix, platform-specific caveats, and the current claim boundary. The short version is that we do not claim universal agent support, and we do not claim hook parity or compact automation for Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, or Kimi.
 
+For exact post-install steps on each partial platform, see [docs/platform-playbooks.md](docs/platform-playbooks.md).
+
 ## Concrete Stories
 
 The visuals in this repo are about specific interrupted-work situations, not abstract architecture theater.
@@ -83,6 +85,7 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 ## See Also
 
 - [Platform support](docs/platforms.md)
+- [Platform playbooks](docs/platform-playbooks.md)
 - [Architecture](docs/architecture.md)
 - [Competitive analysis](docs/competitive-analysis.md)
 - [Planned platform roadmap](docs/launch/platform-roadmap.md)

@@ -29,6 +29,8 @@ Use the matrix above as the public boundary for support claims:
 - do not describe planned platforms as implemented
 - do not claim native lifecycle hooks or compact automation on partial platforms unless the platform actually exposes them
 
+For step-by-step post-install guidance, use [docs/platform-playbooks.md](platform-playbooks.md).
+
 ## How To Read The Matrix
 
 A platform can still be valuable at `partial` tier. The product promise is not "every agent exposes the same primitives." The promise is that the repo can remain the continuity boundary even when the automation surface changes.
