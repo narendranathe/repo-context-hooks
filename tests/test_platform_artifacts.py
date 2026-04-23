@@ -80,3 +80,48 @@ def test_install_replit_writes_replit_md_and_agents() -> None:
     assert "Replit" in result.summary
     assert "partial" in result.summary.lower()
     assert result.manual_steps
+
+
+def test_install_windsurf_writes_rule_and_agents() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract_basics(repo)
+
+    result = install_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+
+    rule_path = repo / ".windsurf" / "rules" / "repo-context-continuity.md"
+    agents_path = repo / "AGENTS.md"
+
+    assert rule_path.exists()
+    assert agents_path.exists()
+    rule_text = rule_path.read_text(encoding="utf-8")
+    assert "README.md" in rule_text
+    assert "specs/README.md" in rule_text
+    assert "AGENTS.md" in rule_text
+    assert "Windsurf" in result.summary
+    assert "partial" in result.summary.lower()
+
+
+def test_install_lovable_writes_knowledge_exports_and_agents() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract_basics(repo)
+
+    result = install_platform("lovable", repo_root=repo, home=tmp_path / "home")
+
+    project_knowledge = repo / ".lovable" / "project-knowledge.md"
+    workspace_knowledge = repo / ".lovable" / "workspace-knowledge.md"
+    agents_path = repo / "AGENTS.md"
+
+    assert project_knowledge.exists()
+    assert workspace_knowledge.exists()
+    assert agents_path.exists()
+    assert "README.md" in project_knowledge.read_text(encoding="utf-8")
+    assert "specs/README.md" in project_knowledge.read_text(encoding="utf-8")
+    assert "AGENTS.md" in workspace_knowledge.read_text(encoding="utf-8")
+    assert "Lovable" in result.summary
+    assert any("project knowledge" in step.lower() for step in result.manual_steps)

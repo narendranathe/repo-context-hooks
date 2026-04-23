@@ -4,8 +4,10 @@ from .base import InstallPlan, InstallResult, PlatformMetadata, SupportTier
 from .claude import ClaudeAdapter
 from .codex import CodexAdapter
 from .cursor import CursorAdapter
+from .lovable import LovableAdapter
 from .replit import ReplitAdapter
 from .registry import PlatformRegistry
+from .windsurf import WindsurfAdapter
 
 _REGISTRY = PlatformRegistry(
     (
@@ -13,6 +15,8 @@ _REGISTRY = PlatformRegistry(
         CursorAdapter(),
         CodexAdapter(),
         ReplitAdapter(),
+        WindsurfAdapter(),
+        LovableAdapter(),
     )
 )
 

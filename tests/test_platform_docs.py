@@ -19,7 +19,11 @@ def test_platform_doc_has_support_matrix_with_tiers() -> None:
         "Cursor",
         "Codex",
         "Replit",
+        "Windsurf",
+        "Lovable",
         "replit.md",
+        ".windsurf/rules",
+        ".lovable/project-knowledge.md",
     ]
     for snippet in expected_snippets:
         assert snippet in text, f"missing platform doc snippet: {snippet}"
@@ -47,6 +51,8 @@ def test_architecture_and_competitive_docs_match_repo_native_positioning() -> No
     assert "repo-native continuity" in competitive
     assert "not a universal memory layer" in competitive
     assert "native support on Claude" in positioning
-    assert "partial support on Cursor, Codex, and Replit" in positioning
+    assert "partial support on Cursor, Codex, Replit, Windsurf, and Lovable" in positioning
     assert "replit.md" in architecture
-    assert "Current support is intentionally built around four platforms" in architecture
+    assert ".windsurf/rules" in architecture
+    assert ".lovable/project-knowledge.md" in architecture
+    assert "Current support is intentionally built around six platforms" in architecture

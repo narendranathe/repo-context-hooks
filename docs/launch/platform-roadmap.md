@@ -1,6 +1,6 @@
 # Planned Platform Roadmap
 
-This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`.
+This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`, Windsurf has already graduated to current partial support via root `AGENTS.md` and `.windsurf/rules`, and Lovable has already graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports.
 
 ## Replit
 
@@ -13,17 +13,27 @@ This document is the public backlog seed for future GitHub issues. Most platform
   - `replit.md` points the agent back to the repo contract instead of pretending to be Claude-style parity.
 - Follow-up use for issue #2: track incremental improvements to the current partial support, not first-time discovery.
 
+## Windsurf
+
+- Status: current `partial` support via root `AGENTS.md`, `.windsurf/rules`, and the repo contract.
+- Goal: translate the repo contract into a rules-driven Cascade workflow that can reopen a project with useful next-step context.
+- Support boundary:
+  - no native lifecycle hooks here.
+  - Windsurf does not automate compact checkpoint and restore flows here.
+  - root `AGENTS.md` and `.windsurf/rules` point Cascade back to the repo contract instead of pretending to be Claude-style parity.
+- Follow-up work: improve the quality of the Windsurf rule templates and any future docs around Windsurf-specific rule composition.
+
 ## Lovable
 
 - Issue: [#3](https://github.com/narendranathe/repo-context-hooks/issues/3)
+- Status: current `partial` support via repo-owned Project Knowledge and Workspace Knowledge exports plus the repo contract.
 - Goal: export the repo contract into a GitHub-synced builder workflow without losing reviewable source-of-truth docs.
-- Tier: provisional until the platform continuity surface is verified.
-- Open question: how much continuity can stay repo-native when most orchestration happens in a hosted product surface?
-- Issue-ready acceptance criteria:
-  - identify which repo files Lovable can reliably consume
-  - decide whether an adapter is honest or whether docs-only guidance is better
-  - define the minimum useful continuity workflow
-  - define which claims must stay out of the README
+- Support boundary:
+  - no native lifecycle hooks here.
+  - Lovable does not automate compact checkpoint and restore flows here.
+  - `.lovable/project-knowledge.md` and `.lovable/workspace-knowledge.md` are canonical repo-owned exports, but the user still has to paste them into Project Knowledge and Workspace Knowledge in the Lovable UI.
+  - local `doctor` checks cannot verify whether Lovable’s hosted project knowledge matches the repo export.
+- Follow-up use for issue #3: track incremental improvements to the current hybrid support, not first-time discovery.
 
 ## Ollama
 

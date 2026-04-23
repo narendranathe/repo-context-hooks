@@ -4,6 +4,10 @@ These issue bodies were used to create the initial planned-platform backlog. The
 
 Replit has since graduated to current partial support via `replit.md`, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
 
+Windsurf has also graduated to current partial support via root `AGENTS.md` and `.windsurf/rules`, so it no longer belongs in roadmap-only discovery.
+
+Lovable has also graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
+
 Created issues:
 
 - Replit: [#2](https://github.com/narendranathe/repo-context-hooks/issues/2)
@@ -37,30 +41,29 @@ Partial support, with no claim of native lifecycle hooks.
 - Which follow-up improvements belong in the issue thread versus the docs?
 ```
 
-## Platform: Lovable adapter discovery
+## Platform: Lovable partial-support notes
 
 ```md
 ## Summary
-Investigate a credible Lovable adapter strategy that keeps repo-native continuity reviewable even when orchestration happens through a hosted builder workflow.
+Lovable now has current partial support through repo-owned Project Knowledge and Workspace Knowledge exports, plus `AGENTS.md` inside the synced repository.
 
 ## Continuity Surface To Evaluate
-- GitHub sync workflow
+- GitHub sync on the default branch
 - checked-in continuity contract files
-- how Lovable can consume or preserve repo guidance during regenerate/edit loops
+- manual Project Knowledge and Workspace Knowledge paste steps in the Lovable UI
 
 ## Tier
-Provisional until the exposed continuity surface is verified.
+Partial support, with no claim of native lifecycle hooks.
 
 ## Acceptance Criteria
-- Identify which repo files Lovable can reliably use as continuity inputs.
-- Decide whether an adapter is honest or whether this should remain roadmap-only.
-- Define the minimum useful workflow that preserves the repo as the source of truth.
-- Document claims that must stay out of the public README until this is real.
+- Keep `.lovable/project-knowledge.md` and `.lovable/workspace-knowledge.md` as canonical repo-owned exports.
+- Keep the public claim boundary honest: no native lifecycle hooks, no compact automation parity, and no claim that hosted UI state is verified locally.
+- Preserve issue #3 as a follow-up tracker for incremental improvements rather than discovery.
 
 ## Open Questions
-- How much continuity can remain repo-native when orchestration is product-hosted?
-- Can GitHub sync preserve `AGENTS.md` and `specs/README.md` as active continuity surfaces?
-- Is the right output an adapter, a template export, or docs-only guidance?
+- What additional repo-owned exports would help users keep Lovable project knowledge aligned with their repo?
+- Which manual Lovable UI steps are worth automating later, if Lovable ever exposes them?
+- How should future docs distinguish hybrid repo-plus-UI knowledge from fully repo-consumed platforms?
 ```
 
 ## Platform: Ollama adapter strategy

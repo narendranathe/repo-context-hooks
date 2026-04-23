@@ -49,6 +49,23 @@ def _required_markers(path: Path) -> tuple[str, ...]:
             "specs/README.md",
             "AGENTS.md",
         )
+    if path.name == "repo-context-continuity.md":
+        return (
+            "README.md",
+            "specs/README.md",
+            "AGENTS.md",
+        )
+    if path.name == "project-knowledge.md":
+        return (
+            "README.md",
+            "specs/README.md",
+            "AGENTS.md",
+        )
+    if path.name == "workspace-knowledge.md":
+        return (
+            "AGENTS.md",
+            "default branch",
+        )
     if path.name == "settings.json":
         return (
             "SessionStart",

@@ -9,6 +9,9 @@ def test_bundle_contains_expected_assets() -> None:
     assert (root / "scripts" / "repo_specs_memory.py").exists()
     assert (root / "scripts" / "session_context.py").exists()
     assert (root / "templates" / "replit.md").exists()
+    assert (root / "templates" / "windsurf-rule.md").exists()
+    assert (root / "templates" / "lovable-project-knowledge.md").exists()
+    assert (root / "templates" / "lovable-workspace-knowledge.md").exists()
 
     skills = root / "skills"
     assert (skills / "context-handoff-hooks" / "SKILL.md").exists()

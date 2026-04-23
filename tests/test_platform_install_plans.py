@@ -68,3 +68,30 @@ def test_replit_plan_targets_replit_md_and_agents() -> None:
     assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
     assert any("native lifecycle hooks" in item.lower() for item in plan.warnings)
     assert any("fresh replit agent conversation" in item.lower() for item in plan.manual_steps)
+
+
+def test_windsurf_plan_targets_rule_and_agents() -> None:
+    tmp_path = _tmp_dir()
+    adapter = get_registry().get("windsurf")
+    plan = adapter.build_install_plan(repo_root=tmp_path, home=tmp_path / "home")
+
+    assert plan.home_paths == ()
+    assert any(
+        path.endswith(".windsurf/rules/repo-context-continuity.md")
+        for path in plan.repo_paths
+    )
+    assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
+    assert any("native lifecycle hooks" in item.lower() for item in plan.warnings)
+
+
+def test_lovable_plan_targets_agents_and_knowledge_exports() -> None:
+    tmp_path = _tmp_dir()
+    adapter = get_registry().get("lovable")
+    plan = adapter.build_install_plan(repo_root=tmp_path, home=tmp_path / "home")
+
+    assert plan.home_paths == ()
+    assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
+    assert any(path.endswith(".lovable/project-knowledge.md") for path in plan.repo_paths)
+    assert any(path.endswith(".lovable/workspace-knowledge.md") for path in plan.repo_paths)
+    assert any("cannot be verified locally" in item.lower() for item in plan.warnings)
+    assert any("project knowledge" in item.lower() for item in plan.manual_steps)

@@ -40,6 +40,8 @@ def test_platforms_print_support_tiers(capsys) -> None:
     assert "cursor" in out
     assert "codex" in out
     assert "replit" in out
+    assert "windsurf" in out
+    assert "lovable" in out
     assert "native" in out
     assert "partial" in out
 

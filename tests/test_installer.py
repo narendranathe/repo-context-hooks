@@ -29,7 +29,14 @@ def test_platform_skill_dir() -> None:
 
 
 def test_supported_platform_ids() -> None:
-    assert supported_platform_ids() == ("claude", "cursor", "codex", "replit")
+    assert supported_platform_ids() == (
+        "claude",
+        "cursor",
+        "codex",
+        "replit",
+        "windsurf",
+        "lovable",
+    )
 
 
 def test_install_skills_idempotent() -> None:
@@ -147,3 +154,36 @@ def test_install_platform_replit_reports_manual_step() -> None:
 
     assert result.home_target is None
     assert any("fresh replit agent conversation" in step.lower() for step in result.manual_steps)
+
+
+def test_install_platform_windsurf_reports_repo_rule_install() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+    specs_dir = repo / "specs"
+    specs_dir.mkdir()
+    (specs_dir / "README.md").write_text("# Specs\n", encoding="utf-8")
+
+    result = install_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+
+    assert result.home_target is None
+    assert "repo context installed" in result.summary.lower()
+
+
+def test_install_platform_lovable_reports_manual_ui_steps() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+    specs_dir = repo / "specs"
+    specs_dir.mkdir()
+    (specs_dir / "README.md").write_text("# Specs\n", encoding="utf-8")
+
+    result = install_platform("lovable", repo_root=repo, home=tmp_path / "home")
+
+    assert result.home_target is None
+    assert any("project knowledge" in step.lower() for step in result.manual_steps)
+    assert any("workspace knowledge" in step.lower() for step in result.manual_steps)

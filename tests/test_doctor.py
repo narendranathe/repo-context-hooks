@@ -133,3 +133,110 @@ def test_doctor_rejects_placeholder_replit_md() -> None:
     assert report.ok is False
     assert any(item.endswith("replit.md") for item in report.invalid)
     assert "INVALID" in report.render()
+
+
+def test_doctor_reports_missing_windsurf_rule() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_repo_contract(repo)
+
+    report = diagnose_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(
+        item.endswith(".windsurf/rules/repo-context-continuity.md")
+        for item in report.missing
+    )
+    assert "MISSING" in report.render()
+
+
+def test_doctor_reports_installed_windsurf_contract() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+    report = diagnose_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is True
+    assert any(
+        item.endswith(".windsurf/rules/repo-context-continuity.md")
+        for item in report.present
+    )
+    assert any(item.endswith("AGENTS.md") for item in report.present)
+
+
+def test_doctor_rejects_placeholder_windsurf_rule() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+    (repo / ".windsurf" / "rules" / "repo-context-continuity.md").write_text(
+        "placeholder\n",
+        encoding="utf-8",
+    )
+
+    report = diagnose_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(
+        item.endswith(".windsurf/rules/repo-context-continuity.md")
+        for item in report.invalid
+    )
+    assert "INVALID" in report.render()
+
+
+def test_doctor_reports_missing_lovable_exports() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_repo_contract(repo)
+
+    report = diagnose_platform("lovable", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith(".lovable/project-knowledge.md") for item in report.missing)
+    assert any(item.endswith(".lovable/workspace-knowledge.md") for item in report.missing)
+    assert any("cannot be verified locally" in item.lower() for item in report.warnings)
+
+
+def test_doctor_reports_installed_lovable_exports() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("lovable", repo_root=repo, home=tmp_path / "home")
+    report = diagnose_platform("lovable", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is True
+    assert any(item.endswith(".lovable/project-knowledge.md") for item in report.present)
+    assert any(item.endswith(".lovable/workspace-knowledge.md") for item in report.present)
+    assert any(item.endswith("AGENTS.md") for item in report.present)
+
+
+def test_doctor_rejects_placeholder_lovable_project_knowledge() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("lovable", repo_root=repo, home=tmp_path / "home")
+    (repo / ".lovable" / "project-knowledge.md").write_text(
+        "placeholder\n",
+        encoding="utf-8",
+    )
+
+    report = diagnose_platform("lovable", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith(".lovable/project-knowledge.md") for item in report.invalid)
+    assert "INVALID" in report.render()

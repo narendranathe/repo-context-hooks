@@ -9,13 +9,15 @@ The repository is the memory boundary. Instead of treating continuity as hidden 
 - `README.md` carries the public product story
 - `specs/README.md` carries engineering memory, active constraints, and next-step context
 - platform-root files such as `replit.md` carry platform-specific continuity guidance when the agent reads from the repo root
+- repo rule directories such as `.windsurf/rules` carry platform-specific continuity guidance when the platform uses a rules engine
+- repo-owned knowledge exports such as `.lovable/project-knowledge.md` and `.lovable/workspace-knowledge.md` carry platform-specific continuity guidance for hosted knowledge UIs
 - platform-specific automation helps move that state forward between sessions
 
 ## Current Continuity Surfaces
 
-Current support is intentionally built around four platforms: Claude, Cursor, Codex, and Replit.
+Current support is intentionally built around six platforms: Claude, Cursor, Codex, Replit, Windsurf, and Lovable.
 
-Claude is the strongest path because it exposes lifecycle primitives that can automate more of the continuity loop. Cursor and Codex matter for a different reason: they prove that platform adapters expose different continuity surfaces while still relying on the same checked-in repo contract. Replit matters for the same repo-contract story, but through `replit.md` instead of native lifecycle hooks.
+Claude is the strongest path because it exposes lifecycle primitives that can automate more of the continuity loop. Cursor and Codex matter for a different reason: they prove that platform adapters expose different continuity surfaces while still relying on the same checked-in repo contract. Replit matters for the same repo-contract story, but through `replit.md` instead of native lifecycle hooks. Windsurf matters because it consumes root `AGENTS.md` and `.windsurf/rules` through the same rules engine that powers Cascade customizations. Lovable matters because it combines repo-visible `AGENTS.md` with repo-owned exports that feed Project Knowledge and Workspace Knowledge in the hosted UI.
 
 That distinction is important. The architecture is not trying to flatten every platform into the same hook model. It is trying to preserve a stable repo-native contract while the surrounding automation changes.
 

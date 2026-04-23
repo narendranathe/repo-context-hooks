@@ -11,6 +11,8 @@ def test_registry_exposes_supported_platform_ids() -> None:
         "cursor",
         "codex",
         "replit",
+        "windsurf",
+        "lovable",
     ]
 
 
@@ -21,6 +23,8 @@ def test_registry_support_tiers_match_current_contract() -> None:
     assert registry.get("cursor").support_tier.value == "partial"
     assert registry.get("codex").support_tier.value == "partial"
     assert registry.get("replit").support_tier.value == "partial"
+    assert registry.get("windsurf").support_tier.value == "partial"
+    assert registry.get("lovable").support_tier.value == "partial"
 
 
 def test_registry_metadata_describes_install_surfaces() -> None:
@@ -40,4 +44,12 @@ def test_registry_metadata_describes_install_surfaces() -> None:
     assert registry.get("replit").metadata.install_surfaces == (
         "replit-md",
         "repo-contract",
+    )
+    assert registry.get("windsurf").metadata.install_surfaces == (
+        "agents-md",
+        "windsurf-rules",
+    )
+    assert registry.get("lovable").metadata.install_surfaces == (
+        "agents-md",
+        "lovable-knowledge-export",
     )
