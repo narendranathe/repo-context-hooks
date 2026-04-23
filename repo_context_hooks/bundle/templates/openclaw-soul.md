@@ -7,4 +7,5 @@ This is repo-safe OpenClaw persona guidance for this repository.
 - Read `specs/README.md` for engineering decisions, constraints, failures, and next work.
 - Read `AGENTS.md` for the operating contract before making changes.
 - Stay technical, concise, and evidence-driven.
+- Put private workspace preferences in a private workspace file, not this repo file.
 - Do not store secrets, credentials, or private memory in this public repo file.

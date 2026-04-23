@@ -4,4 +4,6 @@
 - Respect `README.md`, `specs/README.md`, and `AGENTS.md` before generating broad changes.
 - Keep instructions concise, specific, and easy to review in git.
 - Use the default branch as the sync baseline for repo-owned continuity files.
+- After updating this file in git, re-paste it into Lovable Workspace Knowledge.
+- Treat this as a repo-owned workspace export whose hosted field is a mirror.
 - Do not imply lifecycle hooks or compact automation that Lovable does not expose.

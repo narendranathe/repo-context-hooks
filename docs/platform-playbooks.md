@@ -37,6 +37,12 @@ Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/2
 - Do not claim compact automation.
 - Do not claim that Replit interruption or resume behavior is controlled by this package.
 
+### Restart checklist
+
+1. Re-open the repo at the project root.
+2. Read `replit.md`, `AGENTS.md`, `README.md`, and `specs/README.md`.
+3. Capture the last completed change and the next step in `specs/README.md` before handing off again.
+
 ## Windsurf
 
 Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/8
@@ -62,6 +68,12 @@ Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/8
 - Do not claim native lifecycle hooks.
 - Do not claim compact automation.
 - Do not claim that Windsurf rules are equivalent to Claude hooks.
+
+### Layering example
+
+- Put repo continuity in `AGENTS.md` and `.windsurf/rules/repo-context-continuity.md`.
+- Put team-wide or personal Cascade preferences in separate Windsurf rules.
+- Keep this repo rule focused on repo-specific continuity only.
 
 ## Lovable
 
@@ -91,6 +103,12 @@ Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/3
 - Do not claim compact automation.
 - Do not claim local verification of Lovable's hosted Project Knowledge or Workspace Knowledge state.
 
+### Resync loop
+
+1. Update `.lovable/project-knowledge.md` or `.lovable/workspace-knowledge.md` in git.
+2. Push the repo changes to the default branch.
+3. Re-paste the updated file into the matching Lovable UI field so the hosted field stays a mirror of the repo-owned export.
+
 ## OpenClaw
 
 Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/5
@@ -118,6 +136,11 @@ Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/5
 - Do not claim native lifecycle hooks.
 - Do not claim compact automation.
 - Do not claim that local `doctor` verifies the active OpenClaw workspace path.
+
+### Safe split
+
+- Keep repo-safe project guidance in `AGENTS.md`, `SOUL.md`, `USER.md`, and `TOOLS.md`.
+- Keep personal workflow notes, secrets, and private memory in a private workspace, not in the public repo files.
 
 ## Ollama
 
@@ -147,6 +170,12 @@ Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/4
 
 Ollama is a model runtime. It does not read repo files automatically. `repo-context-hooks` gives it a repeatable repo-context prompt, but an agent wrapper or user prompt must still provide the actual file contents.
 
+### Safe smoke test
+
+1. Create the model with `ollama create repo-context-helper -f Modelfile.repo-context`.
+2. Start a short prompt without pasting repo files.
+3. Confirm the model asks for `README.md`, `specs/README.md`, and `AGENTS.md` instead of inventing repo state.
+
 ## Kimi
 
 Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/6
@@ -172,3 +201,9 @@ Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/6
 - Do not claim generic Kimi API setup.
 
 This support is for Kimi Code CLI project context, not generic Kimi API setup.
+
+### `/init` merge example
+
+1. Run Kimi Code CLI `/init` or review its generated guidance.
+2. Keep the repo-owned `AGENTS.md` contract as the baseline.
+3. Merge any useful project-structure or build notes from `/init` into `AGENTS.md` without replacing the repo contract.
