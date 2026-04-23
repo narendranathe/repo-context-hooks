@@ -67,6 +67,17 @@ def test_readme_points_to_platform_support_doc() -> None:
     assert (ROOT / "docs" / "platforms.md").exists(), "missing docs/platforms.md"
 
 
+def test_readme_points_to_repo_contract_files() -> None:
+    text = readme_text()
+    expected_links = [
+        ("specs/README.md", ROOT / "specs" / "README.md"),
+        ("UBIQUITOUS_LANGUAGE.md", ROOT / "UBIQUITOUS_LANGUAGE.md"),
+    ]
+    for link_text, link_path in expected_links:
+        assert link_text in text, f"missing repo contract link: {link_text}"
+        assert link_path.exists(), f"missing repo contract file: {link_path}"
+
+
 def test_readme_avoids_internal_operator_heavy_sections() -> None:
     text = readme_text()
     unexpected_snippets = [
