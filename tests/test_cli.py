@@ -5,7 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
-from repo_context_hooks.cli import _doctor, _install, _platforms, build_parser
+from repo_context_hooks.cli import _doctor, _init, _install, _platforms, build_parser
 from repo_context_hooks.doctor import DoctorReport
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +30,8 @@ def test_parser_supports_platforms_and_doctor_commands() -> None:
 
     assert parser.parse_args(["platforms"]).command == "platforms"
     assert parser.parse_args(["doctor", "--platform", "claude"]).command == "doctor"
+    assert parser.parse_args(["doctor"]).command == "doctor"
+    assert parser.parse_args(["init"]).command == "init"
 
 
 def test_platforms_print_support_tiers(capsys) -> None:
@@ -162,3 +164,34 @@ def test_doctor_returns_nonzero_for_missing_state(
     assert _doctor(args) == 1
     out = capsys.readouterr().out
     assert "repo-context-continuity.mdc" in out
+
+
+def test_init_prints_repo_contract_statuses(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    def fake_init_repo_contract(repo_root, force: bool = False):
+        return {
+            "README.md": "installed",
+            "specs/README.md": "installed",
+            "UBIQUITOUS_LANGUAGE.md": "installed",
+            "AGENTS.md": "skipped",
+        }
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.init_repo_contract",
+        fake_init_repo_contract,
+    )
+
+    args = Namespace(
+        repo_root=str(tmp_path),
+        force=False,
+    )
+
+    assert _init(args) == 0
+    out = capsys.readouterr().out
+    assert "Initialized repo contract" in out
+    assert "README.md: installed" in out
+    assert "AGENTS.md: skipped" in out

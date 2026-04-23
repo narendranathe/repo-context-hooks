@@ -1,6 +1,6 @@
 # Platform Playbooks
 
-These playbooks explain what to do after `repo-context-hooks install --platform <name>` for each partial platform.
+These playbooks explain what to do after `repo-context-hooks init`, `repo-context-hooks doctor`, and `repo-context-hooks install --platform <name>` for each partial platform.
 
 Use them as the operating guide for platforms that do not expose Claude-style lifecycle hooks. The core rule is simple: keep `README.md`, `specs/README.md`, and `AGENTS.md` as the repo contract, then map that contract into the strongest real surface each platform exposes.
 

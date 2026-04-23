@@ -16,6 +16,12 @@ The repository is the memory boundary. Instead of treating continuity as hidden 
 - shared agent instruction files such as `AGENTS.md` carry the repo contract into Kimi Code CLI workflows without inventing a Kimi-specific rules directory
 - platform-specific automation helps move that state forward between sessions
 
+That is also the onboarding model:
+
+1. run `repo-context-hooks init`
+2. run `repo-context-hooks doctor`
+3. install a platform adapter only after the repo contract exists
+
 ## Current Continuity Surfaces
 
 Current support is intentionally built around nine platforms: Claude, Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi.

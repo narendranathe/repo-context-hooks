@@ -78,6 +78,22 @@ def test_readme_points_to_repo_contract_files() -> None:
         assert link_path.exists(), f"missing repo contract file: {link_path}"
 
 
+def test_readme_promotes_repo_first_onboarding_sequence() -> None:
+    text = readme_text()
+    expected_commands = [
+        "repo-context-hooks init",
+        "repo-context-hooks doctor",
+        "repo-context-hooks install --platform claude",
+    ]
+    positions = []
+    for command in expected_commands:
+        position = text.find(command)
+        assert position != -1, f"missing onboarding command: {command}"
+        positions.append(position)
+
+    assert positions == sorted(positions), "README onboarding commands are out of order"
+
+
 def test_readme_avoids_internal_operator_heavy_sections() -> None:
     text = readme_text()
     unexpected_snippets = [
