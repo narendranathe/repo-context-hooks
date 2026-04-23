@@ -100,6 +100,79 @@ def _matches_expected_markers(path: Path) -> bool:
     return all(marker in text for marker in markers)
 
 
+def _repo_contract_markers(path: Path) -> tuple[str, ...]:
+    path_text = path.as_posix()
+    if path_text.endswith("specs/README.md"):
+        return (
+            "## Repo Context Index",
+            "## Architecture and Design Constraints",
+            "## Open Issues and Next Work",
+            "## How To Work in This Repo",
+            "## Session Checkpoints",
+        )
+    if path.name == "README.md":
+        return ()
+    if path.name == "UBIQUITOUS_LANGUAGE.md":
+        return (
+            "# Ubiquitous Language",
+            "## Terms",
+        )
+    return ()
+
+
+def _matches_repo_contract_markers(path: Path) -> bool:
+    if path.name == "README.md" and path.parent.name != "specs":
+        return bool(path.read_text(encoding="utf-8", errors="ignore").strip())
+
+    markers = _repo_contract_markers(path)
+    if not markers or not path.is_file():
+        return True
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    return all(marker in text for marker in markers)
+
+
+def diagnose_repo_contract(repo_root: Path) -> DoctorReport:
+    repo_root = repo_root.resolve()
+    required = (
+        repo_root / "README.md",
+        repo_root / "specs" / "README.md",
+        repo_root / "UBIQUITOUS_LANGUAGE.md",
+    )
+
+    present: list[str] = []
+    missing: list[str] = []
+    invalid: list[str] = []
+    warnings: list[str] = []
+
+    for path in required:
+        rel = path.relative_to(repo_root).as_posix()
+        if not path.exists():
+            missing.append(rel)
+            continue
+        if _matches_repo_contract_markers(path):
+            present.append(rel)
+        else:
+            invalid.append(rel)
+
+    agents = repo_root / "AGENTS.md"
+    if agents.exists():
+        if _matches_expected_markers(agents):
+            present.append("AGENTS.md")
+        else:
+            warnings.append("AGENTS.md exists but does not clearly reference the repo contract.")
+    else:
+        warnings.append("AGENTS.md is recommended but currently missing.")
+
+    return DoctorReport(
+        platform_id="repo-contract",
+        ok=not missing and not invalid,
+        present=tuple(present),
+        missing=tuple(missing),
+        invalid=tuple(invalid),
+        warnings=tuple(warnings),
+    )
+
+
 def diagnose_platform(
     platform: str,
     repo_root: Path,

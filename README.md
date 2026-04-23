@@ -6,6 +6,8 @@ Repo-native continuity for coding agents.
 
 ```bash
 python -m pip install -e .
+repo-context-hooks init
+repo-context-hooks doctor
 repo-context-hooks install --platform claude
 repo-context-hooks install --platform codex
 repo-context-hooks install --platform replit
@@ -17,6 +19,12 @@ repo-context-hooks install --platform kimi
 ```
 
 Current support is intentionally narrow: Claude is the native path, while Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi are useful but partial integrations.
+
+The first-run path is now repo-first:
+
+1. `repo-context-hooks init`
+2. `repo-context-hooks doctor`
+3. `repo-context-hooks install --platform <name>`
 
 ## Why Repo-Native Continuity
 
@@ -39,6 +47,8 @@ The continuity loop is repo-first:
 2. capture useful tactical state before an interruption or compact event
 3. reload from repo state instead of relying on fragile session memory
 4. leave the next session a cleaner handoff than the one you inherited
+
+That is why onboarding now starts with `repo-context-hooks init` and `repo-context-hooks doctor`. The repo contract should exist before any platform-specific install step.
 
 The mechanism depends on platform surfaces that vary by agent. Claude can automate more of the loop. Cursor and Codex still benefit from the same repo contract, but through narrower continuity surfaces.
 

@@ -3,8 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import uuid4
 
-from repo_context_hooks.doctor import diagnose_platform
+from repo_context_hooks.doctor import diagnose_platform, diagnose_repo_contract
 from repo_context_hooks.installer import install_platform
+from repo_context_hooks.repo_contract import init_repo_contract
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -22,6 +23,49 @@ def _write_repo_contract(repo: Path) -> None:
     specs_dir = repo / "specs"
     specs_dir.mkdir()
     (specs_dir / "README.md").write_text("# Specs\n", encoding="utf-8")
+
+
+def test_repo_doctor_reports_missing_contract_files() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    report = diagnose_repo_contract(repo)
+
+    assert report.ok is False
+    assert "README.md" in report.missing
+    assert "specs/README.md" in report.missing
+    assert "UBIQUITOUS_LANGUAGE.md" in report.missing
+    assert "MISSING" in report.render()
+
+
+def test_repo_doctor_reports_initialized_contract() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    report = diagnose_repo_contract(repo)
+
+    assert report.ok is True
+    assert "README.md" in report.present
+    assert "specs/README.md" in report.present
+    assert "UBIQUITOUS_LANGUAGE.md" in report.present
+    assert "AGENTS.md" in report.present
+
+
+def test_repo_doctor_rejects_placeholder_specs_readme() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+    (repo / "specs" / "README.md").write_text("placeholder\n", encoding="utf-8")
+
+    report = diagnose_repo_contract(repo)
+
+    assert report.ok is False
+    assert "specs/README.md" in report.invalid
+    assert "INVALID" in report.render()
 
 
 def test_doctor_reports_missing_cursor_rule() -> None:

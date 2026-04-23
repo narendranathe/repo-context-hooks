@@ -6,6 +6,8 @@ from pathlib import Path
 from .doctor import diagnose_platform
 from .installer import install_platform, supported_platform_ids
 from .platforms import get_registry
+from .repo_contract import init_repo_contract
+from .doctor import diagnose_repo_contract
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -41,13 +43,27 @@ def build_parser() -> argparse.ArgumentParser:
         help="Overwrite existing installed artifacts.",
     )
 
+    init = subparsers.add_parser(
+        "init",
+        help="Bootstrap the canonical repo contract files.",
+    )
+    init.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root to initialize (default: current directory).",
+    )
+    init.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite bootstrapped files when supported.",
+    )
+
     doctor = subparsers.add_parser(
         "doctor",
         help="Validate repo context setup for a platform.",
     )
     doctor.add_argument(
         "--platform",
-        required=True,
         choices=supported_platform_ids(),
         help="Target platform to validate.",
     )
@@ -107,11 +123,26 @@ def _install(args: argparse.Namespace) -> int:
     return 0
 
 
-def _doctor(args: argparse.Namespace) -> int:
-    report = diagnose_platform(
-        args.platform,
-        repo_root=Path(args.repo_root).resolve(),
+def _init(args: argparse.Namespace) -> int:
+    statuses = init_repo_contract(
+        Path(args.repo_root).resolve(),
+        force=args.force,
     )
+    print("Initialized repo contract:")
+    for name, status in statuses.items():
+        print(f"- {name}: {status}")
+    return 0
+
+
+def _doctor(args: argparse.Namespace) -> int:
+    repo_root = Path(args.repo_root).resolve()
+    if getattr(args, "platform", None):
+        report = diagnose_platform(
+            args.platform,
+            repo_root=repo_root,
+        )
+    else:
+        report = diagnose_repo_contract(repo_root)
     print(report.render())
     return 0 if report.ok else 1
 
@@ -119,6 +150,8 @@ def _doctor(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
+    if args.command == "init":
+        return _init(args)
     if args.command == "install":
         return _install(args)
     if args.command == "platforms":
