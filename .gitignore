@@ -5,6 +5,7 @@ __pycache__/
 .pytest_cache/
 .pytest-tmp*/
 .tmp-tests/
+.tmp-review/
 .tmp/
 .venv/
 venv/
