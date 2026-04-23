@@ -2,6 +2,9 @@
 #
 # Ollama is a model runtime. This Modelfile gives a local model repo-context
 # instructions, but it does not grant file-system access or lifecycle hooks.
+# Best used through an agent wrapper that can pass real repo file contents.
+# Safe smoke test: run without file contents and verify the model asks for
+# README.md, specs/README.md, and AGENTS.md instead of inventing repo state.
 
 FROM llama3.2
 

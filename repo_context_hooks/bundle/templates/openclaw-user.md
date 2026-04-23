@@ -6,4 +6,5 @@ This is repo-safe OpenClaw user context for this repository.
 - Start from `README.md`, then `specs/README.md`, then `AGENTS.md`.
 - Assume project intent and contribution guidance live in `README.md`.
 - Assume design decisions, tradeoffs, failures, and next work live in `specs/README.md`.
+- Put per-user private notes in a private workspace file, not this repo file.
 - Keep personal details, secrets, and credentials out of this file.
