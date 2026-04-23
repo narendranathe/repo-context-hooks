@@ -88,3 +88,48 @@ def test_doctor_does_not_require_codex_skill_directories() -> None:
 
     assert report.ok is True
     assert not any(".codex/skills" in item for item in (*report.present, *report.missing, *report.invalid))
+
+
+def test_doctor_reports_missing_replit_md() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_repo_contract(repo)
+
+    report = diagnose_platform("replit", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith("replit.md") for item in report.missing)
+    assert "MISSING" in report.render()
+
+
+def test_doctor_reports_installed_replit_contract() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("replit", repo_root=repo, home=tmp_path / "home")
+    report = diagnose_platform("replit", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is True
+    assert any(item.endswith("replit.md") for item in report.present)
+    assert any(item.endswith("AGENTS.md") for item in report.present)
+
+
+def test_doctor_rejects_placeholder_replit_md() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("replit", repo_root=repo, home=tmp_path / "home")
+    (repo / "replit.md").write_text("placeholder\n", encoding="utf-8")
+
+    report = diagnose_platform("replit", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith("replit.md") for item in report.invalid)
+    assert "INVALID" in report.render()

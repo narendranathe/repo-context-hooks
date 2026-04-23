@@ -48,6 +48,7 @@ def test_platform_roadmap_doc_links_planned_platforms() -> None:
 
     expected_snippets = [
         "# Planned Platform Roadmap",
+        "current partial support via `replit.md`",
         "Replit",
         "Lovable",
         "Ollama",
@@ -57,6 +58,7 @@ def test_platform_roadmap_doc_links_planned_platforms() -> None:
     for snippet in expected_snippets:
         assert snippet in text, f"missing roadmap snippet: {snippet}"
     assert "Likely tier:" not in text
+    assert "no native lifecycle hooks" in text
 
 
 def test_animation_plan_stays_static_first_but_story_driven() -> None:

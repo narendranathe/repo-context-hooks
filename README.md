@@ -8,9 +8,10 @@ Repo-native continuity for coding agents.
 python -m pip install -e .
 repo-context-hooks install --platform claude
 repo-context-hooks install --platform codex
+repo-context-hooks install --platform replit
 ```
 
-Phase 1 is intentionally narrow: Claude is the native path, while Cursor and Codex are useful but partial integrations.
+Current support is intentionally narrow: Claude is the native path, while Cursor, Codex, and Replit are useful but partial integrations.
 
 ## Why Repo-Native Continuity
 
@@ -38,19 +39,20 @@ The mechanism depends on platform surfaces that vary by agent. Claude can automa
 
 ![Lifecycle flow diagram showing an interrupted bugfix, a checkpoint written to specs/README.md, and the next session resuming from repo state](assets/diagrams/lifecycle-flow.svg)
 
-## Tested In Phase 1
+## Supported Today
 
-The public support story in this phase is intentionally narrow and explicit. These are the platforms tested in Phase 1:
+The public support story is intentionally narrow and explicit. These are the platforms currently supported:
 
 - Claude (`native`): strongest support for repo hooks, session transitions, and continuity checkpoints.
 - Cursor (`partial`): supports the repo contract and instruction surfaces, but not full Claude-style lifecycle parity.
 - Codex (`partial`): supports repo-native continuity through checked-in repo docs and `AGENTS.md`, but not native lifecycle hooks.
+- Replit (`partial`): supports repo-native continuity through `replit.md` and the repo contract, but not native lifecycle hooks or compact automation.
 
 ## Platform Support
 
 The support tiers are `native`, `partial`, and `planned`.
 
-See [docs/platforms.md](docs/platforms.md) for the support matrix, platform-specific caveats, and the current claim boundary. The short version is that we do not claim universal agent support, and we do not claim hook parity for Cursor or Codex.
+See [docs/platforms.md](docs/platforms.md) for the support matrix, platform-specific caveats, and the current claim boundary. The short version is that we do not claim universal agent support, and we do not claim hook parity or compact automation for Cursor, Codex, or Replit.
 
 ## Concrete Stories
 
@@ -60,7 +62,7 @@ The visuals in this repo are about specific interrupted-work situations, not abs
 
 A compact event lands in the middle of a bugfix. The useful checkpoint is written back into the repo so the next session can resume with context instead of re-explaining the problem.
 
-![Repo contract diagram showing the open PR story in README.md, handoff notes in specs/README.md, and a Cursor or Codex session re-entering with repo context](assets/diagrams/repo-contract.svg)
+![Repo contract diagram showing the open PR story in README.md, handoff notes in specs/README.md, and a Cursor, Codex, or Replit session re-entering with repo context](assets/diagrams/repo-contract.svg)
 
 ### Before And After Handoffs
 

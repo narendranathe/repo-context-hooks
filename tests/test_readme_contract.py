@@ -17,7 +17,7 @@ def test_readme_has_public_facing_sections_in_order() -> None:
         "# repo-context-hooks",
         "## Why Repo-Native Continuity",
         "## How It Works",
-        "## Tested In Phase 1",
+        "## Supported Today",
         "## Platform Support",
         "## Concrete Stories",
         "## See Also",
@@ -33,16 +33,18 @@ def test_readme_has_public_facing_sections_in_order() -> None:
     assert positions == sorted(positions), "README sections are out of order"
 
 
-def test_readme_mentions_phase1_platforms_honestly() -> None:
+def test_readme_mentions_current_platforms_honestly() -> None:
     text = readme_text()
     expected_snippets = [
-        "tested in Phase 1",
+        "currently supported",
         "Claude",
         "Cursor",
         "Codex",
+        "Replit",
         "Claude (`native`)",
         "Cursor (`partial`)",
         "Codex (`partial`)",
+        "Replit (`partial`)",
     ]
     for snippet in expected_snippets:
         assert snippet in text, f"missing README platform snippet: {snippet}"

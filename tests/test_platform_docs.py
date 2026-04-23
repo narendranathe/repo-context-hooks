@@ -18,6 +18,8 @@ def test_platform_doc_has_support_matrix_with_tiers() -> None:
         "Claude",
         "Cursor",
         "Codex",
+        "Replit",
+        "replit.md",
     ]
     for snippet in expected_snippets:
         assert snippet in text, f"missing platform doc snippet: {snippet}"
@@ -28,7 +30,7 @@ def test_platform_doc_explains_no_hook_parity_claims() -> None:
 
     expected_snippets = [
         "no Claude-style hook parity",
-        "no native lifecycle hooks",
+        "no native lifecycle hooks or compact automation",
         "do not claim universal agent support",
     ]
     for snippet in expected_snippets:
@@ -45,4 +47,6 @@ def test_architecture_and_competitive_docs_match_repo_native_positioning() -> No
     assert "repo-native continuity" in competitive
     assert "not a universal memory layer" in competitive
     assert "native support on Claude" in positioning
-    assert "partial support on Cursor and Codex" in positioning
+    assert "partial support on Cursor, Codex, and Replit" in positioning
+    assert "replit.md" in architecture
+    assert "Current support is intentionally built around four platforms" in architecture

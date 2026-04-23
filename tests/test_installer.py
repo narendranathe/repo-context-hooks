@@ -29,7 +29,7 @@ def test_platform_skill_dir() -> None:
 
 
 def test_supported_platform_ids() -> None:
-    assert supported_platform_ids() == ("claude", "cursor", "codex")
+    assert supported_platform_ids() == ("claude", "cursor", "codex", "replit")
 
 
 def test_install_skills_idempotent() -> None:
@@ -69,8 +69,8 @@ def test_install_repo_hooks_merges_existing() -> None:
 
     settings = json.loads(settings_path.read_text(encoding="utf-8"))
     assert "hooks" in settings
-    assert "PreToolUse" in settings["hooks"]  # preserved
-    assert "SessionStart" in settings["hooks"]  # added
+    assert "PreToolUse" in settings["hooks"]
+    assert "SessionStart" in settings["hooks"]
     assert (repo / ".claude" / "scripts" / "repo_specs_memory.py").exists()
     assert (repo / ".claude" / "scripts" / "session_context.py").exists()
 
@@ -131,3 +131,19 @@ def test_install_skills_rejects_codex_platform() -> None:
         assert "Unsupported platform: codex" in str(exc)
     else:
         raise AssertionError("Expected install_skills to reject codex")
+
+
+def test_install_platform_replit_reports_manual_step() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+    specs_dir = repo / "specs"
+    specs_dir.mkdir()
+    (specs_dir / "README.md").write_text("# Specs\n", encoding="utf-8")
+
+    result = install_platform("replit", repo_root=repo, home=tmp_path / "home")
+
+    assert result.home_target is None
+    assert any("fresh replit agent conversation" in step.lower() for step in result.manual_steps)

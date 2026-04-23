@@ -8,13 +8,14 @@ The repository is the memory boundary. Instead of treating continuity as hidden 
 
 - `README.md` carries the public product story
 - `specs/README.md` carries engineering memory, active constraints, and next-step context
+- platform-root files such as `replit.md` carry platform-specific continuity guidance when the agent reads from the repo root
 - platform-specific automation helps move that state forward between sessions
 
-## Phase 1 Continuity Surfaces
+## Current Continuity Surfaces
 
-Phase 1 is intentionally built around three platforms: Claude, Cursor, and Codex.
+Current support is intentionally built around four platforms: Claude, Cursor, Codex, and Replit.
 
-Claude is the strongest path because it exposes lifecycle primitives that can automate more of the continuity loop. Cursor and Codex matter for a different reason: they prove that platform adapters expose different continuity surfaces while still relying on the same checked-in repo contract.
+Claude is the strongest path because it exposes lifecycle primitives that can automate more of the continuity loop. Cursor and Codex matter for a different reason: they prove that platform adapters expose different continuity surfaces while still relying on the same checked-in repo contract. Replit matters for the same repo-contract story, but through `replit.md` instead of native lifecycle hooks.
 
 That distinction is important. The architecture is not trying to flatten every platform into the same hook model. It is trying to preserve a stable repo-native contract while the surrounding automation changes.
 
@@ -24,7 +25,7 @@ The continuity loop follows a practical task story:
 
 1. an agent starts work from checked-in repo context
 2. the session is interrupted by compact, handoff, or context loss
-3. useful tactical state is written back into `specs/README.md`
+3. useful tactical state is written back into `specs/README.md` or a platform-root file such as `replit.md`
 4. the next session resumes from repo state instead of replaying the entire task from memory
 
 ## Why The Repo Contract Matters

@@ -39,6 +39,7 @@ def test_platforms_print_support_tiers(capsys) -> None:
     assert "claude" in out
     assert "cursor" in out
     assert "codex" in out
+    assert "replit" in out
     assert "native" in out
     assert "partial" in out
 
@@ -133,6 +134,7 @@ def test_doctor_returns_nonzero_for_missing_state(
     capsys,
 ) -> None:
     tmp_path = _tmp_dir()
+
     def fake_diagnose_platform(platform: str, repo_root, home=None) -> DoctorReport:
         return DoctorReport(
             platform_id=platform,

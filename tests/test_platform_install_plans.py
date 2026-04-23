@@ -52,4 +52,19 @@ def test_codex_plan_installs_repo_contract_only() -> None:
     assert plan.home_paths == ()
     assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
     assert any("native lifecycle hooks" in item.lower() for item in plan.warnings)
-    assert any("does not yet install bundled lifecycle skills" in item.lower() for item in plan.warnings)
+    assert any(
+        "does not yet install bundled lifecycle skills" in item.lower()
+        for item in plan.warnings
+    )
+
+
+def test_replit_plan_targets_replit_md_and_agents() -> None:
+    tmp_path = _tmp_dir()
+    adapter = get_registry().get("replit")
+    plan = adapter.build_install_plan(repo_root=tmp_path, home=tmp_path / "home")
+
+    assert plan.home_paths == ()
+    assert any(path.endswith("replit.md") for path in plan.repo_paths)
+    assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
+    assert any("native lifecycle hooks" in item.lower() for item in plan.warnings)
+    assert any("fresh replit agent conversation" in item.lower() for item in plan.manual_steps)

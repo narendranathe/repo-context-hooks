@@ -43,6 +43,12 @@ def _required_markers(path: Path) -> tuple[str, ...]:
             "specs/README.md",
             "AGENTS.md",
         )
+    if path.name == "replit.md":
+        return (
+            "README.md",
+            "specs/README.md",
+            "AGENTS.md",
+        )
     if path.name == "settings.json":
         return (
             "SessionStart",

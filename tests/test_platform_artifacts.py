@@ -57,3 +57,26 @@ def test_install_codex_preserves_agents_without_installing_skills() -> None:
 
     assert agents_path.read_text(encoding="utf-8") == "keep me\n"
     assert not (tmp_path / "home" / ".codex" / "skills").exists()
+
+
+def test_install_replit_writes_replit_md_and_agents() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract_basics(repo)
+
+    result = install_platform("replit", repo_root=repo, home=tmp_path / "home")
+
+    replit_path = repo / "replit.md"
+    agents_path = repo / "AGENTS.md"
+
+    assert replit_path.exists()
+    assert agents_path.exists()
+    replit_text = replit_path.read_text(encoding="utf-8")
+    assert "README.md" in replit_text
+    assert "specs/README.md" in replit_text
+    assert "AGENTS.md" in replit_text
+    assert "Replit" in result.summary
+    assert "partial" in result.summary.lower()
+    assert result.manual_steps

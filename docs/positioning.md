@@ -2,7 +2,7 @@
 
 ## One-Line Pitch
 
-Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor and Codex in Phase 1.
+Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor, Codex, and Replit today.
 
 ## Problem
 
@@ -24,10 +24,11 @@ Repository context should be durable, reviewable, and operational.
 
 - lifecycle hooks at the right moments
 - repo-local engineering memory
+- checked-in platform-root guidance like `replit.md`
 - startup context loading
 - no external memory backend
 - native support on Claude
-- partial support on Cursor and Codex
+- partial support on Cursor, Codex, and Replit
 
 ## Messaging Guardrails
 
@@ -35,3 +36,4 @@ Repository context should be durable, reviewable, and operational.
 - Do say: "hook-based context handoff"
 - Do not say: "solves AI memory"
 - Do not say: "knowledge graph platform"
+- Do not say: "native lifecycle hooks on Replit"

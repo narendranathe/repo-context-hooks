@@ -1,18 +1,17 @@
 # Planned Platform Roadmap
 
-This document is the public backlog seed for future GitHub issues. Every platform below is intentionally marked as planned, not shipped.
+This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`.
 
 ## Replit
 
 - Issue: [#2](https://github.com/narendranathe/repo-context-hooks/issues/2)
-- Goal: translate the repo contract into a workspace agent flow that can reopen a project with useful next-step context.
-- Tier: provisional until the platform continuity surface is verified.
-- Open question: which workspace surfaces can host checked-in continuity guidance without inventing fake hook parity?
-- Issue-ready acceptance criteria:
-  - identify the actual continuity surface Replit exposes
-  - decide whether `partial` support is honest
-  - define which install or template steps can be automated
-  - define which claims must stay out of the README
+- Status: current `partial` support via `replit.md` and the repo contract.
+- Goal: translate the repo contract into a workspace-agent flow that can reopen a project with useful next-step context.
+- Support boundary:
+  - no native lifecycle hooks here.
+  - Replit does not automate compact checkpoint and restore flows here.
+  - `replit.md` points the agent back to the repo contract instead of pretending to be Claude-style parity.
+- Follow-up use for issue #2: track incremental improvements to the current partial support, not first-time discovery.
 
 ## Lovable
 
@@ -69,3 +68,5 @@ When these become GitHub issues, each issue should answer three things before im
 - what continuity surface the platform actually exposes
 - which support tier is honest for that surface
 - what user-facing claim must stay out of the README until the work is real
+
+Replit is the exception because the exposed surface is already documented well enough to support a current `partial` claim. For Replit, the issue thread should be treated as follow-up work, not proof-of-concept discovery.

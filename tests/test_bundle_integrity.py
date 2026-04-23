@@ -8,6 +8,7 @@ def test_bundle_contains_expected_assets() -> None:
     assert (root / "hooks.json").exists()
     assert (root / "scripts" / "repo_specs_memory.py").exists()
     assert (root / "scripts" / "session_context.py").exists()
+    assert (root / "templates" / "replit.md").exists()
 
     skills = root / "skills"
     assert (skills / "context-handoff-hooks" / "SKILL.md").exists()

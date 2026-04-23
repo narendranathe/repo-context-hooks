@@ -2,6 +2,8 @@
 
 These issue bodies were used to create the initial planned-platform backlog. They remain here as editable source text for future issue revisions.
 
+Replit has since graduated to current partial support via `replit.md`, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
+
 Created issues:
 
 - Replit: [#2](https://github.com/narendranathe/repo-context-hooks/issues/2)
@@ -10,30 +12,29 @@ Created issues:
 - OpenClaw: [#5](https://github.com/narendranathe/repo-context-hooks/issues/5)
 - Kimi: [#6](https://github.com/narendranathe/repo-context-hooks/issues/6)
 
-## Platform: Replit adapter discovery
+## Platform: Replit partial-support notes
 
 ```md
 ## Summary
-Investigate a credible Replit adapter for `repo-context-hooks` without claiming Claude-style lifecycle parity.
+Replit now has current partial support via `replit.md`, which gives the agent a checked-in repo-root continuity surface without claiming Claude-style lifecycle parity.
 
 ## Continuity Surface To Evaluate
-- workspace-level agent/project instructions
+- root-level `replit.md`
 - repo-visible contract files (`README.md`, `specs/README.md`, `AGENTS.md`)
-- restart-from-repo workflows after agent interruption
+- manual restart-from-repo workflows after agent interruption
 
 ## Tier
-Provisional until the exposed continuity surface is verified.
+Partial support, with no claim of native lifecycle hooks.
 
 ## Acceptance Criteria
-- Document the actual Replit surfaces that can consume repo-native continuity.
-- Decide whether the honest tier is `partial` or `planned`.
-- Define what installation can be automated versus documented.
-- Define what README claims must remain out-of-bounds until implementation exists.
+- Keep `replit.md` concise and repo-contract-focused.
+- Keep the public claim boundary honest: no native lifecycle hooks, no compact automation parity.
+- Preserve issue #2 as a follow-up tracker for incremental improvements rather than discovery.
 
 ## Open Questions
-- Which checked-in instruction surfaces can Replit reliably read?
-- Can repo-native continuity survive workspace-agent interruptions without inventing fake hook parity?
-- Is there enough repo-local leverage to justify an adapter instead of docs-only guidance?
+- Which repo-root guidance is most useful inside `replit.md`?
+- What future automation, if any, is actually exposed by Replit beyond the checked-in contract?
+- Which follow-up improvements belong in the issue thread versus the docs?
 ```
 
 ## Platform: Lovable adapter discovery
