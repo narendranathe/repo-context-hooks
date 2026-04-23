@@ -54,7 +54,7 @@ def test_doctor_reports_installed_codex_contract() -> None:
 
     assert report.ok is True
     assert any(item.endswith("AGENTS.md") for item in report.present)
-    assert any(".codex/skills" in item for item in report.present)
+    assert not any(".codex/skills" in item for item in report.present)
 
 
 def test_doctor_rejects_placeholder_codex_agents_file() -> None:
@@ -73,3 +73,18 @@ def test_doctor_rejects_placeholder_codex_agents_file() -> None:
     assert report.ok is False
     assert any(item.endswith("AGENTS.md") for item in report.invalid)
     assert "INVALID" in report.render()
+
+
+def test_doctor_does_not_require_codex_skill_directories() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("codex", repo_root=repo, home=tmp_path / "home")
+
+    report = diagnose_platform("codex", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is True
+    assert not any(".codex/skills" in item for item in (*report.present, *report.missing, *report.invalid))

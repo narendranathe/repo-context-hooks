@@ -44,7 +44,7 @@ The public support story in this phase is intentionally narrow and explicit. The
 
 - Claude (`native`): strongest support for repo hooks, session transitions, and continuity checkpoints.
 - Cursor (`partial`): supports the repo contract and instruction surfaces, but not full Claude-style lifecycle parity.
-- Codex (`partial`): supports repo-native continuity through repo docs and skills, but not native lifecycle hooks.
+- Codex (`partial`): supports repo-native continuity through checked-in repo docs and `AGENTS.md`, but not native lifecycle hooks.
 
 ## Platform Support
 

@@ -4,7 +4,7 @@
 
 **Goal:** Replace the tuple-based installer with a real platform-adapter foundation, ship Claude/Cursor/Codex support tiers, add `platforms` and `doctor` commands, reposition public docs, and create GitHub issues for planned platforms.
 
-**Architecture:** Introduce a narrow adapter registry that produces install and validation behavior per platform. Keep Claude as the only `native` lifecycle implementation, add useful `partial` support for Cursor and Codex, and derive CLI/docs support claims from code-owned metadata instead of hand-written promises.
+**Architecture:** Introduce a narrow adapter registry that produces install and validation behavior per platform. Ship Claude as the flagship `native` lifecycle implementation for Phase 1, add useful `partial` support for Cursor and Codex, and derive CLI/docs support claims from code-owned metadata instead of hand-written promises.
 
 **Tech Stack:** Python 3.9+, setuptools CLI package, pytest, git, GitHub issues
 
@@ -150,12 +150,13 @@ def test_cursor_plan_targets_cursor_rules_and_agents(tmp_path: Path) -> None:
     assert plan.installs_repo_context is True
 
 
-def test_codex_plan_installs_skills_and_repo_contract(tmp_path: Path) -> None:
+def test_codex_plan_installs_repo_contract_only(tmp_path: Path) -> None:
     adapter = get_registry().get("codex")
     plan = adapter.build_install_plan(repo_root=tmp_path, home=tmp_path / "home")
 
-    assert any(".codex/skills" in path for path in plan.home_paths)
+    assert plan.home_paths == ()
     assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
+    assert any("no bundled lifecycle skills" in warning.lower() for warning in plan.warnings)
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -327,7 +328,7 @@ def test_install_cursor_writes_rule_and_agents(tmp_path: Path) -> None:
     assert "Cursor" in result.summary
 
 
-def test_install_codex_preserves_agents_and_installs_skills(tmp_path: Path) -> None:
+def test_install_codex_preserves_agents_without_installing_skills(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
     (repo / ".git").mkdir()
@@ -335,13 +336,13 @@ def test_install_codex_preserves_agents_and_installs_skills(tmp_path: Path) -> N
     install_platform("codex", repo_root=repo, home=tmp_path / "home")
 
     assert (repo / "AGENTS.md").exists()
-    assert (tmp_path / "home" / ".codex" / "skills").exists()
+    assert not (tmp_path / "home" / ".codex" / "skills").exists()
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `python -m pytest tests/test_platform_artifacts.py -q --basetemp .pytest-tmp-artifacts-red`
-Expected: FAIL because Cursor/Codex repo artifacts are not yet installed.
+Expected: FAIL because the Cursor and Codex repo artifacts are not yet installed.
 
 - [ ] **Step 3: Add reusable templates and wire adapters to them**
 
@@ -444,7 +445,7 @@ See [docs/platforms.md](docs/platforms.md) for the roadmap and support tiers.
 | --- | --- | --- | --- |
 | Claude | native | skills, repo hooks, lifecycle continuity | n/a |
 | Cursor | partial | rules, AGENTS.md, repo contract | no Claude-style hook parity |
-| Codex | partial | skills, AGENTS.md, repo contract | no native lifecycle hooks |
+| Codex | partial | AGENTS.md, repo contract | no native lifecycle hooks or bundled lifecycle skills |
 | Replit | planned | issue only | not implemented |
 ```
 

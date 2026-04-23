@@ -8,7 +8,7 @@ Author: Narendranath Edara
 
 This spec defines Phase 1 of the `repo-context-hooks` product expansion: a real platform-adapter foundation with strong first-wave support for Claude, Cursor, and Codex.
 
-The goal of this phase is not to maximize the number of logos on the README. The goal is to make the product structurally honest, extensible, and genuinely useful across more than one agent ecosystem without pretending all platforms support the same lifecycle model.
+The goal of this phase is to make the product structurally honest, extensible, and genuinely useful across more than one agent ecosystem without pretending all platforms support the same lifecycle model.
 
 The approved direction is:
 
@@ -25,7 +25,7 @@ The current repository has a promising core idea, but the product surface is ahe
 - the code only truly supports `claude` and `codex`
 - the current install path is hard-coded rather than adapter-driven
 - Claude is the only platform with a real runtime lifecycle path
-- Codex support is skills-oriented, not parity-level runtime support
+- Codex support is repo-contract-oriented, not parity-level runtime support
 - the public README currently explains internal mechanisms better than it explains user value
 - the current diagrams explain the workflow, but do not yet show a memorable interrupted-task or handoff scenario
 
@@ -200,10 +200,11 @@ Codex support should formalize the repo-contract workflow already implied by the
 
 Codex support should include:
 
-- skill installation into the Codex skills home
 - `AGENTS.md` integration as part of the repo contract
-- validation of installed skills and required repo context files
-- clear documentation of what continuity Codex users get and what they do not
+- validation of required repo context files
+- clear documentation of what continuity Codex users get, what remains manual, and what they do not get in Phase 1
+
+Codex support in Phase 1 does not require bundled lifecycle skills or a Codex-specific hook surface.
 
 Codex support must not claim native lifecycle hook parity unless a real mechanism exists and is tested.
 

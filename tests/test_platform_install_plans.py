@@ -44,11 +44,12 @@ def test_cursor_plan_targets_cursor_rules_and_agents() -> None:
     assert any("native lifecycle hooks" in item.lower() for item in plan.warnings)
 
 
-def test_codex_plan_installs_skills_and_repo_contract() -> None:
+def test_codex_plan_installs_repo_contract_only() -> None:
     tmp_path = _tmp_dir()
     adapter = get_registry().get("codex")
     plan = adapter.build_install_plan(repo_root=tmp_path, home=tmp_path / "home")
 
-    assert any(".codex/skills" in path for path in plan.home_paths)
+    assert plan.home_paths == ()
     assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
     assert any("native lifecycle hooks" in item.lower() for item in plan.warnings)
+    assert any("does not yet install bundled lifecycle skills" in item.lower() for item in plan.warnings)

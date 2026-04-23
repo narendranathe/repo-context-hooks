@@ -12,7 +12,7 @@
 | --- | --- | --- | --- | --- |
 | Claude | `native` | Repo hooks, bundled skills, session-start through session-end continuity, repo checkpointing | Not a replacement for broader memory tooling | Claude is the reference implementation for the continuity loop. |
 | Cursor | `partial` | Repo contract, checked-in instructions, handoff notes, restart-from-repo workflows | no Claude-style hook parity | Cursor can benefit from the same continuity contract even when the lifecycle automation differs. |
-| Codex | `partial` | Repo contract, checked-in skills, AGENTS-style guidance, manual or command-driven resume flows | no native lifecycle hooks | Codex can re-enter with repo context, but it should not be described as hook-equivalent to Claude. |
+| Codex | `partial` | Repo contract, `AGENTS.md`, manual or command-driven resume flows | no native lifecycle hooks and no bundled lifecycle skills | Codex can re-enter with repo context, but it should not be described as hook-equivalent to Claude. |
 | Replit | `planned` | Roadmap only | not implemented | Candidate issue seed in `docs/launch/platform-roadmap.md`. |
 | Lovable | `planned` | Roadmap only | not implemented | Candidate issue seed in `docs/launch/platform-roadmap.md`. |
 | Ollama | `planned` | Roadmap only | not implemented | Candidate issue seed in `docs/launch/platform-roadmap.md`. |
@@ -35,4 +35,4 @@ That is why Phase 1 is intentionally narrow:
 
 - Claude proves the strongest native path.
 - Cursor proves the repo contract matters even without full hook parity.
-- Codex proves repo-native continuity still helps when the workflow is driven by checked-in instructions and manual resume steps.
+- Codex proves repo-native continuity still helps when the workflow is driven by checked-in instructions, `AGENTS.md`, and manual resume steps.

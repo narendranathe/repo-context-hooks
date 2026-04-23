@@ -4,9 +4,6 @@ from pathlib import Path
 
 from .base import InstallPlan, InstallResult, PlatformMetadata, SupportTier
 from .runtime import (
-    bundled_skill_names,
-    install_skills_bundle,
-    platform_skill_dir,
     posix_paths,
     render_template,
     write_text_file,
@@ -18,8 +15,8 @@ class CodexAdapter:
         id="codex",
         display_name="Codex",
         support_tier=SupportTier.PARTIAL,
-        summary="Installs Codex skills and repo contract guidance without native hooks.",
-        install_surfaces=("skills", "repo-contract"),
+        summary="Installs repo-contract guidance for Codex without native hooks.",
+        install_surfaces=("repo-contract",),
     )
 
     @property
@@ -35,15 +32,15 @@ class CodexAdapter:
         repo_root: Path,
         home: Path | None = None,
     ) -> InstallPlan:
-        skill_root = platform_skill_dir("codex", home=home)
-        home_paths = posix_paths(skill_root / name for name in bundled_skill_names())
+        del home
         repo_paths = posix_paths((repo_root / "AGENTS.md",))
         return InstallPlan(
             platform_id=self.id,
-            home_paths=home_paths,
+            home_paths=(),
             repo_paths=repo_paths,
             warnings=(
                 "Codex does not expose native lifecycle hooks; support stays repo-contract driven.",
+                "Codex does not yet install bundled lifecycle skills; continuity is anchored in checked-in repo docs.",
             ),
             installs_repo_context=True,
         )
@@ -55,11 +52,7 @@ class CodexAdapter:
         home: Path | None = None,
         install_repo_context: bool = True,
     ) -> InstallResult:
-        home_target, home_statuses = install_skills_bundle(
-            "codex",
-            force=force,
-            home=home,
-        )
+        del home
         repo_statuses: dict[str, str] = {}
         if install_repo_context:
             repo_statuses["AGENTS.md"] = write_text_file(
@@ -71,10 +64,11 @@ class CodexAdapter:
             platform_id=self.id,
             display_name=self.metadata.display_name,
             support_tier=self.metadata.support_tier,
-            home_target=home_target,
-            home_statuses=home_statuses,
+            home_target=None,
+            home_statuses={},
             repo_statuses=repo_statuses,
             warnings=(
                 "Codex does not expose native lifecycle hooks; support remains partial.",
+                "Codex continuity currently relies on checked-in repo docs and AGENTS.md rather than bundled lifecycle skills.",
             ),
         )

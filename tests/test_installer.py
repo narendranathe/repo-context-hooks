@@ -25,7 +25,6 @@ def _tmp_dir() -> Path:
 
 def test_platform_skill_dir() -> None:
     home = Path("/tmp/demo-home")
-    assert platform_skill_dir("codex", home=home) == home / ".codex" / "skills"
     assert platform_skill_dir("claude", home=home) == home / ".claude" / "skills"
 
 
@@ -35,15 +34,15 @@ def test_supported_platform_ids() -> None:
 
 def test_install_skills_idempotent() -> None:
     tmp_path = _tmp_dir()
-    target, first = install_skills("codex", home=tmp_path, force=False)
+    target, first = install_skills("claude", home=tmp_path, force=False)
     assert target.exists()
     assert first
     assert all(state == "installed" for state in first.values())
 
-    _, second = install_skills("codex", home=tmp_path, force=False)
+    _, second = install_skills("claude", home=tmp_path, force=False)
     assert all(state == "skipped" for state in second.values())
 
-    _, third = install_skills("codex", home=tmp_path, force=True)
+    _, third = install_skills("claude", home=tmp_path, force=True)
     assert all(state == "installed" for state in third.values())
 
 
@@ -120,5 +119,15 @@ def test_install_platform_codex_summary_mentions_skills_only_when_repo_context_s
         install_repo_context=False,
     )
 
-    assert "skills installed" in result.summary.lower()
-    assert "repo context skipped" in result.summary.lower()
+    assert "support checked" in result.summary.lower()
+
+
+def test_install_skills_rejects_codex_platform() -> None:
+    tmp_path = _tmp_dir()
+
+    try:
+        install_skills("codex", home=tmp_path, force=False)
+    except ValueError as exc:
+        assert "Unsupported platform: codex" in str(exc)
+    else:
+        raise AssertionError("Expected install_skills to reject codex")

@@ -33,6 +33,5 @@ def test_registry_metadata_describes_install_surfaces() -> None:
         "repo-contract",
     )
     assert registry.get("codex").metadata.install_surfaces == (
-        "skills",
         "repo-contract",
     )

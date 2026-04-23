@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Iterable, Tuple
 
 
-SKILL_PLATFORMS = ("claude", "codex")
+SKILL_PLATFORMS = ("claude",)
 
 
 def bundle_root() -> Path:

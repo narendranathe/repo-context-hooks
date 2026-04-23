@@ -44,7 +44,7 @@ def test_install_cursor_writes_rule_and_agents() -> None:
     assert "partial" in result.summary.lower()
 
 
-def test_install_codex_preserves_agents_and_installs_skills() -> None:
+def test_install_codex_preserves_agents_without_installing_skills() -> None:
     tmp_path = _tmp_dir()
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -56,4 +56,4 @@ def test_install_codex_preserves_agents_and_installs_skills() -> None:
     install_platform("codex", repo_root=repo, home=tmp_path / "home")
 
     assert agents_path.read_text(encoding="utf-8") == "keep me\n"
-    assert (tmp_path / "home" / ".codex" / "skills").exists()
+    assert not (tmp_path / "home" / ".codex" / "skills").exists()
