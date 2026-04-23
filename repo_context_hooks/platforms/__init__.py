@@ -5,6 +5,7 @@ from .claude import ClaudeAdapter
 from .codex import CodexAdapter
 from .cursor import CursorAdapter
 from .lovable import LovableAdapter
+from .openclaw import OpenClawAdapter
 from .replit import ReplitAdapter
 from .registry import PlatformRegistry
 from .windsurf import WindsurfAdapter
@@ -17,6 +18,7 @@ _REGISTRY = PlatformRegistry(
         ReplitAdapter(),
         WindsurfAdapter(),
         LovableAdapter(),
+        OpenClawAdapter(),
     )
 )
 

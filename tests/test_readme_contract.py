@@ -43,12 +43,14 @@ def test_readme_mentions_current_platforms_honestly() -> None:
         "Replit",
         "Windsurf",
         "Lovable",
+        "OpenClaw",
         "Claude (`native`)",
         "Cursor (`partial`)",
         "Codex (`partial`)",
         "Replit (`partial`)",
         "Windsurf (`partial`)",
         "Lovable (`partial`)",
+        "OpenClaw (`partial`)",
     ]
     for snippet in expected_snippets:
         assert snippet in text, f"missing README platform snippet: {snippet}"

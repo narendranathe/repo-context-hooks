@@ -15,9 +15,9 @@
 | Codex | `partial` | Repo contract, `AGENTS.md`, manual or command-driven resume flows | no native lifecycle hooks and no bundled lifecycle skills | Codex can re-enter with repo context, but it should not be described as hook-equivalent to Claude. |
 | Replit | `partial` | Repo contract, `replit.md`, manual resume from the repo root | no native lifecycle hooks or compact automation | Replit Agent reads `replit.md` from the repo root, so the support claim is current partial support rather than roadmap-only. |
 | Windsurf | `partial` | Repo contract, root `AGENTS.md`, `.windsurf/rules`, rules-driven restart-from-repo workflows | no native lifecycle hooks or compact automation | Windsurf Cascade treats repo instructions as rule inputs, so the support story is repo-native but rules-driven. |
-| Lovable | `partial` | Repo contract, `AGENTS.md`, `.lovable/project-knowledge.md`, `.lovable/workspace-knowledge.md`, manual Project Knowledge and Workspace Knowledge setup | no native lifecycle hooks, no compact automation, and no local verification of hosted UI knowledge | Lovable is a hybrid integration: the repo owns the canonical exports, and the user pastes them into Lovable’s UI knowledge fields. |
+| Lovable | `partial` | Repo contract, `AGENTS.md`, `.lovable/project-knowledge.md`, `.lovable/workspace-knowledge.md`, manual Project Knowledge and Workspace Knowledge setup | no native lifecycle hooks, no compact automation, and no local verification of hosted UI knowledge | Lovable is a hybrid integration: the repo owns the canonical exports, and the user pastes them into Lovable's UI knowledge fields. |
+| OpenClaw | `partial` | Repo contract, `AGENTS.md`, `SOUL.md`, `USER.md`, `TOOLS.md`, manual OpenClaw workspace configuration | no native lifecycle hooks, no compact automation, and no local verification of the active OpenClaw workspace path | OpenClaw is workspace-file-driven: the repo can provide sanitized workspace guidance, but runtime configuration remains manual. |
 | Ollama | `planned` | Roadmap only | not implemented | Candidate issue seed in `docs/launch/platform-roadmap.md`. |
-| OpenClaw | `planned` | Roadmap only | not implemented | Candidate issue seed in `docs/launch/platform-roadmap.md`. |
 | Kimi | `planned` | Roadmap only | not implemented | Candidate issue seed in `docs/launch/platform-roadmap.md`. |
 
 ## Claim Boundary
@@ -41,3 +41,4 @@ That is why the current support story is intentionally narrow:
 - Replit proves the repo contract still matters when the platform reads `replit.md` from the repo root instead of exposing native lifecycle hooks.
 - Windsurf proves repo-native continuity also works when a platform consumes root `AGENTS.md` and `.windsurf/rules` through a rules engine instead of hooks.
 - Lovable proves the repo can remain canonical even when the platform also requires manual Project Knowledge and Workspace Knowledge in a hosted UI.
+- OpenClaw proves repo-native continuity can also map into workspace-loaded Markdown files such as `SOUL.md`, `USER.md`, and `TOOLS.md` without pretending the tool can verify active runtime configuration.

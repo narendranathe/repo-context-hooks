@@ -2,7 +2,7 @@
 
 ## One-Line Pitch
 
-Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor, Codex, Replit, Windsurf, and Lovable today.
+Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor, Codex, Replit, Windsurf, Lovable, and OpenClaw today.
 
 ## Problem
 
@@ -27,10 +27,11 @@ Repository context should be durable, reviewable, and operational.
 - checked-in platform-root guidance like `replit.md`
 - checked-in rule surfaces like `.windsurf/rules`
 - repo-owned knowledge exports like `.lovable/project-knowledge.md`
+- repo-root workspace files like `SOUL.md`, `USER.md`, and `TOOLS.md`
 - startup context loading
 - no external memory backend
 - native support on Claude
-- partial support on Cursor, Codex, Replit, Windsurf, and Lovable
+- partial support on Cursor, Codex, Replit, Windsurf, Lovable, and OpenClaw
 
 ## Messaging Guardrails
 
@@ -41,3 +42,4 @@ Repository context should be durable, reviewable, and operational.
 - Do not say: "native lifecycle hooks on Replit"
 - Do not say: "native lifecycle hooks on Windsurf"
 - Do not say: "Lovable UI knowledge is verified automatically"
+- Do not say: "OpenClaw workspace configuration is verified automatically"

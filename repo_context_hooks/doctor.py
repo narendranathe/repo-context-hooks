@@ -66,6 +66,13 @@ def _required_markers(path: Path) -> tuple[str, ...]:
             "AGENTS.md",
             "default branch",
         )
+    if path.name in ("SOUL.md", "USER.md", "TOOLS.md"):
+        return (
+            "repo as the continuity source of truth",
+            "README.md",
+            "specs/README.md",
+            "AGENTS.md",
+        )
     if path.name == "settings.json":
         return (
             "SessionStart",

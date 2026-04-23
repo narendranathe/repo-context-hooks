@@ -8,9 +8,12 @@ Windsurf has also graduated to current partial support via root `AGENTS.md` and 
 
 Lovable has also graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
 
+OpenClaw has also graduated to current partial support via repo-root workspace files, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
+
 Created issues:
 
 - Replit: [#2](https://github.com/narendranathe/repo-context-hooks/issues/2)
+- Windsurf: [#8](https://github.com/narendranathe/repo-context-hooks/issues/8)
 - Lovable: [#3](https://github.com/narendranathe/repo-context-hooks/issues/3)
 - Ollama: [#4](https://github.com/narendranathe/repo-context-hooks/issues/4)
 - OpenClaw: [#5](https://github.com/narendranathe/repo-context-hooks/issues/5)
@@ -39,6 +42,32 @@ Partial support, with no claim of native lifecycle hooks.
 - Which repo-root guidance is most useful inside `replit.md`?
 - What future automation, if any, is actually exposed by Replit beyond the checked-in contract?
 - Which follow-up improvements belong in the issue thread versus the docs?
+```
+
+## Platform: Windsurf partial-support notes
+
+```md
+## Summary
+Windsurf now has current partial support through root `AGENTS.md`, `.windsurf/rules/repo-context-continuity.md`, and the repo contract.
+
+## Continuity Surface To Evaluate
+- root `AGENTS.md`
+- `.windsurf/rules/repo-context-continuity.md`
+- rules-driven restart-from-repo workflows
+
+## Tier
+Partial support, with no claim of native lifecycle hooks.
+
+## Acceptance Criteria
+- Keep the Windsurf rule concise and repo-contract-focused.
+- Explain how root `AGENTS.md` and `.windsurf/rules` work together without duplicating each other.
+- Keep the public claim boundary honest: no native lifecycle hooks and no compact automation parity.
+- Preserve issue #8 as a follow-up tracker for incremental improvements rather than discovery.
+
+## Open Questions
+- Which Windsurf-specific rule composition examples are useful enough to document?
+- Should future docs explain personal rules versus workspace rules?
+- What future official Windsurf surface, if any, could make this stronger than partial support?
 ```
 
 ## Platform: Lovable partial-support notes
@@ -92,30 +121,29 @@ Provisional until the exposed continuity surface is verified.
 - How do we keep the repo as the continuity boundary without pretending there is a native hook model?
 ```
 
-## Platform: OpenClaw adapter strategy
+## Platform: OpenClaw partial-support notes
 
 ```md
 ## Summary
-Investigate whether OpenClaw exposes a credible continuity surface for `repo-context-hooks` beyond a naming-level integration.
+OpenClaw now has current partial support through repo-root `AGENTS.md`, `SOUL.md`, `USER.md`, and `TOOLS.md` workspace files.
 
 ## Continuity Surface To Evaluate
-- orchestration model
-- checked-in instruction files
-- handoff/resume behavior grounded in repo state
+- configured OpenClaw workspace path
+- repo-root workspace files
+- handoff/resume behavior grounded in `README.md`, `specs/README.md`, and `AGENTS.md`
 
 ## Tier
-Provisional until the exposed continuity surface is verified.
+Partial support, with no claim of native lifecycle hooks.
 
 ## Acceptance Criteria
-- Identify the actual instruction and continuity surfaces OpenClaw exposes.
-- Decide whether an adapter is honest or whether this stays in discovery.
-- Define what a minimum useful integration would look like.
-- Record the README claims that must remain out-of-bounds.
+- Keep `SOUL.md`, `USER.md`, and `TOOLS.md` sanitized and repo-safe.
+- Keep public claims honest: no native lifecycle hooks, no compact automation parity, and no local verification of active OpenClaw runtime configuration.
+- Preserve issue #5 as a follow-up tracker for incremental improvements rather than discovery.
 
 ## Open Questions
-- Does OpenClaw have a stable repo-facing instruction model?
-- Can it consume `README.md`, `specs/README.md`, and `AGENTS.md` in a meaningful way?
-- Is the right scope a platform adapter, a compatibility note, or no integration at all?
+- Should future automation edit `~/.openclaw/openclaw.json`, or should runtime configuration stay manual?
+- Which workspace-file examples help developers without encouraging secrets in public repos?
+- Should a later phase support private OpenClaw memory repos separately from public project repos?
 ```
 
 ## Platform: Kimi adapter discovery

@@ -125,3 +125,28 @@ def test_install_lovable_writes_knowledge_exports_and_agents() -> None:
     assert "AGENTS.md" in workspace_knowledge.read_text(encoding="utf-8")
     assert "Lovable" in result.summary
     assert any("project knowledge" in step.lower() for step in result.manual_steps)
+
+
+def test_install_openclaw_writes_workspace_files_and_agents() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract_basics(repo)
+
+    result = install_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+
+    agents_path = repo / "AGENTS.md"
+    soul_path = repo / "SOUL.md"
+    user_path = repo / "USER.md"
+    tools_path = repo / "TOOLS.md"
+
+    assert agents_path.exists()
+    assert soul_path.exists()
+    assert user_path.exists()
+    assert tools_path.exists()
+    assert "README.md" in soul_path.read_text(encoding="utf-8")
+    assert "specs/README.md" in user_path.read_text(encoding="utf-8")
+    assert "AGENTS.md" in tools_path.read_text(encoding="utf-8")
+    assert "OpenClaw" in result.summary
+    assert any("workspace" in step.lower() for step in result.manual_steps)

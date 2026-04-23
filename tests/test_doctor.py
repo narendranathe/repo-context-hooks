@@ -240,3 +240,52 @@ def test_doctor_rejects_placeholder_lovable_project_knowledge() -> None:
     assert report.ok is False
     assert any(item.endswith(".lovable/project-knowledge.md") for item in report.invalid)
     assert "INVALID" in report.render()
+
+
+def test_doctor_reports_missing_openclaw_workspace_files() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_repo_contract(repo)
+
+    report = diagnose_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith("SOUL.md") for item in report.missing)
+    assert any(item.endswith("USER.md") for item in report.missing)
+    assert any(item.endswith("TOOLS.md") for item in report.missing)
+    assert any("active OpenClaw workspace" in item for item in report.warnings)
+
+
+def test_doctor_reports_installed_openclaw_workspace_files() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+    report = diagnose_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is True
+    assert any(item.endswith("SOUL.md") for item in report.present)
+    assert any(item.endswith("USER.md") for item in report.present)
+    assert any(item.endswith("TOOLS.md") for item in report.present)
+    assert any(item.endswith("AGENTS.md") for item in report.present)
+
+
+def test_doctor_rejects_placeholder_openclaw_soul_file() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+    (repo / "SOUL.md").write_text("placeholder\n", encoding="utf-8")
+
+    report = diagnose_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith("SOUL.md") for item in report.invalid)
+    assert "INVALID" in report.render()

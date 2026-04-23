@@ -95,3 +95,17 @@ def test_lovable_plan_targets_agents_and_knowledge_exports() -> None:
     assert any(path.endswith(".lovable/workspace-knowledge.md") for path in plan.repo_paths)
     assert any("cannot be verified locally" in item.lower() for item in plan.warnings)
     assert any("project knowledge" in item.lower() for item in plan.manual_steps)
+
+
+def test_openclaw_plan_targets_workspace_files_and_agents() -> None:
+    tmp_path = _tmp_dir()
+    adapter = get_registry().get("openclaw")
+    plan = adapter.build_install_plan(repo_root=tmp_path, home=tmp_path / "home")
+
+    assert plan.home_paths == ()
+    assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
+    assert any(path.endswith("SOUL.md") for path in plan.repo_paths)
+    assert any(path.endswith("USER.md") for path in plan.repo_paths)
+    assert any(path.endswith("TOOLS.md") for path in plan.repo_paths)
+    assert any("active OpenClaw workspace" in item for item in plan.warnings)
+    assert any("agents.defaults.workspace" in item for item in plan.manual_steps)

@@ -1,6 +1,6 @@
 # Planned Platform Roadmap
 
-This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`, Windsurf has already graduated to current partial support via root `AGENTS.md` and `.windsurf/rules`, and Lovable has already graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports.
+This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`, Windsurf has already graduated to current partial support via root `AGENTS.md` and `.windsurf/rules`, Lovable has already graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports, and OpenClaw has graduated to current partial support via repo-root workspace files.
 
 ## Replit
 
@@ -15,13 +15,14 @@ This document is the public backlog seed for future GitHub issues. Most platform
 
 ## Windsurf
 
+- Issue: [#8](https://github.com/narendranathe/repo-context-hooks/issues/8)
 - Status: current `partial` support via root `AGENTS.md`, `.windsurf/rules`, and the repo contract.
 - Goal: translate the repo contract into a rules-driven Cascade workflow that can reopen a project with useful next-step context.
 - Support boundary:
   - no native lifecycle hooks here.
   - Windsurf does not automate compact checkpoint and restore flows here.
   - root `AGENTS.md` and `.windsurf/rules` point Cascade back to the repo contract instead of pretending to be Claude-style parity.
-- Follow-up work: improve the quality of the Windsurf rule templates and any future docs around Windsurf-specific rule composition.
+- Follow-up use for issue #8: improve the quality of the Windsurf rule templates and any future docs around Windsurf-specific rule composition.
 
 ## Lovable
 
@@ -32,7 +33,7 @@ This document is the public backlog seed for future GitHub issues. Most platform
   - no native lifecycle hooks here.
   - Lovable does not automate compact checkpoint and restore flows here.
   - `.lovable/project-knowledge.md` and `.lovable/workspace-knowledge.md` are canonical repo-owned exports, but the user still has to paste them into Project Knowledge and Workspace Knowledge in the Lovable UI.
-  - local `doctor` checks cannot verify whether Lovable’s hosted project knowledge matches the repo export.
+  - local `doctor` checks cannot verify whether Lovable's hosted project knowledge matches the repo export.
 - Follow-up use for issue #3: track incremental improvements to the current hybrid support, not first-time discovery.
 
 ## Ollama
@@ -50,14 +51,13 @@ This document is the public backlog seed for future GitHub issues. Most platform
 ## OpenClaw
 
 - Issue: [#5](https://github.com/narendranathe/repo-context-hooks/issues/5)
-- Goal: investigate whether its orchestration model can consume the same continuity contract used by Claude, Cursor, and Codex.
-- Tier: provisional until the platform continuity surface is verified.
-- Open question: what platform adapter boundary is needed before this becomes more than a naming exercise?
-- Issue-ready acceptance criteria:
-  - identify the actual instruction and continuity surfaces OpenClaw exposes
-  - decide whether an adapter is honest or whether discovery should continue
-  - define what minimum useful integration would look like
-  - define which README claims must stay out-of-bounds
+- Status: current `partial` support via repo-root `AGENTS.md`, `SOUL.md`, `USER.md`, `TOOLS.md`, and manual workspace activation.
+- Goal: translate the repo contract into OpenClaw's workspace-file model without treating it as a hook-native platform.
+- Support boundary:
+  - no native lifecycle hooks here.
+  - OpenClaw does not automate compact checkpoint and restore flows here.
+  - local `doctor` checks validate generated repo files, not the active OpenClaw workspace path.
+- Follow-up use for issue #5: track incremental improvements to the current workspace-file support, not first-time discovery.
 
 ## Kimi
 
