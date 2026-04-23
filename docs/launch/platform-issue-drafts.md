@@ -12,6 +12,8 @@ OpenClaw has also graduated to current partial support via repo-root workspace f
 
 Ollama has also graduated to current partial support via `Modelfile.repo-context`, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
 
+Kimi has also graduated to current partial support via root `AGENTS.md` for Kimi Code CLI workflows, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
+
 Created issues:
 
 - Replit: [#2](https://github.com/narendranathe/repo-context-hooks/issues/2)
@@ -147,28 +149,27 @@ Partial support, with no claim of native lifecycle hooks.
 - Should a later phase support private OpenClaw memory repos separately from public project repos?
 ```
 
-## Platform: Kimi adapter discovery
+## Platform: Kimi partial-support notes
 
 ```md
 ## Summary
-Investigate whether Kimi exposes enough coding-workflow surface to support repo-native continuity honestly.
+Kimi now has current partial support through root `AGENTS.md` for Kimi Code CLI workflows.
 
 ## Continuity Surface To Evaluate
-- instruction surfaces for coding workflows
+- Kimi Code CLI `/init`
+- root `AGENTS.md`
 - repo-visible continuity contract files
-- handoff and restart behavior after interruption
 
 ## Tier
-Provisional until the exposed continuity surface is verified.
+Partial support, with no claim of native lifecycle hooks.
 
 ## Acceptance Criteria
-- Identify what Kimi actually exposes for repo or session continuity.
-- Decide the honest support tier after the workflow surface is verified.
-- Define what could be automated and what would remain manual.
-- Document claims that must stay out of the public README until this is proven.
+- Keep Kimi support scoped to Kimi Code CLI project context.
+- Keep generic Kimi API configuration out of scope.
+- Preserve issue #6 as a follow-up tracker for incremental improvements rather than discovery.
 
 ## Open Questions
-- Does Kimi expose repo-facing instruction or session surfaces suitable for continuity?
-- Is the right outcome an adapter, guidance doc, or continued roadmap-only status?
-- What would a minimum credible integration look like?
+- Does Kimi Code publish a stable rules-file path that could make this stronger than `AGENTS.md`-only support?
+- Should future docs include a Kimi Code `/init` merge example?
+- What minimum smoke test is safe without requiring Kimi Code CLI to be installed in CI?
 ```

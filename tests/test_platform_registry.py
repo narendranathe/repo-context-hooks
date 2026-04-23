@@ -15,6 +15,7 @@ def test_registry_exposes_supported_platform_ids() -> None:
         "lovable",
         "openclaw",
         "ollama",
+        "kimi",
     ]
 
 
@@ -29,6 +30,7 @@ def test_registry_support_tiers_match_current_contract() -> None:
     assert registry.get("lovable").support_tier.value == "partial"
     assert registry.get("openclaw").support_tier.value == "partial"
     assert registry.get("ollama").support_tier.value == "partial"
+    assert registry.get("kimi").support_tier.value == "partial"
 
 
 def test_registry_metadata_describes_install_surfaces() -> None:
@@ -64,4 +66,7 @@ def test_registry_metadata_describes_install_surfaces() -> None:
     assert registry.get("ollama").metadata.install_surfaces == (
         "agents-md",
         "ollama-modelfile",
+    )
+    assert registry.get("kimi").metadata.install_surfaces == (
+        "agents-md",
     )

@@ -4,6 +4,7 @@ from .base import InstallPlan, InstallResult, PlatformMetadata, SupportTier
 from .claude import ClaudeAdapter
 from .codex import CodexAdapter
 from .cursor import CursorAdapter
+from .kimi import KimiAdapter
 from .lovable import LovableAdapter
 from .ollama import OllamaAdapter
 from .openclaw import OpenClawAdapter
@@ -21,6 +22,7 @@ _REGISTRY = PlatformRegistry(
         LovableAdapter(),
         OpenClawAdapter(),
         OllamaAdapter(),
+        KimiAdapter(),
     )
 )
 

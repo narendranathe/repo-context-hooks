@@ -121,3 +121,15 @@ def test_ollama_plan_targets_modelfile_and_agents() -> None:
     assert any(path.endswith("Modelfile.repo-context") for path in plan.repo_paths)
     assert any("model runtime" in item.lower() for item in plan.warnings)
     assert any("ollama create" in item.lower() for item in plan.manual_steps)
+
+
+def test_kimi_plan_targets_agents_only() -> None:
+    tmp_path = _tmp_dir()
+    adapter = get_registry().get("kimi")
+    plan = adapter.build_install_plan(repo_root=tmp_path, home=tmp_path / "home")
+
+    assert plan.home_paths == ()
+    assert len(plan.repo_paths) == 1
+    assert any(path.endswith("AGENTS.md") for path in plan.repo_paths)
+    assert any("Kimi Code CLI" in item for item in plan.warnings)
+    assert any("/init" in item for item in plan.manual_steps)

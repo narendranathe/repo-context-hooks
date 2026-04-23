@@ -334,3 +334,47 @@ def test_doctor_rejects_placeholder_ollama_modelfile() -> None:
     assert report.ok is False
     assert any(item.endswith("Modelfile.repo-context") for item in report.invalid)
     assert "INVALID" in report.render()
+
+
+def test_doctor_reports_missing_kimi_agents_file() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_repo_contract(repo)
+
+    report = diagnose_platform("kimi", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith("AGENTS.md") for item in report.missing)
+    assert any("Kimi Code CLI" in item for item in report.warnings)
+
+
+def test_doctor_reports_installed_kimi_agents_file() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("kimi", repo_root=repo, home=tmp_path / "home")
+    report = diagnose_platform("kimi", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is True
+    assert any(item.endswith("AGENTS.md") for item in report.present)
+
+
+def test_doctor_rejects_placeholder_kimi_agents_file() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("kimi", repo_root=repo, home=tmp_path / "home")
+    (repo / "AGENTS.md").write_text("placeholder\n", encoding="utf-8")
+
+    report = diagnose_platform("kimi", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith("AGENTS.md") for item in report.invalid)
+    assert "INVALID" in report.render()

@@ -174,3 +174,22 @@ def test_install_ollama_writes_modelfile_and_agents() -> None:
     assert "AGENTS.md" in modelfile
     assert "Ollama" in result.summary
     assert any("ollama create" in step.lower() for step in result.manual_steps)
+
+
+def test_install_kimi_writes_agents_only() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract_basics(repo)
+
+    result = install_platform("kimi", repo_root=repo, home=tmp_path / "home")
+
+    agents_path = repo / "AGENTS.md"
+
+    assert agents_path.exists()
+    agents_text = agents_path.read_text(encoding="utf-8")
+    assert "README.md" in agents_text
+    assert "specs/README.md" in agents_text
+    assert "Kimi" in result.summary
+    assert any("/init" in step for step in result.manual_steps)

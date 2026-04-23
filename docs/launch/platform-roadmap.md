@@ -1,6 +1,6 @@
 # Planned Platform Roadmap
 
-This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`, Windsurf has already graduated to current partial support via root `AGENTS.md` and `.windsurf/rules`, Lovable has already graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports, OpenClaw has graduated to current partial support via repo-root workspace files, and Ollama has graduated to current partial support via a repo-owned Modelfile template.
+This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`, Windsurf has already graduated to current partial support via root `AGENTS.md` and `.windsurf/rules`, Lovable has already graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports, OpenClaw has graduated to current partial support via repo-root workspace files, Ollama has graduated to current partial support via a repo-owned Modelfile template, and Kimi has graduated to current partial support via root `AGENTS.md` for Kimi Code CLI workflows.
 
 ## Replit
 
@@ -61,14 +61,13 @@ This document is the public backlog seed for future GitHub issues. Most platform
 ## Kimi
 
 - Issue: [#6](https://github.com/narendranathe/repo-context-hooks/issues/6)
-- Goal: evaluate whether repo-native continuity can map onto its coding workflow in a way that is honest and useful.
-- Tier: provisional until the platform continuity surface is verified.
-- Open question: what instruction, tool, or session surfaces are available for carrying forward checked-in task state?
-- Issue-ready acceptance criteria:
-  - identify what coding-workflow continuity surfaces Kimi actually exposes
-  - decide the honest support tier after those surfaces are verified
-  - define what could be automated and what remains manual
-  - define which claims must stay out of the README
+- Status: current `partial` support via root `AGENTS.md` and Kimi Code CLI `/init` merge guidance.
+- Goal: support Kimi Code CLI project-context workflows without conflating them with generic Kimi API model access.
+- Support boundary:
+  - no native lifecycle hooks here.
+  - no generic Kimi API configuration here.
+  - no Kimi-specific rules directory is created until a stable documented path exists.
+- Follow-up use for issue #6: track incremental improvements to the current `AGENTS.md`-only support, not first-time discovery.
 
 ## Issue-Creation Rule
 

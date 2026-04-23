@@ -2,7 +2,7 @@
 
 ## One-Line Pitch
 
-Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, and Ollama today.
+Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi today.
 
 ## Problem
 
@@ -29,10 +29,11 @@ Repository context should be durable, reviewable, and operational.
 - repo-owned knowledge exports like `.lovable/project-knowledge.md`
 - repo-root workspace files like `SOUL.md`, `USER.md`, and `TOOLS.md`
 - local-model templates like `Modelfile.repo-context`
+- Kimi Code CLI project context through `AGENTS.md`
 - startup context loading
 - no external memory backend
 - native support on Claude
-- partial support on Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, and Ollama
+- partial support on Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi
 
 ## Messaging Guardrails
 
@@ -45,3 +46,4 @@ Repository context should be durable, reviewable, and operational.
 - Do not say: "Lovable UI knowledge is verified automatically"
 - Do not say: "OpenClaw workspace configuration is verified automatically"
 - Do not say: "Ollama reads repo files automatically"
+- Do not say: "generic Kimi API support is configured"
