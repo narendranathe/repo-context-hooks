@@ -14,6 +14,7 @@ def test_registry_exposes_supported_platform_ids() -> None:
         "windsurf",
         "lovable",
         "openclaw",
+        "ollama",
     ]
 
 
@@ -27,6 +28,7 @@ def test_registry_support_tiers_match_current_contract() -> None:
     assert registry.get("windsurf").support_tier.value == "partial"
     assert registry.get("lovable").support_tier.value == "partial"
     assert registry.get("openclaw").support_tier.value == "partial"
+    assert registry.get("ollama").support_tier.value == "partial"
 
 
 def test_registry_metadata_describes_install_surfaces() -> None:
@@ -58,4 +60,8 @@ def test_registry_metadata_describes_install_surfaces() -> None:
     assert registry.get("openclaw").metadata.install_surfaces == (
         "agents-md",
         "openclaw-workspace-files",
+    )
+    assert registry.get("ollama").metadata.install_surfaces == (
+        "agents-md",
+        "ollama-modelfile",
     )

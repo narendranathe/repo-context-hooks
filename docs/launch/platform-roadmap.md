@@ -1,6 +1,6 @@
 # Planned Platform Roadmap
 
-This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`, Windsurf has already graduated to current partial support via root `AGENTS.md` and `.windsurf/rules`, Lovable has already graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports, and OpenClaw has graduated to current partial support via repo-root workspace files.
+This document is the public backlog seed for future GitHub issues. Most platforms below are intentionally marked as planned, not shipped, but Replit has already graduated to current partial support via `replit.md`, Windsurf has already graduated to current partial support via root `AGENTS.md` and `.windsurf/rules`, Lovable has already graduated to current partial support via repo-owned Project Knowledge and Workspace Knowledge exports, OpenClaw has graduated to current partial support via repo-root workspace files, and Ollama has graduated to current partial support via a repo-owned Modelfile template.
 
 ## Replit
 
@@ -39,14 +39,13 @@ This document is the public backlog seed for future GitHub issues. Most platform
 ## Ollama
 
 - Issue: [#4](https://github.com/narendranathe/repo-context-hooks/issues/4)
-- Goal: support local-model workflows that still benefit from checked-in instructions, specs memory, and restart-from-repo handoffs.
-- Tier: provisional until the platform continuity surface is verified.
-- Open question: what installer or template shape is realistic for local runtime setups without overcommitting on automation?
-- Issue-ready acceptance criteria:
-  - define whether this should be an adapter, template pack, or docs-only workflow
-  - decide the honest support tier after install/runtime surfaces are verified
-  - define what continuity can be automated and what remains manual
-  - define unsupported claims explicitly
+- Status: current `partial` support via `AGENTS.md`, `Modelfile.repo-context`, and manual local-model creation.
+- Goal: support local-model workflows that still benefit from checked-in instructions and specs memory without pretending Ollama is a repo-aware agent runtime.
+- Support boundary:
+  - no native lifecycle hooks here.
+  - Ollama does not read repo files automatically.
+  - `Modelfile.repo-context` gives a local model a repo-continuity system prompt, but an agent wrapper or pasted context must provide file contents.
+- Follow-up use for issue #4: track incremental improvements to the current local-model-template support, not first-time discovery.
 
 ## OpenClaw
 

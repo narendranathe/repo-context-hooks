@@ -17,7 +17,7 @@
 | Windsurf | `partial` | Repo contract, root `AGENTS.md`, `.windsurf/rules`, rules-driven restart-from-repo workflows | no native lifecycle hooks or compact automation | Windsurf Cascade treats repo instructions as rule inputs, so the support story is repo-native but rules-driven. |
 | Lovable | `partial` | Repo contract, `AGENTS.md`, `.lovable/project-knowledge.md`, `.lovable/workspace-knowledge.md`, manual Project Knowledge and Workspace Knowledge setup | no native lifecycle hooks, no compact automation, and no local verification of hosted UI knowledge | Lovable is a hybrid integration: the repo owns the canonical exports, and the user pastes them into Lovable's UI knowledge fields. |
 | OpenClaw | `partial` | Repo contract, `AGENTS.md`, `SOUL.md`, `USER.md`, `TOOLS.md`, manual OpenClaw workspace configuration | no native lifecycle hooks, no compact automation, and no local verification of the active OpenClaw workspace path | OpenClaw is workspace-file-driven: the repo can provide sanitized workspace guidance, but runtime configuration remains manual. |
-| Ollama | `planned` | Roadmap only | not implemented | Candidate issue seed in `docs/launch/platform-roadmap.md`. |
+| Ollama | `partial` | Repo contract, `AGENTS.md`, `Modelfile.repo-context`, manual `ollama create` flow | no repo file access, no native lifecycle hooks, no compact automation, and no local-model runtime verification | Ollama is a model runtime, so this is local-model-template support rather than agent-runtime support. |
 | Kimi | `planned` | Roadmap only | not implemented | Candidate issue seed in `docs/launch/platform-roadmap.md`. |
 
 ## Claim Boundary
@@ -42,3 +42,4 @@ That is why the current support story is intentionally narrow:
 - Windsurf proves repo-native continuity also works when a platform consumes root `AGENTS.md` and `.windsurf/rules` through a rules engine instead of hooks.
 - Lovable proves the repo can remain canonical even when the platform also requires manual Project Knowledge and Workspace Knowledge in a hosted UI.
 - OpenClaw proves repo-native continuity can also map into workspace-loaded Markdown files such as `SOUL.md`, `USER.md`, and `TOOLS.md` without pretending the tool can verify active runtime configuration.
+- Ollama proves local-model users can still get a repeatable repo-context prompt through `Modelfile.repo-context`, without claiming Ollama can inspect the repo or manage lifecycle events by itself.

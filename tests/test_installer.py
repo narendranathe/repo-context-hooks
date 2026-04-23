@@ -37,6 +37,7 @@ def test_supported_platform_ids() -> None:
         "windsurf",
         "lovable",
         "openclaw",
+        "ollama",
     )
 
 
@@ -205,3 +206,20 @@ def test_install_platform_openclaw_reports_manual_workspace_steps() -> None:
     assert result.home_target is None
     assert any("agents.defaults.workspace" in step for step in result.manual_steps)
     assert any("secrets" in step.lower() for step in result.manual_steps)
+
+
+def test_install_platform_ollama_reports_manual_model_steps() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+    specs_dir = repo / "specs"
+    specs_dir.mkdir()
+    (specs_dir / "README.md").write_text("# Specs\n", encoding="utf-8")
+
+    result = install_platform("ollama", repo_root=repo, home=tmp_path / "home")
+
+    assert result.home_target is None
+    assert any("ollama create" in step.lower() for step in result.manual_steps)
+    assert any("FROM" in step for step in result.manual_steps)

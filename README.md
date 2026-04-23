@@ -12,9 +12,10 @@ repo-context-hooks install --platform replit
 repo-context-hooks install --platform windsurf
 repo-context-hooks install --platform lovable
 repo-context-hooks install --platform openclaw
+repo-context-hooks install --platform ollama
 ```
 
-Current support is intentionally narrow: Claude is the native path, while Cursor, Codex, Replit, Windsurf, Lovable, and OpenClaw are useful but partial integrations.
+Current support is intentionally narrow: Claude is the native path, while Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, and Ollama are useful but partial integrations.
 
 ## Why Repo-Native Continuity
 
@@ -53,12 +54,13 @@ The public support story is intentionally narrow and explicit. These are the pla
 - Windsurf (`partial`): supports repo-native continuity through root `AGENTS.md` and `.windsurf/rules`, but not native lifecycle hooks or compact automation.
 - Lovable (`partial`): supports repo-owned knowledge exports plus `AGENTS.md`, but still requires manual Project Knowledge and Workspace Knowledge steps in the Lovable UI.
 - OpenClaw (`partial`): supports repo-root workspace files such as `SOUL.md`, `USER.md`, `TOOLS.md`, and `AGENTS.md`, but still requires manual OpenClaw workspace configuration.
+- Ollama (`partial`): supports a repo-owned `Modelfile.repo-context` for local-model workflows, but Ollama itself is not a repo-aware agent runtime.
 
 ## Platform Support
 
 The support tiers are `native`, `partial`, and `planned`.
 
-See [docs/platforms.md](docs/platforms.md) for the support matrix, platform-specific caveats, and the current claim boundary. The short version is that we do not claim universal agent support, and we do not claim hook parity or compact automation for Cursor, Codex, Replit, Windsurf, Lovable, or OpenClaw.
+See [docs/platforms.md](docs/platforms.md) for the support matrix, platform-specific caveats, and the current claim boundary. The short version is that we do not claim universal agent support, and we do not claim hook parity or compact automation for Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, or Ollama.
 
 ## Concrete Stories
 

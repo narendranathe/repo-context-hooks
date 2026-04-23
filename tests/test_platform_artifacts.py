@@ -150,3 +150,27 @@ def test_install_openclaw_writes_workspace_files_and_agents() -> None:
     assert "AGENTS.md" in tools_path.read_text(encoding="utf-8")
     assert "OpenClaw" in result.summary
     assert any("workspace" in step.lower() for step in result.manual_steps)
+
+
+def test_install_ollama_writes_modelfile_and_agents() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract_basics(repo)
+
+    result = install_platform("ollama", repo_root=repo, home=tmp_path / "home")
+
+    agents_path = repo / "AGENTS.md"
+    modelfile_path = repo / "Modelfile.repo-context"
+
+    assert agents_path.exists()
+    assert modelfile_path.exists()
+    modelfile = modelfile_path.read_text(encoding="utf-8")
+    assert "FROM" in modelfile
+    assert "SYSTEM" in modelfile
+    assert "README.md" in modelfile
+    assert "specs/README.md" in modelfile
+    assert "AGENTS.md" in modelfile
+    assert "Ollama" in result.summary
+    assert any("ollama create" in step.lower() for step in result.manual_steps)

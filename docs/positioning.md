@@ -2,7 +2,7 @@
 
 ## One-Line Pitch
 
-Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor, Codex, Replit, Windsurf, Lovable, and OpenClaw today.
+Repo-native continuity for coding agents, with native support on Claude and partial support on Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, and Ollama today.
 
 ## Problem
 
@@ -28,10 +28,11 @@ Repository context should be durable, reviewable, and operational.
 - checked-in rule surfaces like `.windsurf/rules`
 - repo-owned knowledge exports like `.lovable/project-knowledge.md`
 - repo-root workspace files like `SOUL.md`, `USER.md`, and `TOOLS.md`
+- local-model templates like `Modelfile.repo-context`
 - startup context loading
 - no external memory backend
 - native support on Claude
-- partial support on Cursor, Codex, Replit, Windsurf, Lovable, and OpenClaw
+- partial support on Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, and Ollama
 
 ## Messaging Guardrails
 
@@ -43,3 +44,4 @@ Repository context should be durable, reviewable, and operational.
 - Do not say: "native lifecycle hooks on Windsurf"
 - Do not say: "Lovable UI knowledge is verified automatically"
 - Do not say: "OpenClaw workspace configuration is verified automatically"
+- Do not say: "Ollama reads repo files automatically"

@@ -15,6 +15,7 @@ def test_bundle_contains_expected_assets() -> None:
     assert (root / "templates" / "openclaw-soul.md").exists()
     assert (root / "templates" / "openclaw-user.md").exists()
     assert (root / "templates" / "openclaw-tools.md").exists()
+    assert (root / "templates" / "ollama-modelfile").exists()
 
     skills = root / "skills"
     assert (skills / "context-handoff-hooks" / "SKILL.md").exists()

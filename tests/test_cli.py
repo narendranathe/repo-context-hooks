@@ -43,6 +43,7 @@ def test_platforms_print_support_tiers(capsys) -> None:
     assert "windsurf" in out
     assert "lovable" in out
     assert "openclaw" in out
+    assert "ollama" in out
     assert "native" in out
     assert "partial" in out
 

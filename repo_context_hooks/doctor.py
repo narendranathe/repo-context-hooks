@@ -73,6 +73,15 @@ def _required_markers(path: Path) -> tuple[str, ...]:
             "specs/README.md",
             "AGENTS.md",
         )
+    if path.name == "Modelfile.repo-context":
+        return (
+            "FROM",
+            "SYSTEM",
+            "repo as the continuity source of truth",
+            "README.md",
+            "specs/README.md",
+            "AGENTS.md",
+        )
     if path.name == "settings.json":
         return (
             "SessionStart",

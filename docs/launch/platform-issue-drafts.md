@@ -10,6 +10,8 @@ Lovable has also graduated to current partial support via repo-owned Project Kno
 
 OpenClaw has also graduated to current partial support via repo-root workspace files, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
 
+Ollama has also graduated to current partial support via `Modelfile.repo-context`, so its draft below should be read as follow-up notes rather than roadmap-only discovery.
+
 Created issues:
 
 - Replit: [#2](https://github.com/narendranathe/repo-context-hooks/issues/2)
@@ -95,30 +97,29 @@ Partial support, with no claim of native lifecycle hooks.
 - How should future docs distinguish hybrid repo-plus-UI knowledge from fully repo-consumed platforms?
 ```
 
-## Platform: Ollama adapter strategy
+## Platform: Ollama partial-support notes
 
 ```md
 ## Summary
-Investigate how `repo-context-hooks` should support local-model workflows around Ollama without overcommitting on automation.
+Ollama now has current partial support through `AGENTS.md`, `Modelfile.repo-context`, and a manual `ollama create` flow.
 
 ## Continuity Surface To Evaluate
-- local runtime workflows
+- Ollama `Modelfile`
 - checked-in repo contract files
-- templates or helper commands for restart-from-repo continuity
+- agent wrappers or manual prompts that can supply repo file contents
 
 ## Tier
-Provisional until the exposed continuity surface is verified.
+Partial support, with no claim of native lifecycle hooks.
 
 ## Acceptance Criteria
-- Define whether Ollama support is an adapter, template pack, or docs-only workflow.
-- Decide the honest support tier after evaluating actual install and runtime surfaces.
-- Identify what continuity can be automated and what remains manual.
-- Document unsupported claims clearly.
+- Keep `Modelfile.repo-context` focused on the repo contract and local-model limitations.
+- Keep public claims honest: no native lifecycle hooks, no compact automation, and no claim that Ollama reads repo files automatically.
+- Preserve issue #4 as a follow-up tracker for incremental improvements rather than discovery.
 
 ## Open Questions
-- What is the right install surface for local-model setups that do not expose agent lifecycle hooks?
-- Should Ollama support target generic local-agent wrappers instead of Ollama directly?
-- How do we keep the repo as the continuity boundary without pretending there is a native hook model?
+- Should a later phase add platform-specific CLI options such as `--ollama-base-model`?
+- Should we add examples for common local-agent wrappers that call Ollama?
+- What minimum smoke test is safe without requiring Ollama to be installed in CI?
 ```
 
 ## Platform: OpenClaw partial-support notes

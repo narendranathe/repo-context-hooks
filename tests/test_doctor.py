@@ -289,3 +289,48 @@ def test_doctor_rejects_placeholder_openclaw_soul_file() -> None:
     assert report.ok is False
     assert any(item.endswith("SOUL.md") for item in report.invalid)
     assert "INVALID" in report.render()
+
+
+def test_doctor_reports_missing_ollama_modelfile() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_repo_contract(repo)
+
+    report = diagnose_platform("ollama", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith("Modelfile.repo-context") for item in report.missing)
+    assert any("model runtime" in item.lower() for item in report.warnings)
+
+
+def test_doctor_reports_installed_ollama_modelfile() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("ollama", repo_root=repo, home=tmp_path / "home")
+    report = diagnose_platform("ollama", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is True
+    assert any(item.endswith("Modelfile.repo-context") for item in report.present)
+    assert any(item.endswith("AGENTS.md") for item in report.present)
+
+
+def test_doctor_rejects_placeholder_ollama_modelfile() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("ollama", repo_root=repo, home=tmp_path / "home")
+    (repo / "Modelfile.repo-context").write_text("placeholder\n", encoding="utf-8")
+
+    report = diagnose_platform("ollama", repo_root=repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert any(item.endswith("Modelfile.repo-context") for item in report.invalid)
+    assert "INVALID" in report.render()
