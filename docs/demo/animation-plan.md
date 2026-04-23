@@ -1,27 +1,32 @@
 # Animation Plan
 
-This repo treats animation as an optional layer on top of the existing SVG assets in `assets/diagrams/`.
+Animation is an optional storytelling layer on top of the SVG diagrams in `assets/diagrams/`.
 
 ## Goal
 
-Keep the README and core docs stable while still allowing launch or demo material to use motion when it helps explain the workflow.
+Keep the README crisp and GitHub-friendly while still leaving room for launch assets or demos that explain an interrupted task or a handoff story more clearly with motion.
 
-## Approach
+## Source Of Truth
 
-- Start from the SVG sources already used in the README and diagrams under `assets/diagrams/`.
-- Derive any animated assets from those SVGs instead of authoring separate, README-specific motion files.
-- Produce concrete outputs like short GIFs, MP4 clips, APNGs, or frame sequences when a demo needs motion.
-- Keep the README image embeds static so the documentation still reads well without animation support.
+The static SVG remains the source of truth. Any animated asset should be derived from the same diagrams already used in the README so the docs, launch assets, and social snippets all describe the same workflow.
+
+## Story-Driven Motion
+
+If a team makes animated variants, the motion should clarify a concrete repo-native continuity story such as:
+
+- an interrupted task that gets checkpointed before compact
+- a handoff story where the next session resumes from `specs/README.md`
+- a before-and-after comparison that shows repeated explanation disappearing once continuity is checked in
 
 ## Practical Rules
 
-- The README should always work with plain SVGs.
-- Animated variants can live alongside the SVGs for demos, social posts, or launch pages.
-- Use motion to clarify flow, sequence, or state changes, not to imply automation the tool does not provide.
-- If animation tooling changes, the README contract should not need to change.
-- Any motion asset should be rebuildable from the SVG source without manual redrawing.
-- Do not make README rendering depend on animated assets.
+- Start from the existing SVG sources instead of redrawing scenes for animation.
+- Use motion to clarify sequence and state change.
+- Do not imply automation the tool does not provide.
+- Keep README embeds static even if demo variants exist.
+- Build GIF, MP4, APNG, or frame-sequence variants only when a launch surface actually benefits from motion.
+- Keep every animated asset rebuildable from versioned repo sources.
 
 ## Scope
 
-This plan is intentionally narrow: it explains how to add motion-friendly assets without making the repository documentation depend on them.
+This plan is intentionally narrow. It protects the static-first documentation contract while making the visuals specific enough that future motion work can stay honest.

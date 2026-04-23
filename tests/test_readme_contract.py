@@ -11,18 +11,16 @@ def readme_text() -> str:
     return README.read_text(encoding="utf-8")
 
 
-def test_readme_has_required_sections() -> None:
+def test_readme_has_public_facing_sections_in_order() -> None:
     text = readme_text()
     expected_sections = [
         "# repo-context-hooks",
-        "## Why This Exists",
+        "## Why Repo-Native Continuity",
         "## How It Works",
-        "## Repo Contract",
-        "## Before / After",
-        "## What `install` Actually Does",
-        "## Technical Details",
-        "## Honest Critique",
-        "## Examples",
+        "## Supported Today",
+        "## Platform Support",
+        "## Concrete Stories",
+        "## See Also",
         "## Development",
         "## License",
     ]
@@ -35,81 +33,50 @@ def test_readme_has_required_sections() -> None:
     assert positions == sorted(positions), "README sections are out of order"
 
 
-def test_readme_includes_install_and_alias_commands() -> None:
+def test_readme_mentions_current_platforms_honestly() -> None:
     text = readme_text()
     expected_snippets = [
-        "python -m pip install -e .",
-        "repo-context-hooks install --platform codex",
-        "repohandoff install --platform codex",
-        "graphify install --platform codex",
+        "currently supported",
+        "Claude",
+        "Cursor",
+        "Codex",
+        "Replit",
+        "Windsurf",
+        "Lovable",
+        "OpenClaw",
+        "Ollama",
+        "Kimi",
+        "Claude (`native`)",
+        "Cursor (`partial`)",
+        "Codex (`partial`)",
+        "Replit (`partial`)",
+        "Windsurf (`partial`)",
+        "Lovable (`partial`)",
+        "OpenClaw (`partial`)",
+        "Ollama (`partial`)",
+        "Kimi (`partial`)",
     ]
     for snippet in expected_snippets:
-        assert snippet in text, f"missing command snippet: {snippet}"
+        assert snippet in text, f"missing README platform snippet: {snippet}"
 
 
-def test_readme_surfaces_install_side_effects() -> None:
+def test_readme_points_to_platform_support_doc() -> None:
     text = readme_text()
-    expected_snippets = [
-        "~/.codex/skills",
-        "~/.claude/skills",
-        ".claude/scripts/repo_specs_memory.py",
-        ".claude/scripts/session_context.py",
-        ".claude/settings.json",
-        "specs/README.md",
-    ]
-    for snippet in expected_snippets:
-        assert snippet in text, f"missing install detail: {snippet}"
+    link_text = "docs/platforms.md"
+    assert link_text in text, f"missing supporting link: {link_text}"
+    assert (ROOT / "docs" / "platforms.md").exists(), "missing docs/platforms.md"
 
 
-def test_readme_contains_honest_critique() -> None:
+def test_readme_avoids_internal_operator_heavy_sections() -> None:
     text = readme_text()
-    expected_snippets = [
-        "not a vector memory layer",
-        "not a hosted memory service",
-        "does not replace repo discipline",
-        "cross-repo semantic memory",
+    unexpected_snippets = [
+        "## What `install` Actually Does",
+        "## Honest Critique",
+        "operational contract",
+        "Supported agent targets today: Codex and Claude",
     ]
-    for snippet in expected_snippets:
-        assert snippet in text, f"missing critique snippet: {snippet}"
-
-
-def test_readme_links_to_supporting_docs() -> None:
-    text = readme_text()
-    expected_links = [
-        ("docs/architecture.md", ROOT / "docs" / "architecture.md"),
-        ("examples/minimal-repo/", ROOT / "examples" / "minimal-repo"),
-        ("examples/multi-project/", ROOT / "examples" / "multi-project"),
-    ]
-    for link_text, link_path in expected_links:
-        assert link_text in text, f"missing supporting link: {link_text}"
-        assert link_path.exists(), f"missing supporting path: {link_path}"
-
-
-def test_readme_links_animation_support_doc_without_mandating_motion() -> None:
-    text = readme_text().lower()
-    animation_doc = ROOT / "docs" / "demo" / "animation-plan.md"
-    doc_text = animation_doc.read_text(encoding="utf-8").lower()
-
-    expected_readme_snippets = [
-        "docs/demo/animation-plan.md",
-        "static-svg-first",
-        "optional layer",
-        "derived from svg sources",
-    ]
-    for snippet in expected_readme_snippets:
-        assert snippet in text, f"missing animation guidance snippet: {snippet}"
-
-    expected_doc_snippets = [
-        "assets/diagrams/",
-        "short gifs",
-        "mp4 clips",
-        "use motion to clarify flow",
-        "do not make README rendering depend on animated assets".lower(),
-    ]
-    for snippet in expected_doc_snippets:
-        assert snippet in doc_text, f"missing animation plan detail: {snippet}"
-
-    assert animation_doc.exists(), f"missing animation support doc: {animation_doc}"
+    for snippet in unexpected_snippets:
+        assert snippet not in text, f"README still exposes internal-heavy copy: {snippet}"
 
 
 def test_readme_embeds_required_diagrams() -> None:
@@ -122,3 +89,18 @@ def test_readme_embeds_required_diagrams() -> None:
     for asset in expected_assets:
         assert asset in text, f"missing diagram embed: {asset}"
         assert (ROOT / asset).exists(), f"missing diagram file: {asset}"
+
+
+def test_readme_links_supporting_docs_and_examples() -> None:
+    text = readme_text()
+    expected_links = [
+        ("docs/architecture.md", ROOT / "docs" / "architecture.md"),
+        ("docs/competitive-analysis.md", ROOT / "docs" / "competitive-analysis.md"),
+        ("docs/demo/animation-plan.md", ROOT / "docs" / "demo" / "animation-plan.md"),
+        ("docs/launch/platform-roadmap.md", ROOT / "docs" / "launch" / "platform-roadmap.md"),
+        ("examples/minimal-repo/", ROOT / "examples" / "minimal-repo"),
+        ("examples/multi-project/", ROOT / "examples" / "multi-project"),
+    ]
+    for link_text, link_path in expected_links:
+        assert link_text in text, f"missing supporting link: {link_text}"
+        assert link_path.exists(), f"missing supporting path: {link_path}"

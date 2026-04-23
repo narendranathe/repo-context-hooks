@@ -3,6 +3,10 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache/
+.pytest-tmp*/
+.tmp-tests/
+.tmp-review/
+.tmp/
 .venv/
 venv/
 dist/

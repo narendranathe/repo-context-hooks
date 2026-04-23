@@ -22,7 +22,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["repo_context_hooks*"]
+include = ["repo_context_hooks*", "graphify*", "repohandoff*"]
 
 [tool.setuptools.package-data]
 repo_context_hooks = ["bundle/**/*"]

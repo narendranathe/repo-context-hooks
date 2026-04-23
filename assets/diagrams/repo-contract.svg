@@ -1,31 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 280" role="img" aria-labelledby="title desc">
-  <title id="title">repo-context-hooks repo contract</title>
-  <desc id="desc">README.md and specs/README.md are connected to hooks and skills that keep continuity operational.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 360" role="img" aria-labelledby="title desc">
+  <title id="title">repo-context-hooks repo contract handoff story</title>
+  <desc id="desc">A concrete repo contract story where README.md holds the open PR story, specs/README.md stores handoff notes, and Cursor or Codex can re-enter with repo context.</desc>
   <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#fffaf0" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155" />
     </marker>
     <style>
-      .title { font: 700 18px Arial, sans-serif; fill: #0f172a; }
-      .body { font: 13px Arial, sans-serif; fill: #475569; }
+      .eyebrow { font: 700 12px Arial, sans-serif; letter-spacing: 1.2px; text-transform: uppercase; fill: #475569; }
+      .title { font: 700 22px Arial, sans-serif; fill: #0f172a; }
+      .card { font: 700 17px Arial, sans-serif; fill: #0f172a; }
+      .body { font: 14px Arial, sans-serif; fill: #334155; }
+      .small { font: 13px Arial, sans-serif; fill: #475569; }
     </style>
   </defs>
 
-  <rect width="920" height="280" rx="24" fill="#f8fafc" />
+  <rect width="1040" height="360" rx="28" fill="url(#bg)" />
+  <text class="eyebrow" x="64" y="54">Repo contract in practice</text>
+  <text class="title" x="64" y="86">README.md, specs/README.md, and AGENTS.md work together as the repo contract</text>
 
-  <rect x="60" y="52" width="250" height="74" rx="16" fill="#ffffff" stroke="#334155" stroke-width="2" />
-  <rect x="60" y="156" width="250" height="74" rx="16" fill="#fff7ed" stroke="#c2410c" stroke-width="2" />
-  <rect x="560" y="104" width="280" height="74" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2" />
+  <rect x="60" y="132" width="280" height="160" rx="20" fill="#ffffff" stroke="#0f172a" stroke-width="2" />
+  <text class="card" x="88" y="168">README.md</text>
+  <text class="body" x="88" y="198">Open PR story stays in README.md</text>
+  <text class="body" x="88" y="222">What the tool is</text>
+  <text class="body" x="88" y="246">Which platforms are supported</text>
+  <text class="small" x="88" y="274">This is the public surface a teammate sees first.</text>
 
-  <text class="title" x="185" y="92" text-anchor="middle">README.md</text>
-  <text class="body" x="185" y="112" text-anchor="middle">user-facing project intent</text>
+  <rect x="380" y="132" width="280" height="160" rx="20" fill="#fff7ed" stroke="#c2410c" stroke-width="2" />
+  <text class="card" x="408" y="168">specs/README.md</text>
+  <text class="body" x="408" y="198">Handoff notes land in specs/README.md</text>
+  <text class="body" x="408" y="222">Latest failed attempt</text>
+  <text class="body" x="408" y="246">Next fix to try</text>
+  <text class="small" x="408" y="274">This is the tactical continuity layer.</text>
 
-  <text class="title" x="185" y="196" text-anchor="middle">specs/README.md</text>
-  <text class="body" x="185" y="216" text-anchor="middle">engineering memory and next work</text>
+  <rect x="700" y="132" width="280" height="160" rx="20" fill="#eff6ff" stroke="#2563eb" stroke-width="2" />
+  <text class="card" x="728" y="168">Re-entry Surface</text>
+  <text class="body" x="728" y="186">AGENTS.md guides the re-entry</text>
+  <text class="body" x="728" y="198">Cursor or Codex can re-enter with repo context</text>
+  <text class="body" x="728" y="222">Claude can automate more of the loop</text>
+  <text class="body" x="728" y="246">All three rely on checked-in continuity</text>
+  <text class="small" x="728" y="274">Different automation, same repo boundary.</text>
 
-  <text class="title" x="700" y="142" text-anchor="middle">Hooks + Skills</text>
-  <text class="body" x="700" y="162" text-anchor="middle">sync and reload continuity</text>
-
-  <path d="M310 92 C420 92, 450 110, 560 128" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
-  <path d="M310 194 C420 194, 450 176, 560 154" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M340 212 H380" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M660 212 H700" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
 </svg>

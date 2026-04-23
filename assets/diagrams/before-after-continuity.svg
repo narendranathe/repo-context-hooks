@@ -1,31 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 260" role="img" aria-labelledby="title desc">
-  <title id="title">repo-context-hooks before and after continuity</title>
-  <desc id="desc">A comparison between context drift before the tool and deterministic handoff after the tool.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 380" role="img" aria-labelledby="title desc">
+  <title id="title">repo-context-hooks before and after continuity story</title>
+  <desc id="desc">A concrete comparison showing repeated explanation before repo-native continuity and a clean resume from checked-in continuity after it.</desc>
   <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#fefce8" />
+    </linearGradient>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155" />
     </marker>
     <style>
-      .heading { font: 700 20px Arial, sans-serif; }
-      .item { font: 14px Arial, sans-serif; }
+      .heading { font: 700 24px Arial, sans-serif; }
+      .title { font: 700 17px Arial, sans-serif; fill: #0f172a; }
+      .body { font: 14px Arial, sans-serif; fill: #334155; }
+      .small { font: 13px Arial, sans-serif; fill: #475569; }
     </style>
   </defs>
 
-  <rect width="920" height="260" rx="24" fill="#f8fafc" />
+  <rect width="1040" height="380" rx="28" fill="url(#bg)" />
 
-  <rect x="36" y="34" width="360" height="192" rx="18" fill="#fef2f2" stroke="#dc2626" stroke-width="2" />
-  <rect x="524" y="34" width="360" height="192" rx="18" fill="#f0fdf4" stroke="#16a34a" stroke-width="2" />
+  <rect x="52" y="52" width="412" height="276" rx="24" fill="#fef2f2" stroke="#dc2626" stroke-width="2" />
+  <rect x="576" y="52" width="412" height="276" rx="24" fill="#ecfdf5" stroke="#16a34a" stroke-width="2" />
 
-  <text class="heading" x="216" y="72" text-anchor="middle" fill="#7f1d1d">Before</text>
-  <text class="heading" x="704" y="72" text-anchor="middle" fill="#14532d">After</text>
+  <text class="heading" x="258" y="96" text-anchor="middle" fill="#7f1d1d">Before</text>
+  <text class="heading" x="782" y="96" text-anchor="middle" fill="#14532d">After</text>
 
-  <text class="item" x="216" y="112" text-anchor="middle" fill="#7f1d1d">re-discovery on every session</text>
-  <text class="item" x="216" y="142" text-anchor="middle" fill="#7f1d1d">lost next-work context</text>
-  <text class="item" x="216" y="172" text-anchor="middle" fill="#7f1d1d">compaction drift</text>
+  <text class="title" x="84" y="138">Same bug explained again</text>
+  <text class="body" x="84" y="166">The new session asks for context.</text>
+  <text class="body" x="84" y="190">Review comments and failed steps</text>
+  <text class="body" x="84" y="214">have to be reconstructed from memory.</text>
+  <text class="small" x="84" y="248">Result: repeated setup, repeated explanation, slow restart.</text>
+  <text class="body" x="84" y="286">Re-read the repo and resume review comments</text>
+  <text class="small" x="84" y="310">This is the goal, but the repo is missing the needed continuity.</text>
 
-  <text class="item" x="704" y="112" text-anchor="middle" fill="#14532d">startup context loaded</text>
-  <text class="item" x="704" y="142" text-anchor="middle" fill="#14532d">tactical checkpoints preserved</text>
-  <text class="item" x="704" y="172" text-anchor="middle" fill="#14532d">deterministic handoff</text>
+  <text class="title" x="608" y="138">Resume from checked-in continuity</text>
+  <text class="body" x="608" y="166">README.md explains the public task story.</text>
+  <text class="body" x="608" y="190">specs/README.md carries the next action.</text>
+  <text class="body" x="608" y="214">AGENTS.md guides the re-entry surface.</text>
+  <text class="body" x="608" y="238">The agent starts from repo state, not guesswork.</text>
+  <text class="small" x="608" y="272">Result: cleaner handoff, faster restart, less duplicated work.</text>
 
-  <path d="M396 130 H524" fill="none" stroke="#334155" stroke-width="4" marker-end="url(#arrow)" />
+  <path d="M464 190 H576" fill="none" stroke="#334155" stroke-width="4" marker-end="url(#arrow)" />
 </svg>
