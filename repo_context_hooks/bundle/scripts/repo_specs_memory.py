@@ -124,17 +124,13 @@ def ensure_section(content: str, title: str, body: str) -> str:
 
 
 def build_auto_block(repo_root: Path, summary: str, ul_path: Path) -> str:
-    branch = git_output("branch", "--show-current") or "unknown"
-    last_commit = git_output("log", "-1", "--pretty=%s") or "(none)"
-
     return (
         f"{AUTO_BLOCK_START}\n"
         "### Canonical Context Sources\n\n"
         f"- User-facing overview: `README.md`\n"
         f"- Engineering memory: `specs/README.md`\n"
         f"- Glossary: `{ul_path.name}`\n"
-        f"- Branch snapshot: `{branch}`\n"
-        f"- Last commit: `{last_commit}`\n\n"
+        "- Source of truth: checked-in repo docs, not chat-only summaries\n\n"
         "### Repo Summary\n\n"
         f"- {summary}\n"
         f"{AUTO_BLOCK_END}"

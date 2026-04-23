@@ -29,7 +29,7 @@ When that happens, the next session has to reconstruct:
 - what tradeoffs were already decided
 - what should happen next
 
-`repo-context-hooks` narrows that problem to a repo contract teams can inspect in git. Product intent stays public in `README.md`. Engineering continuity stays in `specs/README.md`. The agent workflow becomes easier to review, critique, and resume.
+`repo-context-hooks` narrows that problem to a repo contract teams can inspect in git. Product intent stays public in `README.md`. Engineering continuity stays in `specs/README.md`. Shared terminology stays in `UBIQUITOUS_LANGUAGE.md`. The agent workflow becomes easier to review, critique, and resume.
 
 ## How It Works
 
@@ -85,6 +85,8 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 ## See Also
 
 - [Platform support](docs/platforms.md)
+- [Engineering memory](specs/README.md)
+- [Ubiquitous language](UBIQUITOUS_LANGUAGE.md)
 - [Platform playbooks](docs/platform-playbooks.md)
 - [Architecture](docs/architecture.md)
 - [Competitive analysis](docs/competitive-analysis.md)
