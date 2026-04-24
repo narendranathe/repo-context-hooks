@@ -61,6 +61,8 @@ This file is the persistent project context for agents and maintainers.
   - `measure`
   - local JSONL hook/skill events
   - estimated current-vs-baseline continuity uplift
+  - committed Claude repo hooks so the evidence loop is automatic for this repo
+  - documented consent-first remote telemetry as a future product path, not part of the MVP
 
 ## Delivery Timeline
 
@@ -131,6 +133,10 @@ This file is the persistent project context for agents and maintainers.
 - Keep evidence and claims separate:
   - `measure` reports local continuity signals and observed hook events
   - public copy must describe this as operational evidence, not a scientific productivity benchmark
+- Keep telemetry trust boundaries explicit:
+  - local telemetry is on by default because it stays local
+  - remote telemetry must be opt-in, revocable, and policy-backed
+  - cookies are not appropriate for CLI/hook/MCP telemetry
 - Keep partial platforms useful without pretending they expose Claude-style hook parity.
 
 ## What Worked
@@ -200,14 +206,27 @@ This file is the persistent project context for agents and maintainers.
 - Branch: `feat/evidence-monitoring`
 - Goal: add `repo-context-hooks measure` so users can prove the effect of repo continuity instead of only reading product claims.
 - Design boundary: telemetry is local-only, writes outside the repo by default, and reports operational readiness plus observed lifecycle events.
+- Local proof after installing hooks:
+  - Claude doctor: `ok`
+  - repo contract: `ok`
+  - ready platforms: Claude native, Codex partial, Kimi partial
+  - measure score: `90`
+  - estimated baseline: `20`
+  - estimated uplift: `+70`
+  - observed hook events: `12`
 - Current implementation slice:
   - `repo_context_hooks/telemetry.py`
   - `repo-context-hooks measure`
   - hook-script telemetry emission from `repo_specs_memory.py` and `session_context.py`
   - README and monitoring guide updates
+  - `.claude/settings.json`
+  - `.claude/scripts/repo_specs_memory.py`
+  - `.claude/scripts/session_context.py`
+  - `AGENTS.md`
 - Claim boundary:
   - this is an impact evidence layer, not hosted analytics
   - this is an estimated before/after continuity audit, not a controlled productivity benchmark
+  - remote telemetry requires explicit consent and is not implemented in the MVP
 
 ### Current Checkpoint
 

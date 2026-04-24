@@ -4,6 +4,8 @@
 
 This is not a hosted analytics product. It is a local evidence layer for agent-enabled repositories.
 
+Remote telemetry is not enabled in the MVP. If remote community metrics are added later, they must be explicit opt-in and follow [Telemetry Policy](telemetry-policy.md).
+
 ## Quick Start
 
 Run a measurement before installing any platform adapter:
@@ -97,6 +99,8 @@ Events include:
 
 Events do not upload code, prompts, compact summaries, issue bodies, or file contents.
 
+No cookies are used by the CLI. Cookies are only appropriate for a future optional web dashboard, not for hook or MCP telemetry.
+
 ## Before And After Workflow
 
 Use this sequence when you want evidence for a README, blog post, internal adoption note, or recruiter-facing demo:
@@ -126,7 +130,7 @@ Good signs:
 - current score is much higher than baseline
 - event counts include session-start and compact or session-end events
 - recommendations shrink after setup
-- telemetry path points outside the git repo
+- telemetry path points outside the git repo, or under ignored `.repo-context-hooks/` when sandbox fallback is needed
 
 Weak signs:
 

@@ -181,6 +181,8 @@ repo-context-hooks measure
 
 The output is intentionally operational rather than magical: it shows repo-contract readiness, observed lifecycle events, evidence-log location, and concrete recommendations. See [docs/monitoring.md](docs/monitoring.md) for the metric definitions, privacy boundary, and before/after workflow.
 
+Remote telemetry is not enabled in the MVP. Any future community usage metrics must be explicit opt-in and follow [docs/telemetry-policy.md](docs/telemetry-policy.md).
+
 ## Concrete Stories
 
 The visuals in this repo are about specific interrupted-work situations, not abstract architecture theater.
@@ -204,6 +206,7 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 - [Ubiquitous language](UBIQUITOUS_LANGUAGE.md)
 - [Architecture](docs/architecture.md)
 - [Monitoring and impact evidence](docs/monitoring.md)
+- [Telemetry policy](docs/telemetry-policy.md)
 - [Competitive analysis](docs/competitive-analysis.md)
 - [Minimal repo example](examples/minimal-repo/)
 - [Multi-project example](examples/multi-project/)

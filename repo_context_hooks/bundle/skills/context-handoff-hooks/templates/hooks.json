@@ -6,12 +6,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"__REPO_ROOT__/.claude/scripts/repo_specs_memory.py\" session-start",
+            "command": "python \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/repo_specs_memory.py session-start",
             "timeout": 20
           },
           {
             "type": "command",
-            "command": "python \"__REPO_ROOT__/.claude/scripts/session_context.py\" session-start",
+            "command": "python \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/session_context.py session-start",
             "timeout": 20
           }
         ]
@@ -23,7 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"__REPO_ROOT__/.claude/scripts/repo_specs_memory.py\" pre-compact",
+            "command": "python \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/repo_specs_memory.py pre-compact",
             "timeout": 15
           }
         ]
@@ -35,12 +35,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"__REPO_ROOT__/.claude/scripts/repo_specs_memory.py\" post-compact",
+            "command": "python \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/repo_specs_memory.py post-compact",
             "timeout": 20
           },
           {
             "type": "command",
-            "command": "python \"__REPO_ROOT__/.claude/scripts/session_context.py\" post-compact",
+            "command": "python \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/session_context.py post-compact",
             "timeout": 20
           }
         ]
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"__REPO_ROOT__/.claude/scripts/repo_specs_memory.py\" session-end",
+            "command": "python \"$CLAUDE_PROJECT_DIR\"/.claude/scripts/repo_specs_memory.py session-end",
             "timeout": 10
           }
         ]

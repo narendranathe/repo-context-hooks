@@ -81,6 +81,13 @@ def test_install_repo_hooks_merges_existing() -> None:
     assert "hooks" in settings
     assert "PreToolUse" in settings["hooks"]
     assert "SessionStart" in settings["hooks"]
+    commands = [
+        hook["command"]
+        for group in settings["hooks"]["SessionStart"]
+        for hook in group["hooks"]
+    ]
+    assert all("$CLAUDE_PROJECT_DIR" in command for command in commands)
+    assert all(str(repo) not in command for command in commands)
     assert (repo / ".claude" / "scripts" / "repo_specs_memory.py").exists()
     assert (repo / ".claude" / "scripts" / "session_context.py").exists()
 
