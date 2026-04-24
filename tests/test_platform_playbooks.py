@@ -6,14 +6,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_platform_playbooks_doc_exists_and_is_linked() -> None:
+def test_platform_playbooks_doc_exists_but_is_not_primary_public_path() -> None:
     playbooks = ROOT / "docs" / "platform-playbooks.md"
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     platforms = (ROOT / "docs" / "platforms.md").read_text(encoding="utf-8")
 
     assert playbooks.exists()
-    assert "docs/platform-playbooks.md" in readme
-    assert "docs/platform-playbooks.md" in platforms
+    assert "docs/platform-playbooks.md" not in readme
+    assert "docs/platform-playbooks.md" not in platforms
 
 
 def test_platform_playbooks_cover_supported_platforms_and_boundaries() -> None:

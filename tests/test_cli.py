@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from argparse import Namespace
 from pathlib import Path
 from types import SimpleNamespace
@@ -29,15 +30,18 @@ def test_parser_supports_platforms_and_doctor_commands() -> None:
     parser = build_parser()
 
     assert parser.parse_args(["platforms"]).command == "platforms"
+    assert parser.parse_args(["platforms", "--json"]).json is True
     assert parser.parse_args(["doctor", "--platform", "claude"]).command == "doctor"
+    assert parser.parse_args(["doctor", "--platform", "claude", "--json"]).json is True
     assert parser.parse_args(["doctor", "--all-platforms"]).command == "doctor"
     assert parser.parse_args(["doctor"]).command == "doctor"
     assert parser.parse_args(["init"]).command == "init"
     assert parser.parse_args(["recommend"]).command == "recommend"
+    assert parser.parse_args(["recommend", "--json"]).json is True
 
 
 def test_platforms_print_support_tiers(capsys) -> None:
-    assert _platforms() == 0
+    assert _platforms(Namespace(json=False)) == 0
 
     out = capsys.readouterr().out
     assert "claude" in out
@@ -51,6 +55,14 @@ def test_platforms_print_support_tiers(capsys) -> None:
     assert "kimi" in out
     assert "native" in out
     assert "partial" in out
+
+
+def test_platforms_prints_json(capsys) -> None:
+    assert _platforms(Namespace(json=True)) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["platforms"][0]["id"] == "claude"
+    assert payload["platforms"][0]["support_tier"] == "native"
 
 
 def test_install_skips_repo_context_outside_git_repo(
@@ -180,6 +192,9 @@ def test_doctor_all_platforms_prints_matrix_summary(
         def render(self) -> str:
             return "[OK] platform-readiness\nclaude\tnative\tmissing\tsettings.json"
 
+        def to_dict(self):
+            return {"ok": True, "platforms": [{"platform_id": "claude"}]}
+
     monkeypatch.setattr(
         "repo_context_hooks.cli.diagnose_all_platforms",
         lambda repo_root: FakeReport(),
@@ -189,12 +204,44 @@ def test_doctor_all_platforms_prints_matrix_summary(
         platform=None,
         all_platforms=True,
         repo_root=str(tmp_path),
+        json=False,
     )
 
     assert _doctor(args) == 0
     out = capsys.readouterr().out
     assert "platform-readiness" in out
     assert "claude" in out
+
+
+def test_doctor_prints_json(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    class FakeReport:
+        ok = True
+
+        def render(self) -> str:
+            return "[OK] repo-contract"
+
+        def to_dict(self):
+            return {"platform_id": "repo-contract", "ok": True}
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.diagnose_repo_contract",
+        lambda repo_root: FakeReport(),
+    )
+
+    args = Namespace(
+        platform=None,
+        all_platforms=False,
+        repo_root=str(tmp_path),
+        json=True,
+    )
+
+    assert _doctor(args) == 0
+    assert json.loads(capsys.readouterr().out)["platform_id"] == "repo-contract"
 
 
 def test_init_prints_repo_contract_statuses(
@@ -238,6 +285,9 @@ def test_recommend_prints_ranked_output(
         def render(self) -> str:
             return "[RECOMMEND]\n1. claude\nNext: repo-context-hooks install --platform claude"
 
+        def to_dict(self):
+            return {"recommendations": [{"platform_id": "claude"}]}
+
     monkeypatch.setattr(
         "repo_context_hooks.cli.recommend_setup",
         lambda repo_root, limit=3: FakeRecommendations(),
@@ -246,9 +296,39 @@ def test_recommend_prints_ranked_output(
     args = Namespace(
         repo_root=str(tmp_path),
         limit=3,
+        json=False,
     )
 
     assert _recommend(args) == 0
     out = capsys.readouterr().out
     assert "[RECOMMEND]" in out
     assert "repo-context-hooks install --platform claude" in out
+
+
+def test_recommend_prints_json(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    class FakeRecommendations:
+        def render(self) -> str:
+            return "[RECOMMEND]"
+
+        def to_dict(self):
+            return {"recommendations": [{"platform_id": "claude"}]}
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.recommend_setup",
+        lambda repo_root, limit=3: FakeRecommendations(),
+    )
+
+    args = Namespace(
+        repo_root=str(tmp_path),
+        limit=3,
+        json=True,
+    )
+
+    assert _recommend(args) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["recommendations"][0]["platform_id"] == "claude"

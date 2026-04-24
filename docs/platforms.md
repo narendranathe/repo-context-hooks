@@ -29,8 +29,6 @@ Use the matrix above as the public boundary for support claims:
 - do not describe planned platforms as implemented
 - do not claim native lifecycle hooks or compact automation on partial platforms unless the platform actually exposes them
 
-For step-by-step post-install guidance, use [docs/platform-playbooks.md](platform-playbooks.md).
-
 ## Readiness Commands
 
 Use the platform support matrix with the new CLI surface:
@@ -47,6 +45,14 @@ These commands are complementary:
 
 - use `doctor --all-platforms` when you want a support-wide verification snapshot
 - use `recommend` when you want the shortest credible next step for the current repo
+
+For structured consumers:
+
+```bash
+repo-context-hooks platforms --json
+repo-context-hooks doctor --all-platforms --json
+repo-context-hooks recommend --json
+```
 
 ## How To Read The Matrix
 

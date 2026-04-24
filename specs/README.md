@@ -188,15 +188,14 @@ This file is the persistent project context for agents and maintainers.
 
 ### Current Checkpoint
 
-- This file now captures the project history through the platform-readiness phase.
+- This file captures the project history through the platform-readiness phase and the next public README/JSON-output phase.
 - Active branch:
-  - `feat/platform-readiness`
+  - `feat/readme-json-output`
 - Branch purpose:
-  - add `doctor --all-platforms`
-  - add `recommend`
-  - document the new repo-first readiness flow
-- Verification completed for the active branch:
-  - full test suite passing locally
-  - repo-first command flow smoke-tested
+  - make README install commands easier to choose per platform
+  - remove internal-heavy docs from the README primary path
+  - add `--json` output for readiness, recommendation, and platform listing commands
+- Verification completed so far:
+  - focused README/CLI/doctor/recommend tests passing locally
 - Known follow-up:
-  - Windows editable console-launcher behavior is tracked separately and should not be conflated with the readiness feature itself
+  - decide later whether `install` also needs JSON output after real wrapper users ask for it

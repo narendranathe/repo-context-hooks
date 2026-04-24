@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from .doctor import diagnose_all_platforms, diagnose_platform
@@ -79,6 +80,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=".",
         help="Repository root to inspect (default: current directory).",
     )
+    doctor.add_argument(
+        "--json",
+        action="store_true",
+        help="Print machine-readable JSON output.",
+    )
 
     recommend = subparsers.add_parser(
         "recommend",
@@ -95,15 +101,46 @@ def build_parser() -> argparse.ArgumentParser:
         default=3,
         help="Maximum number of platform recommendations to print (default: 3).",
     )
+    recommend.add_argument(
+        "--json",
+        action="store_true",
+        help="Print machine-readable JSON output.",
+    )
 
-    subparsers.add_parser(
+    platforms = subparsers.add_parser(
         "platforms",
         help="List supported platforms and support tiers.",
+    )
+    platforms.add_argument(
+        "--json",
+        action="store_true",
+        help="Print machine-readable JSON output.",
     )
     return parser
 
 
-def _platforms() -> int:
+def _print_json(payload: object) -> None:
+    print(json.dumps(payload, indent=2, sort_keys=True))
+
+
+def _platforms(args: argparse.Namespace | None = None) -> int:
+    if getattr(args, "json", False):
+        _print_json(
+            {
+                "platforms": [
+                    {
+                        "id": adapter.metadata.id,
+                        "display_name": adapter.metadata.display_name,
+                        "support_tier": adapter.metadata.support_tier.value,
+                        "install_surfaces": list(adapter.metadata.install_surfaces),
+                        "summary": adapter.metadata.summary,
+                    }
+                    for adapter in get_registry().all()
+                ]
+            }
+        )
+        return 0
+
     for adapter in get_registry().all():
         meta = adapter.metadata
         surfaces = ", ".join(meta.install_surfaces)
@@ -168,14 +205,20 @@ def _doctor(args: argparse.Namespace) -> int:
         )
     else:
         report = diagnose_repo_contract(repo_root)
-    print(report.render())
+    if getattr(args, "json", False):
+        _print_json(report.to_dict())
+    else:
+        print(report.render())
     return 0 if report.ok else 1
 
 
 def _recommend(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
     report = recommend_setup(repo_root=repo_root, limit=args.limit)
-    print(report.render())
+    if getattr(args, "json", False):
+        _print_json(report.to_dict())
+    else:
+        print(report.render())
     return 0
 
 
@@ -187,7 +230,7 @@ def main() -> int:
     if args.command == "install":
         return _install(args)
     if args.command == "platforms":
-        return _platforms()
+        return _platforms(args)
     if args.command == "doctor":
         return _doctor(args)
     if args.command == "recommend":
