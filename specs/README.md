@@ -1,7 +1,6 @@
-# Engineering Memory
+﻿# Engineering Memory
 
 This file is the persistent project context for agents and maintainers.
-
 
 ## Repo Context Index
 
@@ -23,13 +22,94 @@ This file is the persistent project context for agents and maintainers.
 - Keep the public claim boundary honest. Claude is the native path; the other shipped platforms are partial integrations with documented caveats.
 - Favor repo-native continuity over hosted memory claims. This product should remain inspectable in git and understandable without a separate memory backend.
 - Treat `README.md`, `specs/README.md`, and `UBIQUITOUS_LANGUAGE.md` as durable source-of-truth files, not disposable bootstrap output.
-- Prefer platform-specific adapters and playbooks over generic “supports every agent” language.
+- Prefer platform-specific adapters and playbooks over generic "supports every agent" language.
 
 ## Built So Far
 
-- `v0.2.0` is live with native Claude support plus partial support for Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi.
-- The repo ships platform templates, install flows, doctor checks, playbooks, diagrams, and launch docs.
-- The support matrix is now backed by tests so README claims, platform docs, and templates stay aligned.
+- We turned an internal continuity workflow into a public open source product named `repo-context-hooks`.
+- The product is intentionally positioned around repo-native continuity for coding agents rather than generic "AI memory" claims.
+- We shipped a real install/runtime surface with three command names that resolve to the same product:
+  - `repo-context-hooks`
+  - `repohandoff`
+  - `graphify`
+- We built and documented credible support for:
+  - Claude (`native`)
+  - Cursor (`partial`)
+  - Codex (`partial`)
+  - Replit (`partial`)
+  - Windsurf (`partial`)
+  - Lovable (`partial`)
+  - OpenClaw (`partial`)
+  - Ollama (`partial`)
+  - Kimi (`partial`)
+- We also shipped the surrounding product surface:
+  - installer flows
+  - repo contract bootstrap
+  - doctor checks
+  - platform playbooks
+  - diagrams
+  - launch copy
+  - roadmap/issues
+- Releases completed so far:
+  - `v0.1.0`: initial public platform foundation
+  - `v0.2.0`: platform polish and consolidation
+  - `v0.2.1`: canonical repo memory contract plus repo-first onboarding
+- Current active branch adds the next layer:
+  - `doctor --all-platforms`
+  - `recommend`
+
+## Delivery Timeline
+
+### Phase 1: Product Identity
+
+- We renamed and repositioned the project until the public name matched what the product actually does.
+- We rejected vague memory-platform language because it overlapped with existing products and would have overpromised the implementation.
+- We settled on a sharper product story: repo-native continuity, interruption-safe handoff, and restart-from-repo workflows.
+
+### Phase 2: Public GitHub Surface
+
+- We rewrote the README so it could work as a real public landing page instead of an internal operator notebook.
+- We added diagrams, docs, examples, launch materials, and competitive framing.
+- We removed internal-only wording and draft-only critique sections that were useful during design but wrong for the public README.
+
+### Phase 3: Adapter Foundation
+
+- We introduced explicit platform adapters and support tiers instead of pretending every tool has the same lifecycle primitives.
+- We created a platform matrix backed by tests so the docs could not drift too far from the implementation.
+- We opened follow-up issues for unsupported or partially-supported ecosystems instead of inflating the support story.
+
+### Phase 4: Platform Expansion
+
+- We implemented credible partial support for Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi.
+- For hybrid/manual platforms, we kept the support boundary honest:
+  - Lovable uses exported repo knowledge plus manual UI knowledge steps
+  - OpenClaw uses workspace files but still requires manual runtime configuration
+  - Ollama support is Modelfile/template support, not full repo-aware agent-runtime support
+  - Kimi support is scoped to Kimi Code CLI project context
+
+### Phase 5: Canonical Repo Memory Contract
+
+- We promoted `specs/README.md` and `UBIQUITOUS_LANGUAGE.md` into tracked canonical files on `main`.
+- We reduced the noisy memory-sync behavior so branch-specific churn stopped polluting the top-level memory block.
+- This made the repo contract inherit cleanly across future worktrees.
+
+### Phase 6: Repo-First Onboarding
+
+- We added:
+  - `repo-context-hooks init`
+  - repo-wide `repo-context-hooks doctor`
+- This aligned the CLI with the product story:
+  - establish repo contract first
+  - validate repo contract
+  - then install platform-specific continuity surfaces
+
+### Phase 7: Platform Readiness
+
+- We designed and implemented the next operator layer:
+  - `repo-context-hooks doctor --all-platforms`
+  - `repo-context-hooks recommend`
+- This phase reduces guesswork after onboarding by showing support-wide readiness and transparent next-step recommendations.
+- The implementation is complete in the active feature branch and verified locally.
 
 ## Design Decisions
 
@@ -37,24 +117,64 @@ This file is the persistent project context for agents and maintainers.
 - Keep the public README outcome-focused and move operator-heavy details into docs and playbooks.
 - Model platform support with explicit tiers (`native`, `partial`, `planned`) instead of broad compatibility claims.
 - Track compatibility aliases (`repo-context-hooks`, `repohandoff`, `graphify`) while keeping the product language centered on `repo-context-hooks`.
+- Treat the repo contract as the durable continuity boundary:
+  - `README.md` for user-facing understanding
+  - `specs/README.md` for engineering memory
+  - `UBIQUITOUS_LANGUAGE.md` for shared terminology
+- Keep verification and advice separate:
+  - `doctor` verifies actual state
+  - `recommend` explains the best next move
+- Keep partial platforms useful without pretending they expose Claude-style hook parity.
 
 ## What Worked
 
 - Tight claim boundaries improved trust: each platform is documented according to its real integration surface.
 - Platform-specific adapters plus playbooks made the product more useful without pretending every tool has Claude-style hooks.
 - Contract tests on README, docs, templates, and visuals helped keep product positioning and implementation in sync.
+- Repo-first onboarding made the product easier to understand and made the CLI match the product promise.
+- Canonical tracked memory files reduced repeated worktree clutter and made context continuity feel intentional.
+- Product-driven development with real issues, PRs, releases, and checkpoints created a stronger public artifact than one large undocumented push would have.
 
 ## What Failed or Was Reverted
 
 - Overly internal README sections hurt the public GitHub landing page and had to be removed.
-- Broad “all agents” wording created avoidable trust gaps because the runtime support was narrower than the marketing language.
+- Broad "all agents" wording created avoidable trust gaps because the runtime support was narrower than the marketing language.
 - Leaving repo memory files untracked caused repeated worktree noise and made the contract feel optional instead of canonical.
+- Early diagrams were too generic and had to be improved because they explained the mechanism without showing enough real product value.
+- Some verification paths exposed environment-specific issues that should be tracked separately instead of patched blindly inside feature branches.
+- Editable-install verification on Windows/Conda exposed a console-launcher quirk that is now tracked as follow-up work instead of being buried.
+
+## Releases, PRs, and Current State
+
+- `main` currently includes:
+  - platform foundation
+  - platform polish
+  - canonical repo memory contract
+  - repo-first onboarding
+  - release `v0.2.1`
+- Active feature branch:
+  - `feat/platform-readiness`
+- Active PR:
+  - adds `doctor --all-platforms`
+  - adds `recommend`
+  - updates docs to explain readiness vs recommendations
+- Active follow-up issue:
+  - Windows editable launcher behavior discovered during verification and tracked separately from feature logic
+- Expected path from here:
+  - update memory
+  - merge readiness PR
+  - cut next release
+  - start the next product phase from fresh `origin/main`
 
 ## Open Issues and Next Work
 
 - Keep the repo memory contract canonical and low-noise so future worktrees stop accumulating untracked bootstrap files.
 - Continue raising platform quality through real support surfaces, not expanded marketing copy.
 - Improve launch assets and public examples only when they stay faithful to the implementation boundary.
+- Merge the platform-readiness branch after final review.
+- Cut the next release so readiness and recommendation commands become part of the published package.
+- Resolve the Windows editable-launcher issue separately, because it affects verification confidence on Windows even though feature logic is passing.
+- Start the next product phase from fresh `main` rather than stacking more work on an aging branch.
 
 ## How To Work in This Repo
 
@@ -66,3 +186,17 @@ This file is the persistent project context for agents and maintainers.
 
 ## Session Checkpoints
 
+### Current Checkpoint
+
+- This file now captures the project history through the platform-readiness phase.
+- Active branch:
+  - `feat/platform-readiness`
+- Branch purpose:
+  - add `doctor --all-platforms`
+  - add `recommend`
+  - document the new repo-first readiness flow
+- Verification completed for the active branch:
+  - full test suite passing locally
+  - repo-first command flow smoke-tested
+- Known follow-up:
+  - Windows editable console-launcher behavior is tracked separately and should not be conflated with the readiness feature itself
