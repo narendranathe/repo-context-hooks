@@ -31,6 +31,23 @@ Use the matrix above as the public boundary for support claims:
 
 For step-by-step post-install guidance, use [docs/platform-playbooks.md](platform-playbooks.md).
 
+## Readiness Commands
+
+Use the platform support matrix with the new CLI surface:
+
+```bash
+repo-context-hooks doctor --all-platforms
+repo-context-hooks recommend
+```
+
+- `doctor --all-platforms` verifies the repo contract first, then prints one compact readiness row per supported platform.
+- `recommend` inspects visible repo signals and ranks the strongest next setup paths without auto-installing anything.
+
+These commands are complementary:
+
+- use `doctor --all-platforms` when you want a support-wide verification snapshot
+- use `recommend` when you want the shortest credible next step for the current repo
+
 ## How To Read The Matrix
 
 A platform can still be valuable at `partial` tier. The product promise is not "every agent exposes the same primitives." The promise is that the repo can remain the continuity boundary even when the automation surface changes.

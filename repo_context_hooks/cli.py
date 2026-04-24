@@ -3,9 +3,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .doctor import diagnose_platform
+from .doctor import diagnose_all_platforms, diagnose_platform
 from .installer import install_platform, supported_platform_ids
 from .platforms import get_registry
+from .recommend import recommend_setup
 from .repo_contract import init_repo_contract
 from .doctor import diagnose_repo_contract
 
@@ -62,15 +63,37 @@ def build_parser() -> argparse.ArgumentParser:
         "doctor",
         help="Validate repo context setup for a platform.",
     )
-    doctor.add_argument(
+    doctor_scope = doctor.add_mutually_exclusive_group()
+    doctor_scope.add_argument(
         "--platform",
         choices=supported_platform_ids(),
         help="Target platform to validate.",
+    )
+    doctor_scope.add_argument(
+        "--all-platforms",
+        action="store_true",
+        help="Validate repo contract health plus readiness across all supported platforms.",
     )
     doctor.add_argument(
         "--repo-root",
         default=".",
         help="Repository root to inspect (default: current directory).",
+    )
+
+    recommend = subparsers.add_parser(
+        "recommend",
+        help="Recommend the next best platform setup path for this repo.",
+    )
+    recommend.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root to inspect (default: current directory).",
+    )
+    recommend.add_argument(
+        "--limit",
+        type=int,
+        default=3,
+        help="Maximum number of platform recommendations to print (default: 3).",
     )
 
     subparsers.add_parser(
@@ -136,7 +159,9 @@ def _init(args: argparse.Namespace) -> int:
 
 def _doctor(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
-    if getattr(args, "platform", None):
+    if getattr(args, "all_platforms", False):
+        report = diagnose_all_platforms(repo_root=repo_root)
+    elif getattr(args, "platform", None):
         report = diagnose_platform(
             args.platform,
             repo_root=repo_root,
@@ -145,6 +170,13 @@ def _doctor(args: argparse.Namespace) -> int:
         report = diagnose_repo_contract(repo_root)
     print(report.render())
     return 0 if report.ok else 1
+
+
+def _recommend(args: argparse.Namespace) -> int:
+    repo_root = Path(args.repo_root).resolve()
+    report = recommend_setup(repo_root=repo_root, limit=args.limit)
+    print(report.render())
+    return 0
 
 
 def main() -> int:
@@ -158,5 +190,7 @@ def main() -> int:
         return _platforms()
     if args.command == "doctor":
         return _doctor(args)
+    if args.command == "recommend":
+        return _recommend(args)
     parser.error("Unknown command")
     return 2
