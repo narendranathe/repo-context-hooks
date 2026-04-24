@@ -30,6 +30,95 @@ class DoctorReport:
         return "\n".join(lines)
 
 
+@dataclass(frozen=True)
+class PlatformReadinessRow:
+    platform_id: str
+    support_tier: str
+    state: str
+    detail: str = "-"
+    warnings: tuple[str, ...] = ()
+
+    @classmethod
+    def from_report(
+        cls,
+        platform_id: str,
+        support_tier: str,
+        report: DoctorReport,
+        repo_root: Path,
+        home: Path | None = None,
+    ) -> "PlatformReadinessRow":
+        if report.invalid:
+            state = "invalid"
+            detail = _compact_detail(report.invalid[0], repo_root=repo_root, home=home)
+        elif report.missing:
+            state = "missing"
+            detail = _compact_detail(report.missing[0], repo_root=repo_root, home=home)
+        else:
+            state = "ready"
+            detail = (
+                _compact_detail(report.present[0], repo_root=repo_root, home=home)
+                if report.present
+                else "-"
+            )
+        return cls(
+            platform_id=platform_id,
+            support_tier=support_tier,
+            state=state,
+            detail=detail,
+            warnings=report.warnings,
+        )
+
+
+@dataclass(frozen=True)
+class AllPlatformsReport:
+    ok: bool
+    repo_contract: DoctorReport
+    rows: tuple[PlatformReadinessRow, ...]
+
+    def render(self) -> str:
+        status = "OK" if self.ok else "INVALID"
+        repo_state = "ok"
+        if self.repo_contract.invalid:
+            repo_state = "invalid"
+        elif self.repo_contract.missing:
+            repo_state = "missing"
+
+        repo_detail = "-"
+        if self.repo_contract.invalid:
+            repo_detail = self.repo_contract.invalid[0]
+        elif self.repo_contract.missing:
+            repo_detail = self.repo_contract.missing[0]
+
+        lines = [f"[{status}] platform-readiness", f"repo-contract\t{repo_state}\t{repo_detail}"]
+        lines.extend(
+            f"{row.platform_id}\t{row.support_tier}\t{row.state}\t{row.detail}"
+            for row in self.rows
+        )
+        lines.extend(
+            f"warning[{row.platform_id}]: {warning}"
+            for row in self.rows
+            for warning in row.warnings
+        )
+        return "\n".join(lines)
+
+
+def _compact_detail(item: str, repo_root: Path, home: Path | None = None) -> str:
+    path = Path(item)
+    if not path.is_absolute():
+        return item.replace("\\", "/")
+
+    if home is not None:
+        try:
+            return f"home:{path.relative_to(home.resolve()).as_posix()}"
+        except ValueError:
+            pass
+
+    try:
+        return f"repo:{path.relative_to(repo_root.resolve()).as_posix()}"
+    except ValueError:
+        return path.as_posix()
+
+
 def _required_markers(path: Path) -> tuple[str, ...]:
     if path.name == "AGENTS.md":
         return (
@@ -201,4 +290,33 @@ def diagnose_platform(
         missing=tuple(missing),
         invalid=tuple(invalid),
         warnings=plan.warnings,
+    )
+
+
+def diagnose_all_platforms(
+    repo_root: Path,
+    home: Path | None = None,
+) -> AllPlatformsReport:
+    repo_root = repo_root.resolve()
+    repo_report = diagnose_repo_contract(repo_root)
+
+    rows: list[PlatformReadinessRow] = []
+    has_invalid_platform = False
+    for adapter in get_registry().all():
+        report = diagnose_platform(adapter.id, repo_root=repo_root, home=home)
+        row = PlatformReadinessRow.from_report(
+            platform_id=adapter.id,
+            support_tier=adapter.support_tier.value,
+            report=report,
+            repo_root=repo_root,
+            home=home,
+        )
+        if row.state == "invalid":
+            has_invalid_platform = True
+        rows.append(row)
+
+    return AllPlatformsReport(
+        ok=repo_report.ok and not has_invalid_platform,
+        repo_contract=repo_report,
+        rows=tuple(rows),
     )

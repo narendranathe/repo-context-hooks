@@ -8,6 +8,8 @@ Repo-native continuity for coding agents.
 python -m pip install -e .
 repo-context-hooks init
 repo-context-hooks doctor
+repo-context-hooks doctor --all-platforms
+repo-context-hooks recommend
 repo-context-hooks install --platform claude
 repo-context-hooks install --platform codex
 repo-context-hooks install --platform replit
@@ -24,7 +26,11 @@ The first-run path is now repo-first:
 
 1. `repo-context-hooks init`
 2. `repo-context-hooks doctor`
-3. `repo-context-hooks install --platform <name>`
+3. `repo-context-hooks doctor --all-platforms`
+4. `repo-context-hooks recommend`
+5. `repo-context-hooks install --platform <name>`
+
+`doctor` answers "is the repo contract healthy?" `doctor --all-platforms` answers "which supported platforms are actually ready?" `recommend` answers "what should I do next in this repo?"
 
 ## Why Repo-Native Continuity
 
@@ -75,6 +81,20 @@ The support tiers are `native`, `partial`, and `planned`.
 See [docs/platforms.md](docs/platforms.md) for the support matrix, platform-specific caveats, and the current claim boundary. The short version is that we do not claim universal agent support, and we do not claim hook parity or compact automation for Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, or Kimi.
 
 For exact post-install steps on each partial platform, see [docs/platform-playbooks.md](docs/platform-playbooks.md).
+
+## Readiness And Recommendations
+
+Use the new repo-first commands together:
+
+```bash
+repo-context-hooks doctor --all-platforms
+repo-context-hooks recommend
+```
+
+- `doctor --all-platforms` prints a compact readiness matrix across the current support matrix.
+- `recommend` ranks the best next setup paths for the current repo, prints the repo signals it used, and gives the exact next install command to run.
+
+That combination keeps the product honest: readiness is verification, recommendation is advice, and neither widens the public support claim.
 
 ## Concrete Stories
 

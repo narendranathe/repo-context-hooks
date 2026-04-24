@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import uuid4
 
-from repo_context_hooks.doctor import diagnose_platform, diagnose_repo_contract
+from repo_context_hooks.doctor import diagnose_all_platforms, diagnose_platform, diagnose_repo_contract
 from repo_context_hooks.installer import install_platform
 from repo_context_hooks.repo_contract import init_repo_contract
 
@@ -66,6 +66,50 @@ def test_repo_doctor_rejects_placeholder_specs_readme() -> None:
     assert report.ok is False
     assert "specs/README.md" in report.invalid
     assert "INVALID" in report.render()
+
+
+def test_all_platforms_doctor_is_nonfatal_for_missing_platform_setup() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    report = diagnose_all_platforms(repo, home=tmp_path / "home")
+
+    assert report.ok is True
+    rendered = report.render()
+    assert "[OK] platform-readiness" in rendered
+    assert "repo-contract\tok" in rendered
+    assert "claude\tnative\tmissing" in rendered
+
+
+def test_all_platforms_doctor_fails_on_invalid_platform_state() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    _write_repo_contract(repo)
+
+    install_platform("replit", repo_root=repo, home=tmp_path / "home")
+    (repo / "replit.md").write_text("placeholder\n", encoding="utf-8")
+
+    report = diagnose_all_platforms(repo, home=tmp_path / "home")
+
+    assert report.ok is False
+    assert "replit\tpartial\tinvalid" in report.render()
+
+
+def test_all_platforms_doctor_renders_compact_relative_details() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    report = diagnose_all_platforms(repo, home=tmp_path / "home")
+
+    rendered = report.render()
+    assert "home:.claude/skills/context-handoff-hooks" in rendered
+    assert "repo:.cursor/rules/repo-context-continuity.mdc" in rendered
 
 
 def test_doctor_reports_missing_cursor_rule() -> None:

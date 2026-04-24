@@ -5,7 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
-from repo_context_hooks.cli import _doctor, _init, _install, _platforms, build_parser
+from repo_context_hooks.cli import _doctor, _init, _install, _platforms, _recommend, build_parser
 from repo_context_hooks.doctor import DoctorReport
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,8 +30,10 @@ def test_parser_supports_platforms_and_doctor_commands() -> None:
 
     assert parser.parse_args(["platforms"]).command == "platforms"
     assert parser.parse_args(["doctor", "--platform", "claude"]).command == "doctor"
+    assert parser.parse_args(["doctor", "--all-platforms"]).command == "doctor"
     assert parser.parse_args(["doctor"]).command == "doctor"
     assert parser.parse_args(["init"]).command == "init"
+    assert parser.parse_args(["recommend"]).command == "recommend"
 
 
 def test_platforms_print_support_tiers(capsys) -> None:
@@ -166,6 +168,35 @@ def test_doctor_returns_nonzero_for_missing_state(
     assert "repo-context-continuity.mdc" in out
 
 
+def test_doctor_all_platforms_prints_matrix_summary(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    class FakeReport:
+        ok = True
+
+        def render(self) -> str:
+            return "[OK] platform-readiness\nclaude\tnative\tmissing\tsettings.json"
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.diagnose_all_platforms",
+        lambda repo_root: FakeReport(),
+    )
+
+    args = Namespace(
+        platform=None,
+        all_platforms=True,
+        repo_root=str(tmp_path),
+    )
+
+    assert _doctor(args) == 0
+    out = capsys.readouterr().out
+    assert "platform-readiness" in out
+    assert "claude" in out
+
+
 def test_init_prints_repo_contract_statuses(
     monkeypatch,
     capsys,
@@ -195,3 +226,29 @@ def test_init_prints_repo_contract_statuses(
     assert "Initialized repo contract" in out
     assert "README.md: installed" in out
     assert "AGENTS.md: skipped" in out
+
+
+def test_recommend_prints_ranked_output(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    class FakeRecommendations:
+        def render(self) -> str:
+            return "[RECOMMEND]\n1. claude\nNext: repo-context-hooks install --platform claude"
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.recommend_setup",
+        lambda repo_root, limit=3: FakeRecommendations(),
+    )
+
+    args = Namespace(
+        repo_root=str(tmp_path),
+        limit=3,
+    )
+
+    assert _recommend(args) == 0
+    out = capsys.readouterr().out
+    assert "[RECOMMEND]" in out
+    assert "repo-context-hooks install --platform claude" in out
