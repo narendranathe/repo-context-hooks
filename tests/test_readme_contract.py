@@ -83,7 +83,8 @@ def test_readme_promotes_repo_first_onboarding_sequence() -> None:
     expected_commands = [
         "repo-context-hooks init",
         "repo-context-hooks doctor",
-        "repo-context-hooks install --platform claude",
+        "repo-context-hooks recommend",
+        "repo-context-hooks install --platform <platform>",
     ]
     positions = []
     for command in expected_commands:
@@ -92,6 +93,30 @@ def test_readme_promotes_repo_first_onboarding_sequence() -> None:
         positions.append(position)
 
     assert positions == sorted(positions), "README onboarding commands are out of order"
+
+
+def test_readme_separates_platform_install_commands() -> None:
+    text = readme_text()
+    assert "## Pick Your Platform" in text
+    assert "Run one platform install command" in text
+    for platform in (
+        "claude",
+        "cursor",
+        "codex",
+        "replit",
+        "windsurf",
+        "lovable",
+        "openclaw",
+        "ollama",
+        "kimi",
+    ):
+        assert f"repo-context-hooks install --platform {platform}" in text
+
+
+def test_readme_keeps_internal_docs_out_of_primary_links() -> None:
+    text = readme_text()
+    assert "docs/platform-playbooks.md" not in text
+    assert "docs/positioning.md" not in text
 
 
 def test_readme_avoids_internal_operator_heavy_sections() -> None:
@@ -123,8 +148,6 @@ def test_readme_links_supporting_docs_and_examples() -> None:
     expected_links = [
         ("docs/architecture.md", ROOT / "docs" / "architecture.md"),
         ("docs/competitive-analysis.md", ROOT / "docs" / "competitive-analysis.md"),
-        ("docs/demo/animation-plan.md", ROOT / "docs" / "demo" / "animation-plan.md"),
-        ("docs/launch/platform-roadmap.md", ROOT / "docs" / "launch" / "platform-roadmap.md"),
         ("examples/minimal-repo/", ROOT / "examples" / "minimal-repo"),
         ("examples/multi-project/", ROOT / "examples" / "multi-project"),
     ]

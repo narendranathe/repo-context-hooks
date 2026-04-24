@@ -43,6 +43,21 @@ def test_recommend_defaults_to_claude_for_repo_contract_only_repo() -> None:
     assert "repo-context-hooks install --platform claude" in rendered
 
 
+def test_recommend_exposes_json_contract() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    payload = recommend_setup(repo).to_dict()
+
+    assert payload["repo_contract_ok"] is True
+    assert payload["recommendations"][0]["platform_id"] == "claude"
+    assert payload["recommendations"][0]["next_command"] == (
+        "repo-context-hooks install --platform claude --repo-root ."
+    )
+
+
 def test_recommend_prefers_explicit_platform_signal() -> None:
     tmp_path = _tmp_dir()
     repo = tmp_path / "repo"

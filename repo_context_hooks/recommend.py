@@ -15,6 +15,15 @@ class Recommendation:
     signals: tuple[str, ...]
     next_command: str
 
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "platform_id": self.platform_id,
+            "score": self.score,
+            "reasons": list(self.reasons),
+            "signals": list(self.signals),
+            "next_command": self.next_command,
+        }
+
 
 @dataclass(frozen=True)
 class RecommendationReport:
@@ -48,6 +57,18 @@ class RecommendationReport:
                 lines.append(f"   Why: {reason}")
             lines.append(f"   Next: {recommendation.next_command}")
         return "\n".join(lines)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "repo_contract_ok": self.repo_contract_ok,
+            "repo_contract_detail": self.repo_contract_detail,
+            "detected_signals": list(self.detected_signals),
+            "preflight_commands": list(self.preflight_commands),
+            "recommendations": [
+                recommendation.to_dict()
+                for recommendation in self.recommendations
+            ],
+        }
 
 
 _BASE_SCORES = {

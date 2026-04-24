@@ -54,6 +54,19 @@ def test_repo_doctor_reports_initialized_contract() -> None:
     assert "AGENTS.md" in report.present
 
 
+def test_repo_doctor_exposes_json_contract() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    payload = diagnose_repo_contract(repo).to_dict()
+
+    assert payload["platform_id"] == "repo-contract"
+    assert payload["status"] == "ok"
+    assert "README.md" in payload["present"]
+
+
 def test_repo_doctor_rejects_placeholder_specs_readme() -> None:
     tmp_path = _tmp_dir()
     repo = tmp_path / "repo"
@@ -110,6 +123,20 @@ def test_all_platforms_doctor_renders_compact_relative_details() -> None:
     rendered = report.render()
     assert "home:.claude/skills/context-handoff-hooks" in rendered
     assert "repo:.cursor/rules/repo-context-continuity.mdc" in rendered
+
+
+def test_all_platforms_doctor_exposes_json_contract() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    payload = diagnose_all_platforms(repo, home=tmp_path / "home").to_dict()
+
+    assert payload["ok"] is True
+    assert payload["repo_contract"]["platform_id"] == "repo-contract"
+    assert payload["platforms"][0]["platform_id"] == "claude"
+    assert payload["platforms"][0]["support_tier"] == "native"
 
 
 def test_doctor_reports_missing_cursor_rule() -> None:

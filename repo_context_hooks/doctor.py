@@ -29,6 +29,23 @@ class DoctorReport:
         lines.extend(f"warning: {item}" for item in self.warnings)
         return "\n".join(lines)
 
+    def to_dict(self) -> dict[str, object]:
+        if self.ok:
+            status = "ok"
+        elif self.invalid:
+            status = "invalid"
+        else:
+            status = "missing"
+        return {
+            "platform_id": self.platform_id,
+            "ok": self.ok,
+            "status": status,
+            "present": list(self.present),
+            "missing": list(self.missing),
+            "invalid": list(self.invalid),
+            "warnings": list(self.warnings),
+        }
+
 
 @dataclass(frozen=True)
 class PlatformReadinessRow:
@@ -68,6 +85,15 @@ class PlatformReadinessRow:
             warnings=report.warnings,
         )
 
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "platform_id": self.platform_id,
+            "support_tier": self.support_tier,
+            "state": self.state,
+            "detail": self.detail,
+            "warnings": list(self.warnings),
+        }
+
 
 @dataclass(frozen=True)
 class AllPlatformsReport:
@@ -100,6 +126,13 @@ class AllPlatformsReport:
             for warning in row.warnings
         )
         return "\n".join(lines)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "repo_contract": self.repo_contract.to_dict(),
+            "platforms": [row.to_dict() for row in self.rows],
+        }
 
 
 def _compact_detail(item: str, repo_root: Path, home: Path | None = None) -> str:
