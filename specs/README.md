@@ -183,19 +183,23 @@ This file is the persistent project context for agents and maintainers.
 - Read `UBIQUITOUS_LANGUAGE.md` before renaming core concepts or adding new public terms.
 - Keep support claims narrow unless docs, tests, and install behavior all support widening them.
 - Update this file before `compact` and at session end.
+- Preserve merged feature and release branches unless the user explicitly asks to delete them.
 
 ## Session Checkpoints
 
 ### Current Checkpoint
 
-- This file captures the project history through the platform-readiness phase and the next public README/JSON-output phase.
+- This file captures the project history through the platform-readiness phase and the public README/JSON-output release.
 - Active branch:
-  - `feat/readme-json-output`
-- Branch purpose:
-  - make README install commands easier to choose per platform
-  - remove internal-heavy docs from the README primary path
-  - add `--json` output for readiness, recommendation, and platform listing commands
-- Verification completed so far:
-  - focused README/CLI/doctor/recommend tests passing locally
-- Known follow-up:
-  - decide later whether `install` also needs JSON output after real wrapper users ask for it
+  - `release/v0.2.3`
+- Release completed:
+  - `v0.2.3`
+- What shipped:
+  - README setup separated from per-platform install commands
+  - platform playbooks removed from the primary public README path
+  - JSON output added for `platforms`, `doctor`, `doctor --all-platforms`, and `recommend`
+- Verification completed:
+  - full suite passing locally
+  - JSON command smoke checks passing
+- Branch policy:
+  - merged branches are preserved for future review and revert workflows
