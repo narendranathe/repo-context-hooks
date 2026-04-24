@@ -19,6 +19,7 @@ def test_readme_has_public_facing_sections_in_order() -> None:
         "## How It Works",
         "## Supported Today",
         "## Platform Support",
+        "## Prove Impact",
         "## Concrete Stories",
         "## See Also",
         "## Development",
@@ -111,6 +112,15 @@ def test_readme_separates_platform_install_commands() -> None:
         "kimi",
     ):
         assert f"repo-context-hooks install --platform {platform}" in text
+
+
+def test_readme_documents_impact_measurement() -> None:
+    text = readme_text()
+    assert "## Prove Impact" in text
+    assert "repo-context-hooks measure" in text
+    assert "repo-context-hooks measure --json" in text
+    assert "docs/monitoring.md" in text
+    assert (ROOT / "docs" / "monitoring.md").exists()
 
 
 def test_readme_keeps_internal_docs_out_of_primary_links() -> None:

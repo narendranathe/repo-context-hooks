@@ -200,6 +200,26 @@ def append_checkpoint(specs_readme: Path) -> None:
     specs_readme.write_text(content + entry, encoding="utf-8")
 
 
+def record_telemetry(repo_root: Path, specs_readme: Path, ul_path: Path) -> None:
+    try:
+        for parent in Path(__file__).resolve().parents:
+            if (parent / "repo_context_hooks" / "telemetry.py").exists():
+                sys.path.insert(0, str(parent))
+                break
+
+        from repo_context_hooks.telemetry import record_event
+
+        event_path = record_event(
+            repo_root,
+            EVENT,
+            source="repo_specs_memory",
+            details={"specs_readme": str(specs_readme), "glossary": str(ul_path)},
+        )
+        print(f"- Telemetry: `{event_path}`")
+    except Exception:
+        pass
+
+
 def main() -> int:
     repo_root_raw = git_output("rev-parse", "--show-toplevel")
     if not repo_root_raw:
@@ -219,6 +239,8 @@ def main() -> int:
         print(f"- Appended checkpoint for `{EVENT}`")
     else:
         print(f"- Bootstrapped for `{EVENT}`")
+
+    record_telemetry(repo_root, specs_readme, ul_path)
     return 0
 
 

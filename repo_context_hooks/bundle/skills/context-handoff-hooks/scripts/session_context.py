@@ -104,6 +104,34 @@ def issue_refs_from_text(text: str) -> list[str]:
     return refs[:10]
 
 
+def record_telemetry(
+    repo_root: Path,
+    next_items: list[str],
+    method_items: list[str],
+    issues: list[dict[str, str]],
+) -> None:
+    try:
+        for parent in Path(__file__).resolve().parents:
+            if (parent / "repo_context_hooks" / "telemetry.py").exists():
+                sys.path.insert(0, str(parent))
+                break
+
+        from repo_context_hooks.telemetry import record_event
+
+        record_event(
+            repo_root,
+            f"session-context-{EVENT}",
+            source="session_context",
+            details={
+                "next_work_items": len(next_items),
+                "workflow_items": len(method_items),
+                "open_issues": len(issues),
+            },
+        )
+    except Exception:
+        pass
+
+
 def main() -> int:
     repo_root_raw = git_output("rev-parse", "--show-toplevel")
     if not repo_root_raw:
@@ -165,6 +193,8 @@ def main() -> int:
         else:
             print("- Unable to fetch open issues (missing auth, non-GitHub remote, or no open issues).")
     print("")
+
+    record_telemetry(repo_root, next_items, method_items, issues)
 
     return 0
 

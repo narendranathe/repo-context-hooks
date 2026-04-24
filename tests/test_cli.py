@@ -6,7 +6,15 @@ from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
-from repo_context_hooks.cli import _doctor, _init, _install, _platforms, _recommend, build_parser
+from repo_context_hooks.cli import (
+    _doctor,
+    _init,
+    _install,
+    _measure,
+    _platforms,
+    _recommend,
+    build_parser,
+)
 from repo_context_hooks.doctor import DoctorReport
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,6 +46,8 @@ def test_parser_supports_platforms_and_doctor_commands() -> None:
     assert parser.parse_args(["init"]).command == "init"
     assert parser.parse_args(["recommend"]).command == "recommend"
     assert parser.parse_args(["recommend", "--json"]).json is True
+    assert parser.parse_args(["measure"]).command == "measure"
+    assert parser.parse_args(["measure", "--json"]).json is True
 
 
 def test_platforms_print_support_tiers(capsys) -> None:
@@ -242,6 +252,40 @@ def test_doctor_prints_json(
 
     assert _doctor(args) == 0
     assert json.loads(capsys.readouterr().out)["platform_id"] == "repo-contract"
+
+
+def test_measure_prints_json(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    class FakeReport:
+        def render(self) -> str:
+            return "[OK] context-impact"
+
+        def to_dict(self):
+            return {
+                "repo_name": "demo",
+                "current_score": 84,
+                "estimated_baseline_score": 35,
+                "uplift": 49,
+            }
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.measure_impact",
+        lambda repo_root: FakeReport(),
+    )
+
+    args = Namespace(
+        repo_root=str(tmp_path),
+        json=True,
+    )
+
+    assert _measure(args) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["repo_name"] == "demo"
+    assert payload["uplift"] == 49
 
 
 def test_init_prints_repo_contract_statuses(

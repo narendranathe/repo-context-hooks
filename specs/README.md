@@ -57,6 +57,10 @@ This file is the persistent project context for agents and maintainers.
 - Current active branch adds the next layer:
   - `doctor --all-platforms`
   - `recommend`
+- Current monitoring branch adds local impact evidence:
+  - `measure`
+  - local JSONL hook/skill events
+  - estimated current-vs-baseline continuity uplift
 
 ## Delivery Timeline
 
@@ -124,6 +128,9 @@ This file is the persistent project context for agents and maintainers.
 - Keep verification and advice separate:
   - `doctor` verifies actual state
   - `recommend` explains the best next move
+- Keep evidence and claims separate:
+  - `measure` reports local continuity signals and observed hook events
+  - public copy must describe this as operational evidence, not a scientific productivity benchmark
 - Keep partial platforms useful without pretending they expose Claude-style hook parity.
 
 ## What Worked
@@ -134,6 +141,7 @@ This file is the persistent project context for agents and maintainers.
 - Repo-first onboarding made the product easier to understand and made the CLI match the product promise.
 - Canonical tracked memory files reduced repeated worktree clutter and made context continuity feel intentional.
 - Product-driven development with real issues, PRs, releases, and checkpoints created a stronger public artifact than one large undocumented push would have.
+- Adding a local measurement loop makes the product easier to trust because users can inspect whether hooks actually fired before they believe the continuity story.
 
 ## What Failed or Was Reverted
 
@@ -186,6 +194,20 @@ This file is the persistent project context for agents and maintainers.
 - Preserve merged feature and release branches unless the user explicitly asks to delete them.
 
 ## Session Checkpoints
+
+### 2026-04-24 - evidence monitoring branch
+
+- Branch: `feat/evidence-monitoring`
+- Goal: add `repo-context-hooks measure` so users can prove the effect of repo continuity instead of only reading product claims.
+- Design boundary: telemetry is local-only, writes outside the repo by default, and reports operational readiness plus observed lifecycle events.
+- Current implementation slice:
+  - `repo_context_hooks/telemetry.py`
+  - `repo-context-hooks measure`
+  - hook-script telemetry emission from `repo_specs_memory.py` and `session_context.py`
+  - README and monitoring guide updates
+- Claim boundary:
+  - this is an impact evidence layer, not hosted analytics
+  - this is an estimated before/after continuity audit, not a controlled productivity benchmark
 
 ### Current Checkpoint
 

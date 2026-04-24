@@ -10,6 +10,7 @@ from .platforms import get_registry
 from .recommend import recommend_setup
 from .repo_contract import init_repo_contract
 from .doctor import diagnose_repo_contract
+from .telemetry import measure_impact
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -102,6 +103,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum number of platform recommendations to print (default: 3).",
     )
     recommend.add_argument(
+        "--json",
+        action="store_true",
+        help="Print machine-readable JSON output.",
+    )
+
+    measure = subparsers.add_parser(
+        "measure",
+        help="Measure repo continuity evidence and estimated impact.",
+    )
+    measure.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root to inspect (default: current directory).",
+    )
+    measure.add_argument(
         "--json",
         action="store_true",
         help="Print machine-readable JSON output.",
@@ -222,6 +238,15 @@ def _recommend(args: argparse.Namespace) -> int:
     return 0
 
 
+def _measure(args: argparse.Namespace) -> int:
+    report = measure_impact(repo_root=Path(args.repo_root).resolve())
+    if getattr(args, "json", False):
+        _print_json(report.to_dict())
+    else:
+        print(report.render())
+    return 0
+
+
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
@@ -235,5 +260,7 @@ def main() -> int:
         return _doctor(args)
     if args.command == "recommend":
         return _recommend(args)
+    if args.command == "measure":
+        return _measure(args)
     parser.error("Unknown command")
     return 2

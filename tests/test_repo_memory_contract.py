@@ -84,3 +84,33 @@ def test_repo_specs_memory_bootstrap_avoids_branch_and_commit_noise() -> None:
     assert "Branch snapshot:" not in specs
     assert "Last commit:" not in specs
     assert "Keep project terms stable across code, specs, docs, and conversation." in glossary
+
+
+def test_repo_specs_memory_emits_local_telemetry_event() -> None:
+    temp_root = _tmp_dir()
+    repo = temp_root / "repo"
+    repo.mkdir()
+    telemetry_base = temp_root / "telemetry"
+
+    subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True, text=True)
+    (repo / "README.md").write_text(
+        "# Demo Repo\n\nDemo repo for testing telemetry evidence.\n",
+        encoding="utf-8",
+    )
+
+    subprocess.run(
+        [sys.executable, str(SCRIPT), "pre-compact"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+        env={
+            **dict(__import__("os").environ),
+            "REPO_CONTEXT_HOOKS_TELEMETRY_DIR": str(telemetry_base),
+        },
+    )
+
+    events = list(telemetry_base.rglob("events.jsonl"))
+    assert len(events) == 1
+    payload = events[0].read_text(encoding="utf-8")
+    assert '"event_name": "pre-compact"' in payload

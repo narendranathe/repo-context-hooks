@@ -22,3 +22,29 @@ def test_bundle_contains_expected_assets() -> None:
     assert (skills / "session-start-context-loader" / "SKILL.md").exists()
     assert (skills / "precompact-checkpoint" / "SKILL.md").exists()
     assert (skills / "postcompact-context-reload" / "SKILL.md").exists()
+
+
+def test_context_handoff_skill_scripts_include_telemetry_recording() -> None:
+    root = bundle_root()
+    for relative_path in (
+        "scripts/repo_specs_memory.py",
+        "scripts/session_context.py",
+        "skills/context-handoff-hooks/scripts/repo_specs_memory.py",
+        "skills/context-handoff-hooks/scripts/session_context.py",
+    ):
+        text = (root / relative_path).read_text(encoding="utf-8")
+        assert "record_event" in text
+        assert "repo_context_hooks.telemetry" in text
+
+
+def test_context_handoff_skill_installer_ignores_repo_local_telemetry() -> None:
+    installer = (
+        bundle_root()
+        / "skills"
+        / "context-handoff-hooks"
+        / "scripts"
+        / "install_hooks.py"
+    )
+    text = installer.read_text(encoding="utf-8")
+    assert ".repo-context-hooks/" in text
+    assert "ensure_gitignore" in text

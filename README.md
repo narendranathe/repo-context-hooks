@@ -156,7 +156,30 @@ repo-context-hooks platforms --json
 repo-context-hooks doctor --json
 repo-context-hooks doctor --all-platforms --json
 repo-context-hooks recommend --json
+repo-context-hooks measure --json
 ```
+
+## Prove Impact
+
+`repo-context-hooks` now includes a local evidence loop so teams can show what continuity changed instead of only claiming it helped.
+
+```bash
+repo-context-hooks measure
+repo-context-hooks measure --json
+```
+
+`measure` compares the current repo continuity score against an estimated no-continuity baseline, then reports observed hook and skill events from local JSONL telemetry. Hook scripts write small events to your OS cache by default, outside the git repo. If that cache is unavailable in a sandbox, telemetry falls back to `.repo-context-hooks/`, which `init` adds to `.gitignore`.
+
+Use it before and after installing a platform adapter:
+
+```bash
+repo-context-hooks measure
+repo-context-hooks install --platform claude
+# start a new Claude session or run a compact/session-end flow
+repo-context-hooks measure
+```
+
+The output is intentionally operational rather than magical: it shows repo-contract readiness, observed lifecycle events, evidence-log location, and concrete recommendations. See [docs/monitoring.md](docs/monitoring.md) for the metric definitions, privacy boundary, and before/after workflow.
 
 ## Concrete Stories
 
@@ -180,6 +203,7 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 - [Engineering memory](specs/README.md)
 - [Ubiquitous language](UBIQUITOUS_LANGUAGE.md)
 - [Architecture](docs/architecture.md)
+- [Monitoring and impact evidence](docs/monitoring.md)
 - [Competitive analysis](docs/competitive-analysis.md)
 - [Minimal repo example](examples/minimal-repo/)
 - [Multi-project example](examples/multi-project/)
