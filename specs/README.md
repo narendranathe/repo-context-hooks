@@ -213,10 +213,19 @@ This file is the persistent project context for agents and maintainers.
   - measure score: `90`
   - estimated baseline: `20`
   - estimated uplift: `+70`
-  - observed hook events: `12`
+  - observed hook events: `26`
+  - lifecycle coverage: `100%`
+  - resume events: `22`
+  - checkpoint events: `2`
+  - reload events: `2`
+  - session-end events: `1`
 - Current implementation slice:
   - `repo_context_hooks/telemetry.py`
   - `repo-context-hooks measure`
+  - time-series usability metrics in `ImpactHistory` and `UsabilityMetrics`
+  - local `monitoring.html` dashboard generated from the telemetry log
+  - checked-in public snapshot at `docs/monitoring/index.html`
+  - checked-in visual brand asset at `assets/diagrams/context-continuity-engine.svg`
   - hook-script telemetry emission from `repo_specs_memory.py` and `session_context.py`
   - README and monitoring guide updates
   - `.claude/settings.json`
@@ -244,3 +253,18 @@ This file is the persistent project context for agents and maintainers.
   - JSON command smoke checks passing
 - Branch policy:
   - merged branches are preserved for future review and revert workflows
+
+### 2026-04-24 11:16 - post-compact
+
+- Branch: `feat/evidence-monitoring`
+- Working changes: repo_context_hooks/telemetry.py, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+
+### 2026-04-24 11:16 - session-end
+
+- Branch: `feat/evidence-monitoring`
+- Working changes: repo_context_hooks/telemetry.py, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+
+### 2026-04-24 11:16 - session-end
+
+- Branch: `feat/evidence-monitoring`
+- Working changes: repo_context_hooks/telemetry.py, specs/README.md, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py

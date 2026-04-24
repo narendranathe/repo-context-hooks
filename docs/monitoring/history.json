@@ -1,0 +1,43 @@
+{
+  "repo": "repo-context-hooks",
+  "snapshot_at": "2026-04-24T16:19:00Z",
+  "score": 90,
+  "baseline": 20,
+  "uplift": 70,
+  "observed_events": 26,
+  "time_series": [
+    {
+      "date": "2026-04-24",
+      "score": 70,
+      "events": 8,
+      "note": "local monitoring first observed the repo contract before committed hooks"
+    },
+    {
+      "date": "2026-04-24",
+      "score": 80,
+      "events": 9,
+      "note": "Claude repo hooks installed and detected"
+    },
+    {
+      "date": "2026-04-24",
+      "score": 90,
+      "events": 26,
+      "note": "AGENTS.md added and full lifecycle hooks exercised"
+    }
+  ],
+  "usability": {
+    "active_days": 1,
+    "resume_events": 22,
+    "checkpoint_events": 2,
+    "reload_events": 2,
+    "session_end_events": 1,
+    "lifecycle_coverage": 100
+  },
+  "event_counts": {
+    "session-start": 22,
+    "pre-compact": 1,
+    "post-compact": 1,
+    "session-context-post-compact": 1,
+    "session-end": 1
+  }
+}

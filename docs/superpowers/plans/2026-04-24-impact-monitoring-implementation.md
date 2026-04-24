@@ -53,6 +53,20 @@ python -m pytest -q tests/test_telemetry.py --basetemp .pytest-tmp-monitoring
 
 Expected: telemetry tests pass.
 
+- [x] **Step 5: Add time-series usability metrics**
+
+Implementation includes:
+
+- score series
+- daily event counts
+- active days
+- resume events
+- checkpoint events
+- reload events
+- session-end events
+- lifecycle coverage
+- local `monitoring.html` dashboard generation
+
 ### Task 2: CLI Command
 
 **Files:**
@@ -131,6 +145,16 @@ Explain metric definitions, privacy boundary, evidence storage, and before/after
 - [x] **Step 3: Ignore repo-local telemetry fallback**
 
 Add `.repo-context-hooks/` to `.gitignore` and ensure `init` appends it for target repos.
+
+- [x] **Step 4: Add public monitoring and brand visuals**
+
+Create:
+
+- `assets/diagrams/context-continuity-engine.svg`
+- `docs/monitoring/index.html`
+- `docs/monitoring/history.json`
+
+Update README with the hero visual, current score, uplift, lifecycle coverage, and dashboard link.
 
 ### Task 5: Verification
 

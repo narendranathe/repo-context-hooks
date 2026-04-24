@@ -178,7 +178,6 @@ def ensure_specs_readme(repo_root: Path, summary: str, ul_path: Path) -> Path:
 def append_checkpoint(specs_readme: Path) -> None:
     now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     branch = git_output("branch", "--show-current") or "unknown"
-    last_commit = git_output("log", "-1", "--pretty=%s") or "(none)"
     modified = git_output("status", "--short")
 
     changed_files: list[str] = []
@@ -192,7 +191,6 @@ def append_checkpoint(specs_readme: Path) -> None:
     entry = (
         f"\n### {now} - {EVENT}\n\n"
         f"- Branch: `{branch}`\n"
-        f"- Last commit: `{last_commit}`\n"
         f"- Working changes: {file_list}\n"
     )
 

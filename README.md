@@ -2,6 +2,8 @@
 
 Repo-native continuity for coding agents.
 
+![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
+
 `repo-context-hooks` keeps interrupted work, next-step context, and handoff notes in the repository instead of leaving them trapped in chat history. The goal is simple: a new session should be able to reopen the repo, understand the work in progress, and continue without rediscovering everything from scratch.
 
 ```bash
@@ -180,6 +182,15 @@ repo-context-hooks measure
 ```
 
 The output is intentionally operational rather than magical: it shows repo-contract readiness, observed lifecycle events, evidence-log location, and concrete recommendations. See [docs/monitoring.md](docs/monitoring.md) for the metric definitions, privacy boundary, and before/after workflow.
+
+Current repo snapshot:
+
+- Score `90`
+- Baseline `20`
+- Uplift `+70`
+- Observed hook events `26`
+- Lifecycle coverage `100%`
+- Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 
 Remote telemetry is not enabled in the MVP. Any future community usage metrics must be explicit opt-in and follow [docs/telemetry-policy.md](docs/telemetry-policy.md).
 

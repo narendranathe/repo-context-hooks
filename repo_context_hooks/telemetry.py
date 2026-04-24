@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import html
 import json
 import os
 import subprocess
@@ -172,6 +173,10 @@ def record_event(
     path = telemetry_events_path(repo_root, base=telemetry_base)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, sort_keys=True) + "\n")
+    try:
+        measure_impact(repo_root, telemetry_base=telemetry_base)
+    except Exception:
+        pass
     return path
 
 
@@ -193,6 +198,54 @@ def _read_events(path: Path) -> list[dict[str, Any]]:
 
 
 @dataclass(frozen=True)
+class ImpactHistory:
+    first_seen: str | None
+    latest_seen: str | None
+    latest_score: int
+    min_score: int
+    max_score: int
+    score_delta: int
+    daily_event_counts: tuple[dict[str, Any], ...]
+    score_series: tuple[dict[str, Any], ...]
+    recent_events: tuple[dict[str, Any], ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "first_seen": self.first_seen,
+            "latest_seen": self.latest_seen,
+            "latest_score": self.latest_score,
+            "min_score": self.min_score,
+            "max_score": self.max_score,
+            "score_delta": self.score_delta,
+            "daily_event_counts": list(self.daily_event_counts),
+            "score_series": list(self.score_series),
+            "recent_events": list(self.recent_events),
+        }
+
+
+@dataclass(frozen=True)
+class UsabilityMetrics:
+    active_days: int
+    resume_events: int
+    checkpoint_events: int
+    reload_events: int
+    session_end_events: int
+    lifecycle_coverage: int
+    readiness_minutes_since_last_event: int | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "active_days": self.active_days,
+            "resume_events": self.resume_events,
+            "checkpoint_events": self.checkpoint_events,
+            "reload_events": self.reload_events,
+            "session_end_events": self.session_end_events,
+            "lifecycle_coverage": self.lifecycle_coverage,
+            "readiness_minutes_since_last_event": self.readiness_minutes_since_last_event,
+        }
+
+
+@dataclass(frozen=True)
 class ImpactReport:
     repo_name: str
     repo_id: str
@@ -201,6 +254,9 @@ class ImpactReport:
     estimated_baseline_score: int
     observed_events: int
     event_counts: dict[str, int]
+    dashboard_path: Path
+    history: ImpactHistory
+    usability: UsabilityMetrics
     recommendations: tuple[str, ...]
 
     @property
@@ -216,7 +272,13 @@ class ImpactReport:
             f"Estimated uplift: +{self.uplift}",
             f"Observed hook/skill events: {self.observed_events}",
             f"Evidence log: {self.telemetry_path}",
+            f"Monitoring view: {self.dashboard_path}",
         ]
+        if self.history.latest_seen:
+            lines.append(f"Latest observed score: {self.history.latest_score}")
+            lines.append(f"Historical score delta: {self.history.score_delta:+d}")
+            lines.append(f"Lifecycle coverage: {self.usability.lifecycle_coverage}%")
+            lines.append(f"Active days: {self.usability.active_days}")
         if self.event_counts:
             lines.append("Event counts:")
             lines.extend(
@@ -238,6 +300,9 @@ class ImpactReport:
             "uplift": self.uplift,
             "observed_events": self.observed_events,
             "event_counts": self.event_counts,
+            "dashboard_path": str(self.dashboard_path),
+            "history": self.history.to_dict(),
+            "usability": self.usability.to_dict(),
             "recommendations": list(self.recommendations),
         }
 
@@ -258,6 +323,443 @@ def _recommendations(signals: dict[str, Any], events: list[dict[str, Any]]) -> t
     return tuple(items)
 
 
+def _event_score(event: dict[str, Any]) -> int:
+    try:
+        return int(event.get("repo_contract_score", 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _build_history(events: list[dict[str, Any]]) -> ImpactHistory:
+    if not events:
+        return ImpactHistory(
+            first_seen=None,
+            latest_seen=None,
+            latest_score=0,
+            min_score=0,
+            max_score=0,
+            score_delta=0,
+            daily_event_counts=(),
+            score_series=(),
+            recent_events=(),
+        )
+
+    scores = [_event_score(event) for event in events]
+    first_score = scores[0]
+    latest_score = scores[-1]
+
+    daily: dict[str, int] = {}
+    score_by_day: dict[str, int] = {}
+    for event in events:
+        timestamp = str(event.get("timestamp", "unknown"))
+        day = timestamp[:10] if len(timestamp) >= 10 else "unknown"
+        daily[day] = daily.get(day, 0) + 1
+        score_by_day[day] = _event_score(event)
+
+    recent = tuple(
+        {
+            "timestamp": str(event.get("timestamp", "")),
+            "event_name": str(event.get("event_name", "unknown")),
+            "source": str(event.get("source", "unknown")),
+            "score": _event_score(event),
+        }
+        for event in events[-8:]
+    )
+
+    return ImpactHistory(
+        first_seen=str(events[0].get("timestamp", "")),
+        latest_seen=str(events[-1].get("timestamp", "")),
+        latest_score=latest_score,
+        min_score=min(scores),
+        max_score=max(scores),
+        score_delta=latest_score - first_score,
+        daily_event_counts=tuple(
+            {"date": day, "events": count}
+            for day, count in sorted(daily.items())
+        ),
+        score_series=tuple(
+            {"date": day, "score": score}
+            for day, score in sorted(score_by_day.items())
+        ),
+        recent_events=recent,
+    )
+
+
+def _event_name(event: dict[str, Any]) -> str:
+    return str(event.get("event_name", "unknown"))
+
+
+def _parse_timestamp(value: str | None) -> dt.datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed
+
+
+def _build_usability(events: list[dict[str, Any]], history: ImpactHistory) -> UsabilityMetrics:
+    names = [_event_name(event) for event in events]
+    unique_lifecycle = {
+        name
+        for name in names
+        if name in {"session-start", "pre-compact", "post-compact", "session-end"}
+    }
+    latest = _parse_timestamp(history.latest_seen)
+    minutes_since_last = None
+    if latest is not None:
+        minutes_since_last = max(
+            0,
+            round(
+                (dt.datetime.now(dt.timezone.utc) - latest).total_seconds() / 60
+            ),
+        )
+
+    return UsabilityMetrics(
+        active_days=len(history.daily_event_counts),
+        resume_events=sum(1 for name in names if "session-start" in name),
+        checkpoint_events=sum(
+            1 for name in names if name in {"pre-compact", "session-end"}
+        ),
+        reload_events=sum(1 for name in names if "post-compact" in name),
+        session_end_events=sum(1 for name in names if name == "session-end"),
+        lifecycle_coverage=round(len(unique_lifecycle) / 4 * 100),
+        readiness_minutes_since_last_event=minutes_since_last,
+    )
+
+
+def _dashboard_path(events_path: Path) -> Path:
+    return events_path.with_name("monitoring.html")
+
+
+def _bar_width(value: int, maximum: int) -> int:
+    if maximum <= 0:
+        return 0
+    return max(4, min(100, round(value / maximum * 100)))
+
+
+def render_monitoring_dashboard(report: ImpactReport) -> str:
+    daily = report.history.daily_event_counts or ({"date": "today", "events": 0},)
+    score_series = report.history.score_series or ({"date": "today", "score": report.current_score},)
+    max_events = max(int(item["events"]) for item in daily) if daily else 1
+    bars = "\n".join(
+        (
+            '<div class="bar-row">'
+            f'<span>{html.escape(str(item["date"]))}</span>'
+            '<div class="bar-track">'
+            f'<div class="bar-fill" style="width:{_bar_width(int(item["events"]), max_events)}%"></div>'
+            "</div>"
+            f'<strong>{int(item["events"])}</strong>'
+            "</div>"
+        )
+        for item in daily[-14:]
+    )
+    recent = "\n".join(
+        (
+            '<li>'
+            f'<span>{html.escape(str(item["event_name"]))}</span>'
+            f'<strong>score {int(item["score"])}</strong>'
+            f'<em>{html.escape(str(item["source"]))}</em>'
+            "</li>"
+        )
+        for item in report.history.recent_events
+    )
+    if not recent:
+        recent = "<li><span>No hook events yet</span><strong>score 0</strong><em>waiting</em></li>"
+
+    event_cards = "\n".join(
+        f"<div><span>{html.escape(name)}</span><strong>{count}</strong></div>"
+        for name, count in sorted(report.event_counts.items())
+    )
+    if not event_cards:
+        event_cards = "<div><span>waiting for hooks</span><strong>0</strong></div>"
+
+    score_points = "\n".join(
+        (
+            '<div class="score-point">'
+            f'<span>{html.escape(str(item["date"]))}</span>'
+            f'<strong>{int(item["score"])}</strong>'
+            '<div class="bar-track">'
+            f'<div class="bar-fill moss" style="width:{_bar_width(int(item["score"]), 100)}%"></div>'
+            "</div>"
+            "</div>"
+        )
+        for item in score_series[-14:]
+    )
+
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Continuity Impact Monitor</title>
+  <style>
+    :root {{
+      --ink: #17120b;
+      --paper: #f6efe0;
+      --rust: #b54720;
+      --gold: #e6a92f;
+      --moss: #356857;
+      --night: #101820;
+      --line: rgba(23, 18, 11, .18);
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 10%, rgba(230,169,47,.42), transparent 28rem),
+        radial-gradient(circle at 86% 16%, rgba(53,104,87,.3), transparent 24rem),
+        linear-gradient(135deg, #fff8e8 0%, #f5e5c8 52%, #dac39b 100%);
+      font-family: "Aptos", "Segoe UI", sans-serif;
+    }}
+    .shell {{
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 54px 0;
+    }}
+    .hero {{
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background: rgba(255, 252, 242, .68);
+      box-shadow: 0 34px 90px rgba(51, 38, 20, .22);
+      padding: clamp(28px, 5vw, 64px);
+    }}
+    .hero:before {{
+      content: "";
+      position: absolute;
+      inset: 22px;
+      border: 1px dashed rgba(181,71,32,.35);
+      border-radius: 26px;
+      pointer-events: none;
+    }}
+    .eyebrow {{
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--rust);
+      font-weight: 800;
+      font-size: 12px;
+    }}
+    h1 {{
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(44px, 7vw, 92px);
+      letter-spacing: -.07em;
+      line-height: .87;
+      margin: 18px 0 20px;
+      max-width: 880px;
+    }}
+    .lede {{
+      max-width: 720px;
+      font-size: clamp(18px, 2vw, 24px);
+      line-height: 1.45;
+    }}
+    .metrics {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 34px 0;
+    }}
+    .metric {{
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px;
+      background: rgba(255,255,255,.44);
+      backdrop-filter: blur(10px);
+    }}
+    .metric span {{
+      display: block;
+      color: rgba(23,18,11,.64);
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }}
+    .metric strong {{
+      display: block;
+      margin-top: 8px;
+      font-size: clamp(30px, 4vw, 52px);
+      font-family: Georgia, "Times New Roman", serif;
+      letter-spacing: -.05em;
+    }}
+    .grid {{
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 18px;
+      margin-top: 18px;
+    }}
+    .panel {{
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255, 252, 242, .72);
+      padding: 26px;
+    }}
+    .panel h2 {{
+      margin: 0 0 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      letter-spacing: -.04em;
+      font-size: 30px;
+    }}
+    .bar-row {{
+      display: grid;
+      grid-template-columns: 90px 1fr 40px;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+      font-size: 14px;
+    }}
+    .bar-track {{
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(16,24,32,.1);
+      overflow: hidden;
+    }}
+    .bar-fill {{
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--rust), var(--gold));
+    }}
+    .events {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }}
+    .events div {{
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--night);
+      color: #fff8e8;
+    }}
+        .events span {{ display: block; opacity: .72; font-size: 12px; }}
+    .events strong {{ font-size: 28px; }}
+    .usability {{
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }}
+    .usability div, .score-point {{
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255,255,255,.38);
+    }}
+    .usability span, .score-point span {{
+      display: block;
+      color: rgba(23,18,11,.62);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      font-weight: 800;
+    }}
+    .usability strong, .score-point strong {{
+      display: block;
+      font-size: 27px;
+      margin: 4px 0 8px;
+      font-family: Georgia, "Times New Roman", serif;
+    }}
+    .moss {{ background: linear-gradient(90deg, var(--moss), var(--gold)); }}
+    ol {{
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }}
+    li {{
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }}
+    li em {{
+      grid-column: 1 / -1;
+      color: rgba(23,18,11,.58);
+      font-style: normal;
+      font-size: 13px;
+    }}
+    .footer {{
+      margin-top: 18px;
+      color: rgba(23,18,11,.68);
+      font-size: 14px;
+    }}
+    @media (max-width: 820px) {{
+      .metrics, .grid {{ grid-template-columns: 1fr; }}
+      .shell {{ width: min(100% - 24px, 1180px); padding: 24px 0; }}
+    }}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow">repo-context-hooks telemetry</div>
+      <h1>Continuity Impact Monitor</h1>
+      <p class="lede">A living view of whether hooks are actually preserving repo context, how much better the repo is than a README-only baseline, and which lifecycle events are firing over time.</p>
+      <div class="metrics">
+        <div class="metric"><span>Score</span><strong>{report.current_score}</strong></div>
+        <div class="metric"><span>Baseline</span><strong>{report.estimated_baseline_score}</strong></div>
+        <div class="metric"><span>Uplift</span><strong>+{report.uplift}</strong></div>
+        <div class="metric"><span>Hook events</span><strong>{report.observed_events}</strong></div>
+      </div>
+      <div class="grid">
+        <section class="panel">
+          <h2>Historical pulse</h2>
+          {bars}
+        </section>
+        <section class="panel">
+          <h2>Event mix</h2>
+          <div class="events">{event_cards}</div>
+        </section>
+      </div>
+      <div class="grid">
+        <section class="panel">
+          <h2>Usability time series</h2>
+          {score_points}
+        </section>
+        <section class="panel">
+          <h2>Usability metrics</h2>
+          <div class="usability">
+            <div><span>Active days</span><strong>{report.usability.active_days}</strong></div>
+            <div><span>Resume events</span><strong>{report.usability.resume_events}</strong></div>
+            <div><span>Checkpoints</span><strong>{report.usability.checkpoint_events}</strong></div>
+            <div><span>Reloads</span><strong>{report.usability.reload_events}</strong></div>
+            <div><span>Session ends</span><strong>{report.usability.session_end_events}</strong></div>
+            <div><span>Coverage</span><strong>{report.usability.lifecycle_coverage}%</strong></div>
+          </div>
+        </section>
+      </div>
+      <div class="grid">
+        <section class="panel">
+          <h2>Recent hook evidence</h2>
+          <ol>{recent}</ol>
+        </section>
+        <section class="panel">
+          <h2>Signal</h2>
+          <p>Latest score {report.history.latest_score}. Historical score delta {report.history.score_delta:+d}. First seen {html.escape(str(report.history.first_seen or "not yet"))}. Latest seen {html.escape(str(report.history.latest_seen or "not yet"))}.</p>
+        </section>
+      </div>
+      <p class="footer">Local-only telemetry. Evidence log: {html.escape(str(report.telemetry_path))}</p>
+    </section>
+  </main>
+</body>
+</html>
+"""
+
+
+def write_monitoring_dashboard(report: ImpactReport) -> Path:
+    report.dashboard_path.write_text(
+        render_monitoring_dashboard(report),
+        encoding="utf-8",
+    )
+    return report.dashboard_path
+
+
 def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> ImpactReport:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)
@@ -267,8 +769,11 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
     for event in events:
         name = str(event.get("event_name", "unknown"))
         event_counts[name] = event_counts.get(name, 0) + 1
+    history = _build_history(events)
+    usability = _build_usability(events, history)
+    dashboard_path = _dashboard_path(path)
 
-    return ImpactReport(
+    report = ImpactReport(
         repo_name=repo_root.name,
         repo_id=repo_id(repo_root),
         telemetry_path=path,
@@ -276,5 +781,10 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
         estimated_baseline_score=int(signals["estimated_baseline_score"]),
         observed_events=len(events),
         event_counts=event_counts,
+        dashboard_path=dashboard_path,
+        history=history,
+        usability=usability,
         recommendations=_recommendations(signals, events),
     )
+    write_monitoring_dashboard(report)
+    return report

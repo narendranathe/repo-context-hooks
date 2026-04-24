@@ -32,6 +32,8 @@ For scripts, dashboards, and CI experiments:
 repo-context-hooks measure --json
 ```
 
+The public snapshot for this repo lives at [docs/monitoring/index.html](monitoring/index.html). It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory.
+
 ## What Gets Measured
 
 The report includes:
@@ -41,6 +43,14 @@ The report includes:
 - estimated uplift
 - observed hook and skill events
 - event counts by lifecycle stage
+- score time series
+- daily event counts
+- active days
+- resume events
+- checkpoint events
+- reload events
+- session-end events
+- lifecycle coverage
 - local evidence-log path
 - recommendations for missing setup
 

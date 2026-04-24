@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>repo-context-hooks Continuity Impact Monitor</title>
+  <style>
+    :root {
+      --ink: #17120b;
+      --paper: #f7eedc;
+      --rust: #b54720;
+      --gold: #e6a92f;
+      --moss: #356857;
+      --night: #101820;
+      --cream: #fff8e7;
+      --line: rgba(23, 18, 11, .16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(181, 71, 32, .22), transparent 26rem),
+        radial-gradient(circle at 86% 12%, rgba(53, 104, 87, .26), transparent 28rem),
+        linear-gradient(135deg, #fff8e7 0%, #f2d6a4 58%, #c99559 100%);
+      font-family: "Aptos", "Segoe UI", sans-serif;
+    }
+    .shell {
+      width: min(1180px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 42px 0;
+    }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      padding: clamp(30px, 5vw, 66px);
+      background: rgba(255, 248, 231, .72);
+      box-shadow: 0 32px 90px rgba(48, 31, 12, .24);
+    }
+    .hero:after {
+      content: "";
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      right: -220px;
+      top: -180px;
+      border-radius: 999px;
+      background: repeating-conic-gradient(from 20deg, rgba(16,24,32,.08) 0deg 8deg, transparent 8deg 18deg);
+    }
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      text-transform: uppercase;
+      letter-spacing: .2em;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--rust);
+    }
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 920px;
+      margin: 18px 0 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(46px, 7vw, 96px);
+      line-height: .88;
+      letter-spacing: -.07em;
+    }
+    .lede {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      font-size: clamp(18px, 2vw, 25px);
+      line-height: 1.42;
+    }
+    .metrics {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 34px;
+    }
+    .metric {
+      min-height: 138px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px;
+      background: rgba(255,255,255,.38);
+      backdrop-filter: blur(12px);
+    }
+    .metric span {
+      display: block;
+      font-size: 12px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: rgba(23,18,11,.6);
+    }
+    .metric strong {
+      display: block;
+      margin-top: 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(34px, 5vw, 62px);
+      letter-spacing: -.06em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 28px;
+      background: rgba(255, 248, 231, .74);
+    }
+    .panel.dark {
+      background: var(--night);
+      color: var(--cream);
+    }
+    h2 {
+      margin: 0 0 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 32px;
+      letter-spacing: -.04em;
+    }
+    .timeline {
+      display: grid;
+      gap: 16px;
+    }
+    .point {
+      display: grid;
+      grid-template-columns: 120px 1fr 80px;
+      align-items: center;
+      gap: 14px;
+    }
+    .track {
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(16,24,32,.12);
+      overflow: hidden;
+    }
+    .dark .track {
+      background: rgba(255,248,231,.14);
+    }
+    .fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--rust), var(--gold), var(--moss));
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .card {
+      border: 1px solid rgba(255,248,231,.18);
+      border-radius: 20px;
+      padding: 16px;
+      background: rgba(255,248,231,.08);
+    }
+    .card span {
+      display: block;
+      opacity: .7;
+      font-size: 12px;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+    .card strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 30px;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    .note {
+      margin-top: 18px;
+      color: rgba(23,18,11,.7);
+      line-height: 1.5;
+    }
+    .dark .note {
+      color: rgba(255,248,231,.72);
+    }
+    @media (max-width: 840px) {
+      .metrics, .grid { grid-template-columns: 1fr; }
+      .point { grid-template-columns: 1fr; gap: 8px; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow">local-only telemetry snapshot</div>
+      <h1>Continuity Impact Monitor</h1>
+      <p class="lede">The repo now carries a living time-series view of usability: score over time, hook activity, checkpoint coverage, reload behavior, and whether the next agent can resume warm.</p>
+      <div class="metrics">
+        <div class="metric"><span>Score 90</span><strong>90</strong></div>
+        <div class="metric"><span>+70 uplift</span><strong>+70</strong></div>
+        <div class="metric"><span>18+ hook events</span><strong>26</strong></div>
+        <div class="metric"><span>Lifecycle coverage</span><strong>100%</strong></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Usability time series</h2>
+        <div class="timeline">
+          <div class="point"><strong>initial</strong><div class="track"><div class="fill" style="width:70%"></div></div><span>70</span></div>
+          <div class="point"><strong>hooks installed</strong><div class="track"><div class="fill" style="width:80%"></div></div><span>80</span></div>
+          <div class="point"><strong>repo entry added</strong><div class="track"><div class="fill" style="width:90%"></div></div><span>90</span></div>
+        </div>
+        <p class="note">This is not a one-off before/after claim. The hook events keep accumulating locally, and the dashboard trend shows whether continuity keeps working as sessions compact, restart, and hand off.</p>
+      </div>
+
+      <div class="panel dark">
+        <h2>What is improving?</h2>
+        <div class="cards">
+          <div class="card"><span>Claude native hooks</span><strong>ready</strong></div>
+          <div class="card"><span>Codex/Kimi repo entry</span><strong>ready</strong></div>
+          <div class="card"><span>Resume events</span><strong>22</strong></div>
+          <div class="card"><span>Checkpoints</span><strong>2</strong></div>
+          <div class="card"><span>Reloads</span><strong>2</strong></div>
+          <div class="card"><span>Local-only telemetry</span><strong>on</strong></div>
+        </div>
+        <p class="note">No source code, prompts, compact summaries, issue bodies, secrets, resumes, or personal files are collected.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -43,6 +43,7 @@ def test_record_event_writes_local_jsonl_outside_repo() -> None:
     assert payload["repo_id"]
     assert payload["repo_contract_score"] > 0
     assert payload["details"]["context_bytes"] == 123
+    assert (event_path.parent / "monitoring.html").exists()
 
 
 def test_measure_impact_compares_current_state_to_no_contract_baseline() -> None:
@@ -61,9 +62,24 @@ def test_measure_impact_compares_current_state_to_no_contract_baseline() -> None
     assert report.observed_events == 2
     assert report.event_counts["session-start"] == 1
     assert report.event_counts["pre-compact"] == 1
+    assert report.history.latest_score > 0
+    assert report.history.score_delta >= 0
+    assert report.history.daily_event_counts
+    assert report.history.score_series
+    assert report.usability.active_days == 1
+    assert report.usability.resume_events == 1
+    assert report.usability.checkpoint_events == 1
+    assert report.usability.lifecycle_coverage >= 50
+    assert report.dashboard_path.exists()
+    assert "Continuity Impact Monitor" in report.dashboard_path.read_text(encoding="utf-8")
+    assert "Usability time series" in report.dashboard_path.read_text(encoding="utf-8")
     assert "context-impact" in report.render()
+    assert "Monitoring view" in report.render()
     assert "Estimated baseline" in report.render()
     assert report.to_dict()["uplift"] == report.uplift
+    assert report.to_dict()["history"]["latest_score"] == report.history.latest_score
+    assert report.to_dict()["usability"]["active_days"] == 1
+    assert report.to_dict()["dashboard_path"] == str(report.dashboard_path)
 
 
 def test_measure_impact_recommends_install_when_no_hooks_are_observed() -> None:

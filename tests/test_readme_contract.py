@@ -144,6 +144,7 @@ def test_readme_avoids_internal_operator_heavy_sections() -> None:
 def test_readme_embeds_required_diagrams() -> None:
     text = readme_text()
     expected_assets = [
+        "assets/diagrams/context-continuity-engine.svg",
         "assets/diagrams/lifecycle-flow.svg",
         "assets/diagrams/repo-contract.svg",
         "assets/diagrams/before-after-continuity.svg",
