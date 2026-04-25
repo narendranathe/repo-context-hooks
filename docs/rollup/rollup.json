@@ -1,0 +1,40 @@
+{
+  "checkpoint_events": 2,
+  "context_threshold_events": 2,
+  "event_counts": {
+    "context-window-sample": 1,
+    "context-window-threshold": 2,
+    "pre-compact": 2,
+    "session-start": 26
+  },
+  "generated_at": "2026-04-25T18:56:08.489166+00:00",
+  "repo_count": 1,
+  "repos": [
+    {
+      "agent_platforms": [
+        "claude",
+        "codex"
+      ],
+      "agent_sessions": 4,
+      "baseline": 20,
+      "checkpoint_events": 2,
+      "context_threshold_events": 2,
+      "event_counts": {
+        "context-window-sample": 1,
+        "context-window-threshold": 2,
+        "pre-compact": 2,
+        "session-start": 26
+      },
+      "latest_score": 90,
+      "latest_seen": "2026-04-25T18:55:52.898189+00:00",
+      "lifecycle_coverage": 50,
+      "max_context_usage_percent": 99.5,
+      "observed_events": 31,
+      "repo_id": "22cb13c919431701",
+      "repo_name": "repo-context-hooks",
+      "uplift": 70
+    }
+  ],
+  "total_agent_sessions": 4,
+  "total_events": 31
+}

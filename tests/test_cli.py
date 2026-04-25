@@ -12,7 +12,9 @@ from repo_context_hooks.cli import (
     _install,
     _measure,
     _platforms,
+    _record_context,
     _recommend,
+    _rollup,
     build_parser,
 )
 from repo_context_hooks.doctor import DoctorReport
@@ -55,6 +57,11 @@ def test_parser_supports_platforms_and_doctor_commands() -> None:
         ).snapshot_dir
         == "docs/monitoring"
     )
+    assert parser.parse_args(["rollup"]).command == "rollup"
+    assert parser.parse_args(["rollup", "--json"]).json is True
+    assert parser.parse_args(["rollup", "--prometheus"]).prometheus is True
+    assert parser.parse_args(["rollup", "--projects-root", "C:/projects"]).projects_root == "C:/projects"
+    assert parser.parse_args(["record-context", "--used-tokens", "99", "--limit-tokens", "100"]).command == "record-context"
 
 
 def test_platforms_print_support_tiers(capsys) -> None:
@@ -371,6 +378,122 @@ def test_measure_writes_public_snapshot(
     out = capsys.readouterr().out
     assert "Wrote public monitoring snapshot" in out
     assert calls == [("demo", tmp_path / "docs" / "monitoring")]
+
+
+def test_rollup_prints_json(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    class FakeRollup:
+        def render(self) -> str:
+            return "[OK] cross-repo telemetry rollup"
+
+        def to_dict(self):
+            return {
+                "repo_count": 2,
+                "total_events": 5,
+            }
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.measure_rollup",
+        lambda telemetry_base=None, projects_root=None: FakeRollup(),
+    )
+
+    args = Namespace(
+        telemetry_dir=None,
+        projects_root=None,
+        json=True,
+        prometheus=False,
+        snapshot_dir=None,
+    )
+
+    assert _rollup(args) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["repo_count"] == 2
+    assert payload["total_events"] == 5
+
+
+def test_rollup_writes_public_snapshot(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+    calls: list[Path] = []
+
+    class FakeRollup:
+        def render(self) -> str:
+            return "[OK] cross-repo telemetry rollup"
+
+        def to_dict(self):
+            return {"repo_count": 1}
+
+    def fake_snapshot(report, output_dir):
+        calls.append(output_dir)
+        return {
+            "dashboard_path": str(output_dir / "index.html"),
+            "history_path": str(output_dir / "rollup.json"),
+        }
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.measure_rollup",
+        lambda telemetry_base=None, projects_root=None: FakeRollup(),
+    )
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.write_public_rollup_snapshot",
+        fake_snapshot,
+    )
+
+    args = Namespace(
+        telemetry_dir=None,
+        projects_root=None,
+        json=False,
+        prometheus=False,
+        snapshot_dir=str(tmp_path / "docs" / "rollup"),
+    )
+
+    assert _rollup(args) == 0
+    out = capsys.readouterr().out
+    assert "Wrote cross-repo rollup dashboard" in out
+    assert calls == [(tmp_path / "docs" / "rollup").resolve()]
+
+
+def test_record_context_prints_threshold_status(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+    calls: list[dict[str, object]] = []
+
+    def fake_record_context_window(**kwargs):
+        calls.append(kwargs)
+        return tmp_path / "events.jsonl"
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.record_context_window",
+        fake_record_context_window,
+    )
+
+    args = Namespace(
+        repo_root=str(tmp_path),
+        used_tokens=99_000,
+        limit_tokens=100_000,
+        threshold_percent=99.0,
+        checkpoint=True,
+        json=False,
+        source="vscode-extension",
+        agent_platform="codex",
+        model_name="gpt-test",
+        session_id="session-1",
+    )
+
+    assert _record_context(args) == 0
+    out = capsys.readouterr().out
+    assert "context-window-threshold" in out
+    assert "99.0%" in out
+    assert calls[0]["checkpoint"] is True
+    assert calls[0]["agent_platform"] == "codex"
 
 
 def test_init_prints_repo_contract_statuses(

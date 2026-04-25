@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cross-Repo Telemetry Rollup</title>
+  <style>
+    body { margin: 0; font-family: Segoe UI, sans-serif; background: #f6efe0; color: #17120b; }
+    main { max-width: 1080px; margin: 0 auto; padding: 48px 24px; }
+    h1 { font-family: Georgia, serif; font-size: 44px; margin: 0 0 12px; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 28px 0; }
+    .card { background: #17120b; color: #f6efe0; border-radius: 20px; padding: 20px; }
+    .card span { display: block; color: #e5a92f; font-size: 13px; font-weight: 800; }
+    .card strong { display: block; font-size: 34px; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; background: #fff9ea; border-radius: 18px; overflow: hidden; }
+    th, td { text-align: left; padding: 14px 16px; border-bottom: 1px solid #dec18d; }
+    th { background: #f0d9a8; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+    p { color: #5d4327; line-height: 1.6; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Cross-Repo Telemetry Rollup</h1>
+  <p>Aggregate local-only hook evidence across every repository observed in the telemetry store. This snapshot does not include local filesystem paths, prompts, code, resumes, secrets, or compact summaries.</p>
+  <section class="grid">
+    <div class="card"><span>Repos</span><strong>1</strong></div>
+    <div class="card"><span>Events</span><strong>31</strong></div>
+    <div class="card"><span>Sessions</span><strong>4</strong></div>
+    <div class="card"><span>Context thresholds</span><strong>2</strong></div>
+  </section>
+  <table>
+    <thead>
+      <tr><th>Repo</th><th>Events</th><th>Sessions</th><th>Score</th><th>Uplift</th><th>Thresholds</th><th>Max context %</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>repo-context-hooks</td><td>31</td><td>4</td><td>90</td><td>+70</td><td>2</td><td>99.5</td></tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

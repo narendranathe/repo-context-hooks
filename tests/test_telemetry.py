@@ -6,11 +6,15 @@ from uuid import uuid4
 
 from repo_context_hooks.repo_contract import init_repo_contract
 from repo_context_hooks.telemetry import (
+    measure_rollup,
     measure_impact,
+    record_context_window,
     record_event,
+    render_rollup_prometheus_metrics,
     render_prometheus_metrics,
     render_public_time_series_svg,
     telemetry_dir,
+    write_public_rollup_snapshot,
     write_public_monitoring_snapshot,
 )
 
@@ -225,7 +229,9 @@ def test_measure_impact_uses_remote_name_for_worktree_display(monkeypatch) -> No
     monkeypatch.setattr(
         "repo_context_hooks.telemetry._git_output",
         lambda repo_root, *args: (
-            "https://github.com/narendranathe/repo-context-hooks.git"
+            str(repo)
+            if args == ("rev-parse", "--show-toplevel")
+            else "https://github.com/narendranathe/repo-context-hooks.git"
             if args == ("remote", "get-url", "origin")
             else ""
         ),
@@ -234,6 +240,35 @@ def test_measure_impact_uses_remote_name_for_worktree_display(monkeypatch) -> No
     report = measure_impact(repo, telemetry_base=tmp_path / "telemetry")
 
     assert report.repo_name == "repo-context-hooks"
+
+
+def test_record_event_uses_remote_name_for_worktree_display(monkeypatch) -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "feat-observability-proof-strip"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    monkeypatch.setattr(
+        "repo_context_hooks.telemetry._git_output",
+        lambda repo_root, *args: (
+            str(repo)
+            if args == ("rev-parse", "--show-toplevel")
+            else "https://github.com/narendranathe/repo-context-hooks.git"
+            if args == ("remote", "get-url", "origin")
+            else "feature-branch"
+            if args == ("branch", "--show-current")
+            else ""
+        ),
+    )
+
+    event_path = record_event(
+        repo,
+        "session-start",
+        telemetry_base=tmp_path / "telemetry",
+    )
+    payload = json.loads(event_path.read_text(encoding="utf-8").splitlines()[0])
+
+    assert payload["repo_name"] == "repo-context-hooks"
 
 
 def test_telemetry_falls_back_to_repo_local_directory_when_cache_is_unavailable(monkeypatch) -> None:
@@ -424,3 +459,163 @@ def test_render_prometheus_metrics_exports_safe_aggregate_evidence() -> None:
     )
     assert str(tmp_path) not in metrics
     assert "telemetry_path" not in metrics
+
+
+def test_record_context_window_records_threshold_and_checkpoint_event() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+    telemetry_base = tmp_path / "telemetry"
+
+    event_path = record_context_window(
+        repo,
+        used_tokens=99_000,
+        limit_tokens=100_000,
+        threshold_percent=99,
+        checkpoint=True,
+        telemetry_base=telemetry_base,
+        source="vscode-extension",
+        agent_platform="codex",
+        model_name="gpt-test",
+    )
+
+    events = [
+        json.loads(line)
+        for line in event_path.read_text(encoding="utf-8").splitlines()
+    ]
+    names = [event["event_name"] for event in events]
+    threshold_event = events[0]
+    checkpoint_event = events[1]
+
+    assert names == ["context-window-threshold", "pre-compact"]
+    assert threshold_event["agent_platform"] == "codex"
+    assert threshold_event["model_name"] == "gpt-test"
+    assert threshold_event["details"]["used_tokens"] == 99_000
+    assert threshold_event["details"]["limit_tokens"] == 100_000
+    assert threshold_event["details"]["usage_percent"] == 99.0
+    assert threshold_event["details"]["remaining_percent"] == 1.0
+    assert threshold_event["details"]["threshold_percent"] == 99.0
+    assert threshold_event["details"]["threshold_window_percent"] == 1.0
+    assert checkpoint_event["details"]["checkpoint_trigger"] == "context-window-threshold"
+
+
+def test_measure_rollup_aggregates_multiple_repo_event_logs() -> None:
+    tmp_path = _tmp_dir()
+    telemetry_base = tmp_path / "telemetry"
+    repo_a = tmp_path / "portfolio"
+    repo_b = tmp_path / "tailor-resume"
+    repo_a.mkdir()
+    repo_b.mkdir()
+    init_repo_contract(repo_a)
+    init_repo_contract(repo_b)
+
+    record_event(
+        repo_a,
+        "session-start",
+        telemetry_base=telemetry_base,
+        agent_platform="claude",
+        model_name="sonnet-test",
+    )
+    record_context_window(
+        repo_a,
+        used_tokens=99_500,
+        limit_tokens=100_000,
+        threshold_percent=99,
+        checkpoint=True,
+        telemetry_base=telemetry_base,
+        agent_platform="claude",
+        model_name="sonnet-test",
+    )
+    record_event(
+        repo_b,
+        "session-start",
+        telemetry_base=telemetry_base,
+        agent_platform="codex",
+        model_name="gpt-test",
+    )
+
+    report = measure_rollup(telemetry_base=telemetry_base)
+    payload = report.to_dict()
+
+    assert payload["repo_count"] == 2
+    assert payload["total_events"] == 4
+    assert payload["total_agent_sessions"] == 2
+    assert payload["context_threshold_events"] == 1
+    assert payload["checkpoint_events"] == 1
+    assert payload["repos"][0]["repo_name"] == "portfolio"
+    assert payload["repos"][0]["context_threshold_events"] == 1
+    assert payload["repos"][0]["max_context_usage_percent"] == 99.5
+    assert {item["repo_name"] for item in payload["repos"]} == {
+        "portfolio",
+        "tailor-resume",
+    }
+    assert "portfolio" in report.render()
+    assert "cross-repo telemetry rollup" in report.render()
+
+    metrics = render_rollup_prometheus_metrics(report)
+    assert "repo_context_hooks_rollup_repos_total 2" in metrics
+    assert "repo_context_hooks_rollup_context_threshold_events_total 1" in metrics
+    assert 'repo_context_hooks_repo_events_total{repo="portfolio"} 3' in metrics
+
+
+def test_measure_rollup_scans_projects_root_fallback_telemetry() -> None:
+    tmp_path = _tmp_dir()
+    projects_root = tmp_path / "projects"
+    repo_a = projects_root / "portfolio"
+    repo_b = projects_root / "tailor-resume"
+    repo_a.mkdir(parents=True)
+    repo_b.mkdir(parents=True)
+    init_repo_contract(repo_a)
+    init_repo_contract(repo_b)
+
+    record_event(
+        repo_a,
+        "session-start",
+        telemetry_base=repo_a / ".repo-context-hooks" / "telemetry",
+        agent_platform="claude",
+    )
+    record_event(
+        repo_b,
+        "session-start",
+        telemetry_base=repo_b / ".repo-context-hooks" / "telemetry",
+        agent_platform="codex",
+    )
+
+    report = measure_rollup(
+        telemetry_base=tmp_path / "empty-shared-telemetry",
+        projects_root=projects_root,
+    )
+    payload = report.to_dict()
+
+    assert payload["repo_count"] == 2
+    assert payload["total_events"] == 2
+    assert {item["repo_name"] for item in payload["repos"]} == {
+        "portfolio",
+        "tailor-resume",
+    }
+
+
+def test_write_public_rollup_snapshot_sanitizes_paths() -> None:
+    tmp_path = _tmp_dir()
+    telemetry_base = tmp_path / "telemetry"
+    repo = tmp_path / "portfolio"
+    repo.mkdir()
+    init_repo_contract(repo)
+    record_event(repo, "session-start", telemetry_base=telemetry_base)
+
+    report = measure_rollup(telemetry_base=telemetry_base)
+    output_dir = tmp_path / "public" / "rollup"
+
+    result = write_public_rollup_snapshot(report, output_dir)
+
+    assert result["dashboard_path"] == str(output_dir / "index.html")
+    assert result["history_path"] == str(output_dir / "rollup.json")
+    dashboard = (output_dir / "index.html").read_text(encoding="utf-8")
+    history = json.loads((output_dir / "rollup.json").read_text(encoding="utf-8"))
+
+    assert "Cross-Repo Telemetry Rollup" in dashboard
+    assert history["repo_count"] == 1
+    assert history["repos"][0]["repo_name"] == "portfolio"
+    assert str(tmp_path) not in dashboard
+    assert str(tmp_path) not in json.dumps(history)

@@ -33,12 +33,15 @@ For scripts, dashboards, and CI experiments:
 ```bash
 repo-context-hooks measure --json
 repo-context-hooks measure --prometheus
+repo-context-hooks rollup --json
+repo-context-hooks rollup --prometheus
 ```
 
 To intentionally refresh a checked-in public dashboard from local evidence:
 
 ```bash
 repo-context-hooks measure --snapshot-dir docs/monitoring
+repo-context-hooks rollup --snapshot-dir docs/rollup
 ```
 
 The public snapshot for this repo lives at [docs/monitoring/index.html](monitoring/index.html). It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory. The public snapshot writer sanitizes local paths and publishes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
@@ -48,6 +51,51 @@ The README-facing graph lives at [docs/monitoring/timeseries.svg](monitoring/tim
 The graph intentionally compares the model/session-only baseline against repo continuity. It also shows previous-vs-latest telemetry days, score trend, hook-event volume, agent/model comparison, event mix, lifecycle coverage, and the source fields used by the renderer.
 
 For Prometheus/OpenMetrics, Grafana, and Datadog usage paths, see [Observability Integrations](observability.md).
+
+## Context Window Thresholds
+
+The package now supports a generic context-window telemetry surface for VS Code extensions, wrappers, local model runners, and agent tools that can observe token usage.
+
+```bash
+repo-context-hooks record-context \
+  --used-tokens 99000 \
+  --limit-tokens 100000 \
+  --threshold-percent 99 \
+  --checkpoint \
+  --source vscode-extension \
+  --agent-platform codex \
+  --model-name gpt-5.5
+```
+
+At `99%` usage, the command records `context-window-threshold`. With `--checkpoint`, it also records `pre-compact`.
+
+This is the honest boundary: `repo-context-hooks` can record and aggregate context pressure, but arbitrary VS Code extensions and model runners must call this command with token counts. Claude native hooks can use the platform's lifecycle events; partial platforms need wrappers or extensions to supply the context-window signal.
+
+## Cross-Repo Rollup
+
+Use `rollup` to see whether hooks are working across every repo observed in the shared telemetry store:
+
+```bash
+repo-context-hooks rollup
+repo-context-hooks rollup --json
+repo-context-hooks rollup --prometheus
+repo-context-hooks rollup --projects-root ~/projects
+repo-context-hooks rollup --snapshot-dir docs/rollup
+```
+
+The rollup scans local telemetry directories for `events.jsonl` files and aggregates:
+
+- repositories observed
+- total hook and skill events
+- agent sessions
+- context-window threshold events
+- checkpoint events
+- per-repo continuity score and uplift
+- max context-window usage percent when wrappers report token counts
+
+That makes the product useful for answering, "is this working across my projects, not just inside one README demo?"
+
+Use `--projects-root` when sandboxing forced telemetry into each repo's ignored `.repo-context-hooks/telemetry/` fallback directory instead of the shared OS cache.
 
 ## Visualization Tools
 

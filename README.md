@@ -38,6 +38,8 @@ Public evidence files:
 - Time-series chart: [docs/monitoring/timeseries.svg](docs/monitoring/timeseries.svg)
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 - Source data: [docs/monitoring/history.json](docs/monitoring/history.json)
+- Cross-repo rollup: [docs/rollup/index.html](docs/rollup/index.html)
+- Rollup data: [docs/rollup/rollup.json](docs/rollup/rollup.json)
 
 Use the same evidence locally:
 
@@ -54,6 +56,39 @@ As more hook events accumulate, rerun `repo-context-hooks measure --snapshot-dir
 For explicit agent/model comparisons, set `REPO_CONTEXT_HOOKS_AGENT_PLATFORM` and `REPO_CONTEXT_HOOKS_MODEL_NAME` before a session or hook run. If model labels are unavailable, the graph keeps the platform comparison and marks the model as `unknown model`.
 
 Telemetry collection is agent-session first: installed hooks automatically record lifecycle events at session start, compact, reload, and session end. `repo-context-hooks measure` is for inspection and export, not for starting telemetry collection.
+
+### Context Window Thresholds
+
+Claude native hooks can record `PreCompact` when Claude exposes that lifecycle event. VS Code, model wrappers, and other agent runners need a generic API because they do not all expose the same auto-compact hook surface.
+
+Use `record-context` from any extension, wrapper, task runner, or script that can observe context usage:
+
+```bash
+repo-context-hooks record-context \
+  --used-tokens 99000 \
+  --limit-tokens 100000 \
+  --threshold-percent 99 \
+  --checkpoint \
+  --source vscode-extension \
+  --agent-platform codex \
+  --model-name gpt-5.5
+```
+
+At or above the threshold, this records a `context-window-threshold` event. With `--checkpoint`, it also records a `pre-compact` checkpoint event so the rollup can show whether context pressure is being caught before the model loses state. This does not magically read every model's context window; the editor, wrapper, or agent runtime must pass the token counts it can see.
+
+### Cross-Repo Rollup
+
+Use `rollup` when you want to measure the hooks across every project using the shared local telemetry store:
+
+```bash
+repo-context-hooks rollup
+repo-context-hooks rollup --json
+repo-context-hooks rollup --prometheus
+repo-context-hooks rollup --projects-root ~/projects
+repo-context-hooks rollup --snapshot-dir docs/rollup
+```
+
+The rollup aggregates repo count, total events, agent sessions, context-window threshold events, checkpoint events, per-repo scores, and max context-window usage. `--projects-root` also scans repo-local fallback telemetry under each child project folder, which is useful when sandboxing blocks the shared OS cache. This is the right view for answering "are these hooks helping across my portfolio, tailor-resume, job-scout, and other repos?"
 
 ```bash
 python -m pip install -e .
@@ -258,6 +293,7 @@ The landing-page proof surface is designed to be inspectable, portable, and hone
 | --- | --- | --- |
 | [Impact monitor](docs/monitoring/index.html) | Score, uplift, lifecycle coverage, event mix, and recent hook evidence | Open it directly from GitHub or publish it with GitHub Pages |
 | [History JSON](docs/monitoring/history.json) | Time-series score, daily hook events, and usability metrics | Import into Observable Plot, Vega-Lite, Evidence, DuckDB, or a docs site |
+| [Cross-repo rollup](docs/rollup/index.html) | Aggregate hook evidence across every repo observed in the local telemetry store | Run `repo-context-hooks rollup --snapshot-dir docs/rollup` |
 | Local dashboard | Private per-repo `monitoring.html` generated beside the local event log | Run `repo-context-hooks measure` after real agent sessions |
 | Public snapshot | Sanitized dashboard and `history.json` for a README, demo, or adoption note | Run `repo-context-hooks measure --snapshot-dir docs/monitoring` |
 

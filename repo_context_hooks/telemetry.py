@@ -85,6 +85,14 @@ def telemetry_events_path(repo_root: Path, base: Path | None = None) -> Path:
 
 
 def _repo_display_name(repo_root: Path) -> str:
+    top_level = _git_output(repo_root, "rev-parse", "--show-toplevel")
+    try:
+        is_git_root = bool(top_level) and Path(top_level).resolve() == repo_root.resolve()
+    except OSError:
+        is_git_root = False
+    if not is_git_root:
+        return repo_root.name
+
     remote = _git_output(repo_root, "remote", "get-url", "origin")
     if remote:
         name = remote.rstrip("/").split("/")[-1]
@@ -374,7 +382,7 @@ def record_event(
         "model_name": resolved_model,
         "agent_session_id": resolved_session_id,
         "repo_id": repo_id(repo_root),
-        "repo_name": repo_root.name,
+        "repo_name": _repo_display_name(repo_root),
         "branch": _git_output(repo_root, "branch", "--show-current") or "unknown",
         "repo_contract_score": signals["score"],
         "estimated_baseline_score": signals["estimated_baseline_score"],
@@ -386,6 +394,83 @@ def record_event(
         measure_impact(repo_root, telemetry_base=telemetry_base)
     except Exception:
         pass
+    return path
+
+
+def _context_window_details(
+    *,
+    used_tokens: int,
+    limit_tokens: int,
+    threshold_percent: float,
+) -> dict[str, Any]:
+    if limit_tokens <= 0:
+        raise ValueError("limit_tokens must be greater than zero")
+    if used_tokens < 0:
+        raise ValueError("used_tokens must be zero or greater")
+    usage_percent = round(used_tokens / limit_tokens * 100, 2)
+    remaining_percent = round(max(0.0, 100.0 - usage_percent), 2)
+    threshold_window = round(max(0.0, 100.0 - threshold_percent), 2)
+    return {
+        "used_tokens": used_tokens,
+        "limit_tokens": limit_tokens,
+        "usage_percent": usage_percent,
+        "remaining_percent": remaining_percent,
+        "threshold_percent": float(threshold_percent),
+        "threshold_window_percent": threshold_window,
+    }
+
+
+def record_context_window(
+    repo_root: Path,
+    *,
+    used_tokens: int,
+    limit_tokens: int,
+    threshold_percent: float = 99.0,
+    checkpoint: bool = False,
+    source: str = "context-window",
+    telemetry_base: Path | None = None,
+    agent_platform: str | None = None,
+    model_name: str | None = None,
+    agent_session_id: str | None = None,
+) -> Path:
+    """Record context-window pressure from an editor, wrapper, or model runner."""
+    details = _context_window_details(
+        used_tokens=used_tokens,
+        limit_tokens=limit_tokens,
+        threshold_percent=threshold_percent,
+    )
+    threshold_reached = details["usage_percent"] >= threshold_percent
+    event_name = (
+        "context-window-threshold"
+        if threshold_reached
+        else "context-window-sample"
+    )
+    path = record_event(
+        repo_root,
+        event_name,
+        source=source,
+        telemetry_base=telemetry_base,
+        details=details,
+        agent_platform=agent_platform,
+        model_name=model_name,
+        agent_session_id=agent_session_id,
+    )
+    if threshold_reached and checkpoint:
+        checkpoint_details = {
+            **details,
+            "checkpoint_trigger": event_name,
+            "checkpoint_requested": True,
+        }
+        record_event(
+            repo_root,
+            "pre-compact",
+            source=f"{source}:checkpoint",
+            telemetry_base=telemetry_base,
+            details=checkpoint_details,
+            agent_platform=agent_platform,
+            model_name=model_name,
+            agent_session_id=agent_session_id,
+        )
     return path
 
 
@@ -529,6 +614,111 @@ class ImpactReport:
             "history": self.history.to_dict(),
             "usability": self.usability.to_dict(),
             "recommendations": list(self.recommendations),
+        }
+
+
+@dataclass(frozen=True)
+class RepoRollupSummary:
+    repo_name: str
+    repo_id: str
+    observed_events: int
+    latest_score: int
+    baseline: int
+    uplift: int
+    agent_sessions: int
+    lifecycle_coverage: int
+    context_threshold_events: int
+    checkpoint_events: int
+    max_context_usage_percent: float | None
+    latest_seen: str | None
+    event_counts: dict[str, int]
+    agent_platforms: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "repo_name": self.repo_name,
+            "repo_id": self.repo_id,
+            "observed_events": self.observed_events,
+            "latest_score": self.latest_score,
+            "baseline": self.baseline,
+            "uplift": self.uplift,
+            "agent_sessions": self.agent_sessions,
+            "lifecycle_coverage": self.lifecycle_coverage,
+            "context_threshold_events": self.context_threshold_events,
+            "checkpoint_events": self.checkpoint_events,
+            "max_context_usage_percent": self.max_context_usage_percent,
+            "latest_seen": self.latest_seen,
+            "event_counts": self.event_counts,
+            "agent_platforms": list(self.agent_platforms),
+        }
+
+
+@dataclass(frozen=True)
+class RollupReport:
+    telemetry_base: Path
+    generated_at: str
+    repos: tuple[RepoRollupSummary, ...]
+    event_counts: dict[str, int]
+
+    @property
+    def repo_count(self) -> int:
+        return len(self.repos)
+
+    @property
+    def total_events(self) -> int:
+        return sum(repo.observed_events for repo in self.repos)
+
+    @property
+    def total_agent_sessions(self) -> int:
+        return sum(repo.agent_sessions for repo in self.repos)
+
+    @property
+    def context_threshold_events(self) -> int:
+        return sum(repo.context_threshold_events for repo in self.repos)
+
+    @property
+    def checkpoint_events(self) -> int:
+        return sum(repo.checkpoint_events for repo in self.repos)
+
+    def render(self) -> str:
+        lines = [
+            "[OK] cross-repo telemetry rollup",
+            f"Telemetry store: {self.telemetry_base}",
+            f"Repos observed: {self.repo_count}",
+            f"Total events: {self.total_events}",
+            f"Agent sessions observed: {self.total_agent_sessions}",
+            f"Context threshold events: {self.context_threshold_events}",
+            f"Checkpoint events: {self.checkpoint_events}",
+        ]
+        if self.repos:
+            lines.append("Repos:")
+            for repo in self.repos:
+                usage = (
+                    "n/a"
+                    if repo.max_context_usage_percent is None
+                    else f"{repo.max_context_usage_percent}%"
+                )
+                lines.append(
+                    "- "
+                    f"{repo.repo_name}: {repo.observed_events} events, "
+                    f"{repo.agent_sessions} sessions, "
+                    f"score {repo.latest_score}, "
+                    f"context max {usage}"
+                )
+        else:
+            lines.append("No repo telemetry events found yet.")
+        return "\n".join(lines)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "generated_at": self.generated_at,
+            "repo_count": self.repo_count,
+            "total_events": self.total_events,
+            "total_agent_sessions": self.total_agent_sessions,
+            "context_threshold_events": self.context_threshold_events,
+            "checkpoint_events": self.checkpoint_events,
+            "event_counts": self.event_counts,
+            "repos": [repo.to_dict() for repo in self.repos],
         }
 
 
@@ -678,6 +868,178 @@ def render_prometheus_metrics(report: ImpactReport) -> str:
                 labels=labels,
             )
         )
+    return "\n".join(metrics) + "\n"
+
+
+def _event_context_usage_percent(event: dict[str, Any]) -> float | None:
+    details = event.get("details", {})
+    if not isinstance(details, dict):
+        return None
+    value = details.get("usage_percent")
+    if value is None:
+        return None
+    try:
+        return round(float(value), 2)
+    except (TypeError, ValueError):
+        return None
+
+
+def _rollup_event_paths(
+    telemetry_base: Path,
+    projects_root: Path | None = None,
+) -> tuple[Path, ...]:
+    paths: set[Path] = set()
+    if not telemetry_base.exists() or not telemetry_base.is_dir():
+        pass
+    else:
+        paths.update(path.resolve() for path in telemetry_base.glob(f"*/{EVENTS_FILE}"))
+    if projects_root is not None and projects_root.exists():
+        paths.update(
+            path.resolve()
+            for path in projects_root.glob(f"*/.repo-context-hooks/telemetry/*/{EVENTS_FILE}")
+        )
+    return tuple(sorted(paths))
+
+
+def _build_repo_rollup(events: list[dict[str, Any]]) -> RepoRollupSummary:
+    history = _build_history(events)
+    usability = _build_usability(events, history)
+    latest = events[-1]
+    event_counts: dict[str, int] = {}
+    for event in events:
+        name = _event_name(event)
+        event_counts[name] = event_counts.get(name, 0) + 1
+    context_values = [
+        value
+        for value in (_event_context_usage_percent(event) for event in events)
+        if value is not None
+    ]
+    baseline = 0
+    try:
+        baseline = int(latest.get("estimated_baseline_score", 0))
+    except (TypeError, ValueError):
+        baseline = 0
+    latest_score = history.latest_score or _event_score(latest)
+    session_ids = {
+        _event_agent_session_id(event)
+        for event in events
+        if _event_agent_session_id(event) != "unknown-session"
+    }
+    if not session_ids and events:
+        session_ids = {"unknown-session"}
+    agent_platforms = tuple(
+        sorted(
+            {
+                _event_agent_platform(event)
+                for event in events
+            }
+        )
+    )
+    return RepoRollupSummary(
+        repo_name=_clean_dimension(latest.get("repo_name"), "unknown-repo"),
+        repo_id=_clean_dimension(latest.get("repo_id"), "unknown-repo"),
+        observed_events=len(events),
+        latest_score=latest_score,
+        baseline=baseline,
+        uplift=latest_score - baseline,
+        agent_sessions=len(session_ids),
+        lifecycle_coverage=usability.lifecycle_coverage,
+        context_threshold_events=event_counts.get("context-window-threshold", 0),
+        checkpoint_events=sum(
+            count
+            for name, count in event_counts.items()
+            if name in {"pre-compact", "session-end"}
+        ),
+        max_context_usage_percent=max(context_values) if context_values else None,
+        latest_seen=history.latest_seen,
+        event_counts=event_counts,
+        agent_platforms=agent_platforms,
+    )
+
+
+def measure_rollup(
+    telemetry_base: Path | None = None,
+    projects_root: Path | None = None,
+) -> RollupReport:
+    """Aggregate local telemetry across every repo directory in the telemetry store."""
+    base = telemetry_base or _default_telemetry_base()
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    event_counts: dict[str, int] = {}
+    for path in _rollup_event_paths(base, projects_root=projects_root):
+        for event in _read_events(path):
+            repo_key = _clean_dimension(
+                event.get("repo_id"),
+                path.parent.name,
+            )
+            grouped.setdefault(repo_key, []).append(event)
+            name = _event_name(event)
+            event_counts[name] = event_counts.get(name, 0) + 1
+
+    repos = [
+        _build_repo_rollup(sorted(events, key=lambda event: str(event.get("timestamp", ""))))
+        for events in grouped.values()
+        if events
+    ]
+    return RollupReport(
+        telemetry_base=base,
+        generated_at=dt.datetime.now(dt.timezone.utc).isoformat(),
+        repos=tuple(
+            sorted(
+                repos,
+                key=lambda repo: (
+                    -repo.observed_events,
+                    repo.repo_name,
+                ),
+            )
+        ),
+        event_counts=event_counts,
+    )
+
+
+def render_rollup_prometheus_metrics(report: RollupReport) -> str:
+    metrics: list[str] = [
+        "# HELP repo_context_hooks_rollup_repos_total Number of repositories with local telemetry evidence.",
+        "# TYPE repo_context_hooks_rollup_repos_total gauge",
+        _prometheus_line("repo_context_hooks_rollup_repos_total", report.repo_count),
+        "# HELP repo_context_hooks_rollup_events_total Total local continuity events across repositories.",
+        "# TYPE repo_context_hooks_rollup_events_total counter",
+        _prometheus_line("repo_context_hooks_rollup_events_total", report.total_events),
+        "# HELP repo_context_hooks_rollup_agent_sessions_total Total observed agent sessions across repositories.",
+        "# TYPE repo_context_hooks_rollup_agent_sessions_total counter",
+        _prometheus_line("repo_context_hooks_rollup_agent_sessions_total", report.total_agent_sessions),
+        "# HELP repo_context_hooks_rollup_context_threshold_events_total Total context-window threshold events across repositories.",
+        "# TYPE repo_context_hooks_rollup_context_threshold_events_total counter",
+        _prometheus_line(
+            "repo_context_hooks_rollup_context_threshold_events_total",
+            report.context_threshold_events,
+        ),
+        "# HELP repo_context_hooks_repo_events_total Local continuity events per repository.",
+        "# TYPE repo_context_hooks_repo_events_total counter",
+    ]
+    for repo in report.repos:
+        labels = {"repo": repo.repo_name}
+        metrics.append(
+            _prometheus_line(
+                "repo_context_hooks_repo_events_total",
+                repo.observed_events,
+                labels=labels,
+            )
+        )
+        metrics.append(
+            _prometheus_line(
+                "repo_context_hooks_repo_context_threshold_events_total",
+                repo.context_threshold_events,
+                labels=labels,
+            )
+        )
+        if repo.max_context_usage_percent is not None:
+            metrics.append(
+                _prometheus_line(
+                    "repo_context_hooks_repo_max_context_usage_percent",
+                    repo.max_context_usage_percent,
+                    labels=labels,
+                )
+            )
     return "\n".join(metrics) + "\n"
 
 
@@ -1632,6 +1994,88 @@ def write_public_monitoring_snapshot(
         "dashboard_path": str(dashboard_path),
         "history_path": str(history_path),
         "time_series_svg_path": str(time_series_svg_path),
+    }
+
+
+def render_rollup_dashboard(report: RollupReport) -> str:
+    rows = "\n".join(
+        (
+            "<tr>"
+            f"<td>{html.escape(repo.repo_name)}</td>"
+            f"<td>{repo.observed_events}</td>"
+            f"<td>{repo.agent_sessions}</td>"
+            f"<td>{repo.latest_score}</td>"
+            f"<td>{repo.uplift:+d}</td>"
+            f"<td>{repo.context_threshold_events}</td>"
+            f"<td>{'' if repo.max_context_usage_percent is None else repo.max_context_usage_percent}</td>"
+            "</tr>"
+        )
+        for repo in report.repos
+    )
+    if not rows:
+        rows = '<tr><td colspan="7">No repo telemetry observed yet.</td></tr>'
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cross-Repo Telemetry Rollup</title>
+  <style>
+    body {{ margin: 0; font-family: Segoe UI, sans-serif; background: #f6efe0; color: #17120b; }}
+    main {{ max-width: 1080px; margin: 0 auto; padding: 48px 24px; }}
+    h1 {{ font-family: Georgia, serif; font-size: 44px; margin: 0 0 12px; }}
+    .grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 28px 0; }}
+    .card {{ background: #17120b; color: #f6efe0; border-radius: 20px; padding: 20px; }}
+    .card span {{ display: block; color: #e5a92f; font-size: 13px; font-weight: 800; }}
+    .card strong {{ display: block; font-size: 34px; margin-top: 8px; }}
+    table {{ width: 100%; border-collapse: collapse; background: #fff9ea; border-radius: 18px; overflow: hidden; }}
+    th, td {{ text-align: left; padding: 14px 16px; border-bottom: 1px solid #dec18d; }}
+    th {{ background: #f0d9a8; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }}
+    p {{ color: #5d4327; line-height: 1.6; }}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Cross-Repo Telemetry Rollup</h1>
+  <p>Aggregate local-only hook evidence across every repository observed in the telemetry store. This snapshot does not include local filesystem paths, prompts, code, resumes, secrets, or compact summaries.</p>
+  <section class="grid">
+    <div class="card"><span>Repos</span><strong>{report.repo_count}</strong></div>
+    <div class="card"><span>Events</span><strong>{report.total_events}</strong></div>
+    <div class="card"><span>Sessions</span><strong>{report.total_agent_sessions}</strong></div>
+    <div class="card"><span>Context thresholds</span><strong>{report.context_threshold_events}</strong></div>
+  </section>
+  <table>
+    <thead>
+      <tr><th>Repo</th><th>Events</th><th>Sessions</th><th>Score</th><th>Uplift</th><th>Thresholds</th><th>Max context %</th></tr>
+    </thead>
+    <tbody>
+      {rows}
+    </tbody>
+  </table>
+</main>
+</body>
+</html>
+"""
+
+
+def write_public_rollup_snapshot(
+    report: RollupReport,
+    output_dir: Path,
+) -> dict[str, str]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    dashboard_path = output_dir / "index.html"
+    history_path = output_dir / "rollup.json"
+    history_path.write_text(
+        json.dumps(report.to_dict(), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    dashboard_path.write_text(
+        render_rollup_dashboard(report),
+        encoding="utf-8",
+    )
+    return {
+        "dashboard_path": str(dashboard_path),
+        "history_path": str(history_path),
     }
 
 

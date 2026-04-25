@@ -367,6 +367,15 @@ This file is the persistent project context for agents and maintainers.
   - compact/reload/session-end hooks reuse the current agent-session id
   - public snapshots include agent-session rows and session counts
   - `measure` is positioned as inspection/export; hooks are the automatic collection layer
+- Cross-repo rollup and context-window threshold phase:
+  - added `repo-context-hooks record-context` for VS Code extensions, wrappers, and model runners that can report used tokens and context-window limits
+  - default threshold is `99%`, which models the "1% before auto-compact" checkpoint target when a runner can supply token usage
+  - `--checkpoint` records a `pre-compact` event after a context threshold event, so rollups can prove context pressure was caught
+  - added `repo-context-hooks rollup` to aggregate local telemetry across all observed repo event logs
+  - added `rollup --projects-root` for repo-local fallback telemetry across child project folders
+  - added rollup JSON, Prometheus/OpenMetrics, and sanitized public snapshot output
+  - added `docs/rollup/index.html` and `docs/rollup/rollup.json` from local fallback telemetry
+  - honest boundary: this does not magically inspect every model context window; platforms or wrappers must provide token usage unless the platform exposes native lifecycle hooks
 - Claim boundary:
   - the project now has a real local observability export
   - Grafana and Datadog are documented integration paths over OpenMetrics

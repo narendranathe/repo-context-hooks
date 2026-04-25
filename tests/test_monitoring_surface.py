@@ -107,8 +107,14 @@ def test_readme_embeds_monitoring_brand_assets() -> None:
     assert "assets/diagrams/context-continuity-engine.svg" in readme
     assert "docs/monitoring/index.html" in readme
     assert "docs/monitoring/history.json" in readme
+    assert "docs/rollup/index.html" in readme
+    assert "docs/rollup/rollup.json" in readme
+    assert (ROOT / "docs" / "rollup" / "index.html").exists()
+    assert (ROOT / "docs" / "rollup" / "rollup.json").exists()
     assert "generated from the same `docs/monitoring/history.json`" in readme
     assert "repo-context-hooks measure --prometheus" in readme
+    assert "repo-context-hooks record-context" in readme
+    assert "repo-context-hooks rollup" in readme
     assert "Grafana" in readme
     assert "Datadog" in readme
     assert "Telemetry Visibility" in readme
@@ -116,6 +122,8 @@ def test_readme_embeds_monitoring_brand_assets() -> None:
     assert "Vega-Lite" in readme
     assert "Score `90`" in readme
     assert "Uplift `+70`" in readme
+    assert "Context Window Thresholds" in readme
+    assert "Cross-Repo Rollup" in readme
 
 
 def test_png_brand_logo_exists_and_has_expected_dimensions() -> None:

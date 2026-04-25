@@ -123,6 +123,9 @@ def test_readme_documents_impact_measurement() -> None:
     assert "repo-context-hooks measure --json" in text
     assert "repo-context-hooks measure --prometheus" in text
     assert "repo-context-hooks measure --snapshot-dir docs/monitoring" in text
+    assert "repo-context-hooks record-context" in text
+    assert "repo-context-hooks rollup" in text
+    assert "repo-context-hooks rollup --snapshot-dir docs/rollup" in text
     assert "docs/monitoring.md" in text
     assert "docs/observability.md" in text
     assert "docs/monitoring/history.json" in text
