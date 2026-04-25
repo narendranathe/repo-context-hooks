@@ -2,6 +2,12 @@
 
 Repo-native continuity for coding agents.
 
+<p align="center">
+  <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">
+</p>
+
+![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
+
 `repo-context-hooks` keeps interrupted work, next-step context, and handoff notes in the repository instead of leaving them trapped in chat history. The goal is simple: a new session should be able to reopen the repo, understand the work in progress, and continue without rediscovering everything from scratch.
 
 ```bash
@@ -156,7 +162,64 @@ repo-context-hooks platforms --json
 repo-context-hooks doctor --json
 repo-context-hooks doctor --all-platforms --json
 repo-context-hooks recommend --json
+repo-context-hooks measure --json
 ```
+
+## Prove Impact
+
+`repo-context-hooks` now includes a local evidence loop so teams can show what continuity changed instead of only claiming it helped.
+
+```bash
+repo-context-hooks measure
+repo-context-hooks measure --json
+repo-context-hooks measure --snapshot-dir docs/monitoring
+```
+
+`measure` compares the current repo continuity score against an estimated no-continuity baseline, then reports observed hook and skill events from local JSONL telemetry. Hook scripts write small events to your OS cache by default, outside the git repo. If that cache is unavailable in a sandbox, telemetry falls back to `.repo-context-hooks/`, which `init` adds to `.gitignore`.
+
+Use `--snapshot-dir` when you intentionally want to publish a sanitized dashboard and `history.json` from your local evidence. The snapshot includes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
+
+Use it before and after installing a platform adapter:
+
+```bash
+repo-context-hooks measure
+repo-context-hooks install --platform claude
+# start a new Claude session or run a compact/session-end flow
+repo-context-hooks measure
+```
+
+The output is intentionally operational rather than magical: it shows repo-contract readiness, observed lifecycle events, evidence-log location, and concrete recommendations. See [docs/monitoring.md](docs/monitoring.md) for the metric definitions, privacy boundary, and before/after workflow.
+
+Current repo snapshot:
+
+- Score `90`
+- Baseline `20`
+- Uplift `+70`
+- Observed hook events `32`
+- Active days `2`
+- Lifecycle coverage `100%`
+- Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
+- Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
+
+Remote telemetry is not enabled in the MVP. Any future community usage metrics must be explicit opt-in and follow [docs/telemetry-policy.md](docs/telemetry-policy.md).
+
+## Telemetry Visibility
+
+The landing-page proof surface is designed to be inspectable, portable, and honest. The repo does not ask users to trust a hidden service; it gives them local telemetry, a generated HTML monitor, and a checked-in JSON snapshot they can visualize anywhere.
+
+| Surface | What it shows | How to use it |
+| --- | --- | --- |
+| [Impact monitor](docs/monitoring/index.html) | Score, uplift, lifecycle coverage, event mix, and recent hook evidence | Open it directly from GitHub or publish it with GitHub Pages |
+| [History JSON](docs/monitoring/history.json) | Time-series score, daily hook events, and usability metrics | Import into Observable Plot, Vega-Lite, Evidence, DuckDB, or a docs site |
+| Local dashboard | Private per-repo `monitoring.html` generated beside the local event log | Run `repo-context-hooks measure` after real agent sessions |
+| Public snapshot | Sanitized dashboard and `history.json` for a README, demo, or adoption note | Run `repo-context-hooks measure --snapshot-dir docs/monitoring` |
+
+Visualization tools that fit the current MVP:
+
+- Observable Plot for a lightweight public notebook over `docs/monitoring/history.json`.
+- Vega-Lite for an embeddable JSON-driven chart in docs or a portfolio case study.
+- GitHub Pages for hosting `docs/monitoring/index.html` without adding a backend.
+- DuckDB or SQLite for local trend analysis once the JSONL log grows across many sessions.
 
 ## Concrete Stories
 
@@ -180,6 +243,8 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 - [Engineering memory](specs/README.md)
 - [Ubiquitous language](UBIQUITOUS_LANGUAGE.md)
 - [Architecture](docs/architecture.md)
+- [Monitoring and impact evidence](docs/monitoring.md)
+- [Telemetry policy](docs/telemetry-policy.md)
 - [Competitive analysis](docs/competitive-analysis.md)
 - [Minimal repo example](examples/minimal-repo/)
 - [Multi-project example](examples/multi-project/)

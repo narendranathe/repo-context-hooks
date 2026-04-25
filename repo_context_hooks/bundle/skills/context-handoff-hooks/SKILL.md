@@ -22,6 +22,7 @@ This skill installs a context-handoff pipeline so new agent sessions start with 
 - `PreCompact`: checkpoints state in `specs/README.md`.
 - `PostCompact`: reloads memory and active work context.
 - `SessionEnd`: appends a final checkpoint for handoff.
+- Local telemetry: emits small JSONL events so `repo-context-hooks measure` can prove hooks actually fired.
 
 ## Quick Start
 
@@ -33,6 +34,7 @@ python .claude/skills/context-handoff-hooks/scripts/install_hooks.py --repo-root
 ```
 
 3. Start a new session and verify hooks fire.
+4. Run `repo-context-hooks measure` to inspect observed hook evidence and estimated continuity uplift.
 
 ## Canonical Context Contract
 
@@ -46,3 +48,4 @@ python .claude/skills/context-handoff-hooks/scripts/install_hooks.py --repo-root
 - Installing hook entries but forgetting script files in `.claude/scripts/`
 - Treating `README.md` and `specs/README.md` as duplicate docs instead of different audiences
 - Not updating `Open Issues and Next Work`, resulting in weak session-start context
+- Assuming hooks work without checking `repo-context-hooks measure`

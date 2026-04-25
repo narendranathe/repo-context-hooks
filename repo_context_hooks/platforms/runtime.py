@@ -109,9 +109,9 @@ def _save_json(path: Path, data: dict) -> None:
 
 
 def hook_payload(repo_root: Path) -> dict:
-    scripts = repo_root / ".claude" / "scripts"
-    repo_specs = scripts / "repo_specs_memory.py"
-    session_ctx = scripts / "session_context.py"
+    del repo_root
+    repo_specs = '"$CLAUDE_PROJECT_DIR"/.claude/scripts/repo_specs_memory.py'
+    session_ctx = '"$CLAUDE_PROJECT_DIR"/.claude/scripts/session_context.py'
     return {
         "SessionStart": [
             {
@@ -119,12 +119,12 @@ def hook_payload(repo_root: Path) -> dict:
                 "hooks": [
                     {
                         "type": "command",
-                        "command": f'python "{repo_specs}" session-start',
+                        "command": f"python {repo_specs} session-start",
                         "timeout": 20,
                     },
                     {
                         "type": "command",
-                        "command": f'python "{session_ctx}" session-start',
+                        "command": f"python {session_ctx} session-start",
                         "timeout": 20,
                     },
                 ],
@@ -136,7 +136,7 @@ def hook_payload(repo_root: Path) -> dict:
                 "hooks": [
                     {
                         "type": "command",
-                        "command": f'python "{repo_specs}" pre-compact',
+                        "command": f"python {repo_specs} pre-compact",
                         "timeout": 15,
                     }
                 ],
@@ -148,12 +148,12 @@ def hook_payload(repo_root: Path) -> dict:
                 "hooks": [
                     {
                         "type": "command",
-                        "command": f'python "{repo_specs}" post-compact',
+                        "command": f"python {repo_specs} post-compact",
                         "timeout": 20,
                     },
                     {
                         "type": "command",
-                        "command": f'python "{session_ctx}" post-compact',
+                        "command": f"python {session_ctx} post-compact",
                         "timeout": 20,
                     },
                 ],
@@ -165,7 +165,7 @@ def hook_payload(repo_root: Path) -> dict:
                 "hooks": [
                     {
                         "type": "command",
-                        "command": f'python "{repo_specs}" session-end',
+                        "command": f"python {repo_specs} session-end",
                         "timeout": 10,
                     }
                 ],

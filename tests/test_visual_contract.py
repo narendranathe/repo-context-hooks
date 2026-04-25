@@ -43,6 +43,21 @@ def test_before_after_diagram_mentions_repeated_work_and_clean_handoff() -> None
         assert snippet in text, f"missing before/after story detail: {snippet}"
 
 
+def test_context_engine_hero_mentions_continuous_monitoring() -> None:
+    text = (ROOT / "assets" / "diagrams" / "context-continuity-engine.svg").read_text(encoding="utf-8").lower()
+
+    expected_snippets = [
+        "context continuity engine",
+        "hook events",
+        "impact monitor",
+        "score 90",
+        "+70 uplift",
+        "next agent resumes warm",
+    ]
+    for snippet in expected_snippets:
+        assert snippet in text, f"missing context engine hero detail: {snippet}"
+
+
 def test_platform_roadmap_doc_links_planned_platforms() -> None:
     text = (ROOT / "docs" / "launch" / "platform-roadmap.md").read_text(encoding="utf-8")
 

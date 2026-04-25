@@ -1,0 +1,38 @@
+{
+  "baseline": 20,
+  "event_counts": {
+    "post-compact": 1,
+    "pre-compact": 1,
+    "session-context-post-compact": 1,
+    "session-end": 1,
+    "session-start": 28
+  },
+  "first_seen": "2026-04-24T15:26:58.522809+00:00",
+  "latest_seen": "2026-04-25T00:30:10.604902+00:00",
+  "observed_events": 32,
+  "repo": "repo-context-hooks",
+  "score": 90,
+  "snapshot_at": "2026-04-25T00:41:08Z",
+  "time_series": [
+    {
+      "date": "2026-04-24",
+      "events": 30,
+      "score": 90
+    },
+    {
+      "date": "2026-04-25",
+      "events": 2,
+      "score": 90
+    }
+  ],
+  "uplift": 70,
+  "usability": {
+    "active_days": 2,
+    "checkpoint_events": 2,
+    "lifecycle_coverage": 100,
+    "readiness_minutes_since_last_event": 11,
+    "reload_events": 2,
+    "resume_events": 28,
+    "session_end_events": 1
+  }
+}

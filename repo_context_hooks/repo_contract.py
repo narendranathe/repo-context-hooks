@@ -144,6 +144,23 @@ def ensure_agents(repo_root: Path, force: bool = False) -> str:
     return "installed"
 
 
+def ensure_gitignore(repo_root: Path) -> str:
+    path = repo_root / ".gitignore"
+    entry = ".repo-context-hooks/"
+    if not path.exists():
+        path.write_text(f"{entry}\n", encoding="utf-8")
+        return "installed"
+
+    content = path.read_text(encoding="utf-8", errors="ignore")
+    lines = {line.strip() for line in content.splitlines()}
+    if entry in lines:
+        return "skipped"
+
+    suffix = "" if content.endswith("\n") else "\n"
+    path.write_text(f"{content}{suffix}{entry}\n", encoding="utf-8")
+    return "updated"
+
+
 def ensure_specs_readme(repo_root: Path, force: bool = False) -> str:
     specs_dir = repo_root / "specs"
     specs_dir.mkdir(exist_ok=True)
@@ -203,4 +220,5 @@ def init_repo_contract(repo_root: Path, force: bool = False) -> dict[str, str]:
         "specs/README.md": ensure_specs_readme(repo_root, force=force),
         "UBIQUITOUS_LANGUAGE.md": ensure_ubiquitous_language(repo_root, force=force),
         "AGENTS.md": ensure_agents(repo_root, force=force),
+        ".gitignore": ensure_gitignore(repo_root),
     }

@@ -13,3 +13,4 @@ dist/
 build/
 *.egg-info/
 .worktrees/
+.repo-context-hooks/

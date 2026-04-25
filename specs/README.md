@@ -57,6 +57,13 @@ This file is the persistent project context for agents and maintainers.
 - Current active branch adds the next layer:
   - `doctor --all-platforms`
   - `recommend`
+- Current monitoring branch adds local impact evidence:
+  - `measure`
+  - `measure --snapshot-dir docs/monitoring`
+  - local JSONL hook/skill events
+  - estimated current-vs-baseline continuity uplift
+  - committed Claude repo hooks so the evidence loop is automatic for this repo
+  - documented consent-first remote telemetry as a future product path, not part of the MVP
 
 ## Delivery Timeline
 
@@ -124,6 +131,13 @@ This file is the persistent project context for agents and maintainers.
 - Keep verification and advice separate:
   - `doctor` verifies actual state
   - `recommend` explains the best next move
+- Keep evidence and claims separate:
+  - `measure` reports local continuity signals and observed hook events
+  - public copy must describe this as operational evidence, not a scientific productivity benchmark
+- Keep telemetry trust boundaries explicit:
+  - local telemetry is on by default because it stays local
+  - remote telemetry must be opt-in, revocable, and policy-backed
+  - cookies are not appropriate for CLI/hook/MCP telemetry
 - Keep partial platforms useful without pretending they expose Claude-style hook parity.
 
 ## What Worked
@@ -134,6 +148,7 @@ This file is the persistent project context for agents and maintainers.
 - Repo-first onboarding made the product easier to understand and made the CLI match the product promise.
 - Canonical tracked memory files reduced repeated worktree clutter and made context continuity feel intentional.
 - Product-driven development with real issues, PRs, releases, and checkpoints created a stronger public artifact than one large undocumented push would have.
+- Adding a local measurement loop makes the product easier to trust because users can inspect whether hooks actually fired before they believe the continuity story.
 
 ## What Failed or Was Reverted
 
@@ -187,6 +202,47 @@ This file is the persistent project context for agents and maintainers.
 
 ## Session Checkpoints
 
+### 2026-04-24 - evidence monitoring branch
+
+- Branch: `feat/evidence-monitoring`
+- Goal: add `repo-context-hooks measure` so users can prove the effect of repo continuity instead of only reading product claims.
+- Design boundary: telemetry is local-only, writes outside the repo by default, and reports operational readiness plus observed lifecycle events.
+- Local proof after installing hooks:
+  - Claude doctor: `ok`
+  - repo contract: `ok`
+  - ready platforms: Claude native, Codex partial, Kimi partial
+  - measure score: `90`
+  - estimated baseline: `20`
+  - estimated uplift: `+70`
+  - observed hook events: `32`
+  - active days: `2`
+  - lifecycle coverage: `100%`
+  - resume events: `28`
+  - checkpoint events: `2`
+  - reload events: `2`
+  - session-end events: `1`
+- Current implementation slice:
+  - `repo_context_hooks/telemetry.py`
+  - `repo-context-hooks measure`
+  - `repo-context-hooks measure --snapshot-dir docs/monitoring`
+  - time-series usability metrics in `ImpactHistory` and `UsabilityMetrics`
+  - local `monitoring.html` dashboard generated from the telemetry log
+  - sanitized checked-in public snapshot at `docs/monitoring/index.html`
+  - generated public history at `docs/monitoring/history.json`
+  - README telemetry visibility section for Observable Plot, Vega-Lite, GitHub Pages, and local analysis workflows
+  - PNG/SVG brand assets at `assets/brand/repo-context-hooks-logo.*`
+  - checked-in visual brand asset at `assets/diagrams/context-continuity-engine.svg`
+  - hook-script telemetry emission from `repo_specs_memory.py` and `session_context.py`
+  - README and monitoring guide updates
+  - `.claude/settings.json`
+  - `.claude/scripts/repo_specs_memory.py`
+  - `.claude/scripts/session_context.py`
+  - `AGENTS.md`
+- Claim boundary:
+  - this is an impact evidence layer, not hosted analytics
+  - this is an estimated before/after continuity audit, not a controlled productivity benchmark
+  - remote telemetry requires explicit consent and is not implemented in the MVP
+
 ### Current Checkpoint
 
 - This file captures the project history through the platform-readiness phase and the public README/JSON-output release.
@@ -203,3 +259,18 @@ This file is the persistent project context for agents and maintainers.
   - JSON command smoke checks passing
 - Branch policy:
   - merged branches are preserved for future review and revert workflows
+
+### 2026-04-24 11:16 - post-compact
+
+- Branch: `feat/evidence-monitoring`
+- Working changes: repo_context_hooks/telemetry.py, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+
+### 2026-04-24 11:16 - session-end
+
+- Branch: `feat/evidence-monitoring`
+- Working changes: repo_context_hooks/telemetry.py, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+
+### 2026-04-24 11:16 - session-end
+
+- Branch: `feat/evidence-monitoring`
+- Working changes: repo_context_hooks/telemetry.py, specs/README.md, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
