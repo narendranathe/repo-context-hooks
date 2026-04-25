@@ -1,49 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 360" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="440" viewBox="0 0 1120 440" role="img" aria-labelledby="title desc">
   <title id="title">repo-context-hooks repo contract handoff story</title>
-  <desc id="desc">A concrete repo contract story where README.md holds the open PR story, specs/README.md stores handoff notes, and Cursor or Codex can re-enter with repo context.</desc>
+  <desc id="desc">A concrete repo contract story where open PR story stays in README.md, handoff notes land in specs/README.md, AGENTS.md guides the re-entry, and Cursor or Codex can re-enter with repo context.</desc>
+
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#fffaf0" />
-      <stop offset="100%" stop-color="#f8fafc" />
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff8e8"/>
+      <stop offset="58%" stop-color="#f2d6a4"/>
+      <stop offset="100%" stop-color="#c98d50"/>
     </linearGradient>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155" />
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#203a33"/>
+      <stop offset="100%" stop-color="#101820"/>
+    </linearGradient>
+    <linearGradient id="heat" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#b54720"/>
+      <stop offset="48%" stop-color="#e6a92f"/>
+      <stop offset="100%" stop-color="#2f6f5e"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#3a2410" flood-opacity=".18"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#2f6f5e"/>
     </marker>
-    <style>
-      .eyebrow { font: 700 12px Arial, sans-serif; letter-spacing: 1.2px; text-transform: uppercase; fill: #475569; }
-      .title { font: 700 22px Arial, sans-serif; fill: #0f172a; }
-      .card { font: 700 17px Arial, sans-serif; fill: #0f172a; }
-      .body { font: 14px Arial, sans-serif; fill: #334155; }
-      .small { font: 13px Arial, sans-serif; fill: #475569; }
-    </style>
   </defs>
 
-  <rect width="1040" height="360" rx="28" fill="url(#bg)" />
-  <text class="eyebrow" x="64" y="54">Repo contract in practice</text>
-  <text class="title" x="64" y="86">README.md, specs/README.md, and AGENTS.md work together as the repo contract</text>
 
-  <rect x="60" y="132" width="280" height="160" rx="20" fill="#ffffff" stroke="#0f172a" stroke-width="2" />
-  <text class="card" x="88" y="168">README.md</text>
-  <text class="body" x="88" y="198">Open PR story stays in README.md</text>
-  <text class="body" x="88" y="222">What the tool is</text>
-  <text class="body" x="88" y="246">Which platforms are supported</text>
-  <text class="small" x="88" y="274">This is the public surface a teammate sees first.</text>
+  <style>
+    .eyebrow { font: 800 15px Aptos, Segoe UI, sans-serif; letter-spacing: 3px; text-transform: uppercase; fill: #8f3d22; }
+    .headline { font: 800 44px Georgia, serif; letter-spacing: -1.8px; fill: #17120b; }
+    .subhead { font: 600 19px Aptos, Segoe UI, sans-serif; fill: #5d4630; }
+    .card-title { font: 800 23px Georgia, serif; fill: #17120b; }
+    .card-title-light { font: 800 23px Georgia, serif; fill: #fff8e8; }
+    .label { font: 800 13px Aptos, Segoe UI, sans-serif; letter-spacing: 2px; text-transform: uppercase; fill: #8f3d22; }
+    .body { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #4f3e2d; }
+    .body-light { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #efe2c8; }
+    .small { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #6e5943; }
+    .small-light { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #d8c7a8; }
+  </style>
 
-  <rect x="380" y="132" width="280" height="160" rx="20" fill="#fff7ed" stroke="#c2410c" stroke-width="2" />
-  <text class="card" x="408" y="168">specs/README.md</text>
-  <text class="body" x="408" y="198">Handoff notes land in specs/README.md</text>
-  <text class="body" x="408" y="222">Latest failed attempt</text>
-  <text class="body" x="408" y="246">Next fix to try</text>
-  <text class="small" x="408" y="274">This is the tactical continuity layer.</text>
+  <rect width="1120" height="440" rx="36" fill="url(#paper)"/>
+  <text class="eyebrow" x="64" y="62">Repo contract in practice</text>
+  <text class="headline" x="64" y="112">One repo boundary, many agents</text>
+  <text class="subhead" x="68" y="148">README.md, specs/README.md, and AGENTS.md split public story, memory, and re-entry.</text>
 
-  <rect x="700" y="132" width="280" height="160" rx="20" fill="#eff6ff" stroke="#2563eb" stroke-width="2" />
-  <text class="card" x="728" y="168">Re-entry Surface</text>
-  <text class="body" x="728" y="186">AGENTS.md guides the re-entry</text>
-  <text class="body" x="728" y="198">Cursor or Codex can re-enter with repo context</text>
-  <text class="body" x="728" y="222">Claude can automate more of the loop</text>
-  <text class="body" x="728" y="246">All three rely on checked-in continuity</text>
-  <text class="small" x="728" y="274">Different automation, same repo boundary.</text>
+  <rect x="72" y="210" width="276" height="150" rx="26" fill="#fffaf0" stroke="#17120b" stroke-opacity=".14" filter="url(#soft)"/>
+  <text class="card-title" x="104" y="254">README.md</text>
+  <text class="body" x="104" y="288">Open PR story stays</text>
+  <text class="body" x="104" y="314">in README.md</text>
+  <text class="small" x="104" y="340">public surface first</text>
 
-  <path d="M340 212 H380" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
-  <path d="M660 212 H700" fill="none" stroke="#334155" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="422" y="210" width="276" height="150" rx="26" fill="url(#ink)" filter="url(#soft)"/>
+  <text class="card-title-light" x="454" y="254">specs/README.md</text>
+  <text class="body-light" x="454" y="288">Handoff notes land</text>
+  <text class="body-light" x="454" y="314">in specs/README.md</text>
+  <text class="small-light" x="454" y="340">latest tactical state</text>
+
+  <rect x="772" y="210" width="276" height="150" rx="26" fill="#f0f7f4" stroke="#2f6f5e" stroke-opacity=".46" filter="url(#soft)"/>
+  <text class="card-title" x="804" y="254">AGENTS.md</text>
+  <text class="body" x="804" y="288">AGENTS.md guides</text>
+  <text class="body" x="804" y="314">the re-entry</text>
+  <text class="small" x="804" y="340">Cursor or Codex can re-enter with repo context</text>
+
+  <line x1="352" y1="286" x2="414" y2="286" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <line x1="702" y1="286" x2="764" y2="286" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
 </svg>

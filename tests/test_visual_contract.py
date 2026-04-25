@@ -1,9 +1,118 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
+import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DIAGRAMS = ROOT / "assets" / "diagrams"
+BRAND = ROOT / "assets" / "brand"
+
+
+def _svg_root(path: Path) -> ET.Element:
+    return ET.fromstring(path.read_text(encoding="utf-8"))
+
+
+def _viewbox(root: ET.Element) -> tuple[float, float, float, float]:
+    raw = root.attrib["viewBox"]
+    values = tuple(float(part) for part in raw.split())
+    assert len(values) == 4
+    return values
+
+
+def _numbers(value: str) -> list[float]:
+    return [float(item) for item in re.findall(r"-?\d+(?:\.\d+)?", value)]
+
+
+def _walk_visible(root: ET.Element):
+    ignored = {"defs", "title", "desc", "marker", "pattern", "filter", "linearGradient", "radialGradient", "style"}
+
+    def visit(element: ET.Element, hidden: bool = False):
+        tag = element.tag.rsplit("}", 1)[-1]
+        hidden = hidden or tag in ignored
+        if not hidden:
+            yield element
+        for child in element:
+            yield from visit(child, hidden)
+
+    yield from visit(root)
+
+
+def test_diagram_assets_keep_content_inside_safe_margins() -> None:
+    for path in sorted(DIAGRAMS.glob("*.svg")):
+        root = _svg_root(path)
+        _, _, width, height = _viewbox(root)
+        for element in _walk_visible(root):
+            tag = element.tag.rsplit("}", 1)[-1]
+            if tag in {"rect", "text", "circle"}:
+                for attr in ("x", "y", "cx", "cy"):
+                    if attr in element.attrib:
+                        value = float(element.attrib[attr])
+                        assert 32 <= value <= width - 32, f"{path.name} {tag}.{attr}={value} is too close to edge"
+                if tag == "rect":
+                    x = float(element.attrib.get("x", "0"))
+                    y = float(element.attrib.get("y", "0"))
+                    rect_width = float(element.attrib.get("width", "0"))
+                    rect_height = float(element.attrib.get("height", "0"))
+                    if x > 0 and y > 0:
+                        assert x + rect_width <= width - 32, f"{path.name} rect overflows right edge"
+                        assert y + rect_height <= height - 32, f"{path.name} rect overflows bottom edge"
+
+
+def test_diagram_paths_do_not_draw_outside_viewbox() -> None:
+    for path in sorted(DIAGRAMS.glob("*.svg")):
+        root = _svg_root(path)
+        _, _, width, height = _viewbox(root)
+        for element in _walk_visible(root):
+            if element.tag.rsplit("}", 1)[-1] != "path":
+                continue
+            values = _numbers(element.attrib.get("d", ""))
+            for index in range(0, len(values) - 1, 2):
+                x = values[index]
+                y = values[index + 1]
+                assert 24 <= x <= width - 24, f"{path.name} path x={x} is outside safe viewBox"
+                assert 24 <= y <= height - 24, f"{path.name} path y={y} is outside safe viewBox"
+
+
+def test_diagram_lines_and_polylines_stay_inside_safe_margins() -> None:
+    for path in sorted(DIAGRAMS.glob("*.svg")):
+        root = _svg_root(path)
+        _, _, width, height = _viewbox(root)
+        for element in _walk_visible(root):
+            tag = element.tag.rsplit("}", 1)[-1]
+            if tag == "line":
+                for attr in ("x1", "x2"):
+                    value = float(element.attrib[attr])
+                    assert 24 <= value <= width - 24, f"{path.name} line {attr}={value} is outside safe viewBox"
+                for attr in ("y1", "y2"):
+                    value = float(element.attrib[attr])
+                    assert 24 <= value <= height - 24, f"{path.name} line {attr}={value} is outside safe viewBox"
+            if tag == "polyline":
+                values = _numbers(element.attrib.get("points", ""))
+                for index in range(0, len(values) - 1, 2):
+                    x = values[index]
+                    y = values[index + 1]
+                    assert 24 <= x <= width - 24, f"{path.name} polyline x={x} is outside safe viewBox"
+                    assert 24 <= y <= height - 24, f"{path.name} polyline y={y} is outside safe viewBox"
+
+
+def test_visual_assets_avoid_transform_based_edge_positioning() -> None:
+    for path in [*sorted(DIAGRAMS.glob("*.svg")), BRAND / "repo-context-hooks-logo.svg"]:
+        text = path.read_text(encoding="utf-8")
+        assert "transform=" not in text, f"{path.name} should use direct coordinates for easier edge safety"
+
+
+def test_brand_svg_keeps_visible_artwork_inside_logo_tile() -> None:
+    root = _svg_root(BRAND / "repo-context-hooks-logo.svg")
+    _, _, width, height = _viewbox(root)
+    for element in _walk_visible(root):
+        tag = element.tag.rsplit("}", 1)[-1]
+        if tag in {"rect", "circle", "path", "text"}:
+            for attr in ("x", "y", "cx", "cy"):
+                if attr in element.attrib:
+                    value = float(element.attrib[attr])
+                    assert 40 <= value <= width - 40, f"brand {tag}.{attr}={value} is too close to edge"
 
 
 def test_lifecycle_diagram_mentions_real_interrupted_workflow() -> None:
