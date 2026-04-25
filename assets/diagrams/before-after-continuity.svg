@@ -1,44 +1,61 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 380" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="440" viewBox="0 0 1120 440" role="img" aria-labelledby="title desc">
   <title id="title">repo-context-hooks before and after continuity story</title>
   <desc id="desc">A concrete comparison showing repeated explanation before repo-native continuity and a clean resume from checked-in continuity after it.</desc>
+
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#f8fafc" />
-      <stop offset="100%" stop-color="#fefce8" />
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff8e8"/>
+      <stop offset="58%" stop-color="#f2d6a4"/>
+      <stop offset="100%" stop-color="#c98d50"/>
     </linearGradient>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155" />
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#203a33"/>
+      <stop offset="100%" stop-color="#101820"/>
+    </linearGradient>
+    <linearGradient id="heat" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#b54720"/>
+      <stop offset="48%" stop-color="#e6a92f"/>
+      <stop offset="100%" stop-color="#2f6f5e"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#3a2410" flood-opacity=".18"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#2f6f5e"/>
     </marker>
-    <style>
-      .heading { font: 700 24px Arial, sans-serif; }
-      .title { font: 700 17px Arial, sans-serif; fill: #0f172a; }
-      .body { font: 14px Arial, sans-serif; fill: #334155; }
-      .small { font: 13px Arial, sans-serif; fill: #475569; }
-    </style>
   </defs>
 
-  <rect width="1040" height="380" rx="28" fill="url(#bg)" />
 
-  <rect x="52" y="52" width="412" height="276" rx="24" fill="#fef2f2" stroke="#dc2626" stroke-width="2" />
-  <rect x="576" y="52" width="412" height="276" rx="24" fill="#ecfdf5" stroke="#16a34a" stroke-width="2" />
+  <style>
+    .eyebrow { font: 800 15px Aptos, Segoe UI, sans-serif; letter-spacing: 3px; text-transform: uppercase; fill: #8f3d22; }
+    .headline { font: 800 44px Georgia, serif; letter-spacing: -1.8px; fill: #17120b; }
+    .subhead { font: 600 19px Aptos, Segoe UI, sans-serif; fill: #5d4630; }
+    .card-title { font: 800 23px Georgia, serif; fill: #17120b; }
+    .card-title-light { font: 800 23px Georgia, serif; fill: #fff8e8; }
+    .label { font: 800 13px Aptos, Segoe UI, sans-serif; letter-spacing: 2px; text-transform: uppercase; fill: #8f3d22; }
+    .body { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #4f3e2d; }
+    .body-light { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #efe2c8; }
+    .small { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #6e5943; }
+    .small-light { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #d8c7a8; }
+  </style>
 
-  <text class="heading" x="258" y="96" text-anchor="middle" fill="#7f1d1d">Before</text>
-  <text class="heading" x="782" y="96" text-anchor="middle" fill="#14532d">After</text>
+  <rect width="1120" height="440" rx="36" fill="url(#paper)"/>
+  <text class="eyebrow" x="64" y="62">Before and after handoffs</text>
+  <text class="headline" x="64" y="112">Less repeated context, cleaner restarts</text>
 
-  <text class="title" x="84" y="138">Same bug explained again</text>
-  <text class="body" x="84" y="166">The new session asks for context.</text>
-  <text class="body" x="84" y="190">Review comments and failed steps</text>
-  <text class="body" x="84" y="214">have to be reconstructed from memory.</text>
-  <text class="small" x="84" y="248">Result: repeated setup, repeated explanation, slow restart.</text>
-  <text class="body" x="84" y="286">Re-read the repo and resume review comments</text>
-  <text class="small" x="84" y="310">This is the goal, but the repo is missing the needed continuity.</text>
+  <rect x="72" y="170" width="430" height="206" rx="30" fill="#fef2f2" stroke="#b54720" stroke-opacity=".48" filter="url(#soft)"/>
+  <text class="card-title" x="108" y="220" fill="#7f1d1d">Before</text>
+  <text class="body" x="108" y="258">Same bug explained again</text>
+  <text class="small" x="108" y="288">review comments reconstructed</text>
+  <text class="small" x="108" y="314">failed steps retold from memory</text>
+  <text class="body" x="108" y="346">Re-read the repo and resume review comments</text>
 
-  <text class="title" x="608" y="138">Resume from checked-in continuity</text>
-  <text class="body" x="608" y="166">README.md explains the public task story.</text>
-  <text class="body" x="608" y="190">specs/README.md carries the next action.</text>
-  <text class="body" x="608" y="214">AGENTS.md guides the re-entry surface.</text>
-  <text class="body" x="608" y="238">The agent starts from repo state, not guesswork.</text>
-  <text class="small" x="608" y="272">Result: cleaner handoff, faster restart, less duplicated work.</text>
+  <rect x="618" y="170" width="430" height="206" rx="30" fill="#ecfdf5" stroke="#2f6f5e" stroke-opacity=".5" filter="url(#soft)"/>
+  <text class="card-title" x="654" y="220" fill="#14532d">After</text>
+  <text class="body" x="654" y="258">Resume from checked-in continuity</text>
+  <text class="small" x="654" y="288">README.md explains the story</text>
+  <text class="small" x="654" y="314">specs/README.md carries next action</text>
+  <text class="small" x="654" y="340">AGENTS.md guides the re-entry</text>
 
-  <path d="M464 190 H576" fill="none" stroke="#334155" stroke-width="4" marker-end="url(#arrow)" />
+  <line x1="510" y1="274" x2="610" y2="274" stroke="#2f6f5e" stroke-width="7" stroke-linecap="round" marker-end="url(#arrow)"/>
 </svg>

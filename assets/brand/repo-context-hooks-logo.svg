@@ -2,9 +2,9 @@
   <title id="title">repo-context-hooks brand mark</title>
   <desc id="desc">repo-context-hooks context continuity logo showing hook events flowing into an impact monitor.</desc>
   <defs>
-    <radialGradient id="sun" cx="24%" cy="18%" r="78%">
+    <radialGradient id="sun" cx="28%" cy="20%" r="76%">
       <stop offset="0%" stop-color="#ffe3a1"/>
-      <stop offset="44%" stop-color="#e8ad3d"/>
+      <stop offset="52%" stop-color="#e8ad3d"/>
       <stop offset="100%" stop-color="#8f3d22"/>
     </radialGradient>
     <linearGradient id="ink" x1="12%" y1="10%" x2="92%" y2="96%">
@@ -13,27 +13,26 @@
     </linearGradient>
     <linearGradient id="wire" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#f7d86b"/>
-      <stop offset="50%" stop-color="#f3f0df"/>
       <stop offset="100%" stop-color="#80b6a2"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="22" stdDeviation="18" flood-color="#17120b" flood-opacity=".26"/>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#17120b" flood-opacity=".24"/>
     </filter>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#sun)"/>
-  <path d="M78 394 C142 338 98 232 188 168 C262 116 350 118 430 70 L430 438 L78 438 Z" fill="#f7ecd3" opacity=".18"/>
-  <rect x="74" y="76" width="364" height="360" rx="86" fill="url(#ink)" filter="url(#shadow)"/>
-  <path d="M146 166 C196 120 265 132 302 184 C338 236 393 230 414 186" fill="none" stroke="url(#wire)" stroke-width="19" stroke-linecap="round"/>
-  <path d="M112 300 C180 238 250 252 296 312 C334 362 382 360 432 312" fill="none" stroke="url(#wire)" stroke-width="19" stroke-linecap="round" opacity=".95"/>
-  <path d="M146 166 L112 300 M302 184 L296 312 M414 186 L432 312" stroke="#f3f0df" stroke-width="8" stroke-linecap="round" opacity=".45"/>
-  <circle cx="146" cy="166" r="31" fill="#f7d86b" stroke="#fff6d9" stroke-width="8"/>
-  <circle cx="302" cy="184" r="31" fill="#80b6a2" stroke="#fff6d9" stroke-width="8"/>
-  <circle cx="414" cy="186" r="31" fill="#f7d86b" stroke="#fff6d9" stroke-width="8"/>
-  <circle cx="112" cy="300" r="31" fill="#80b6a2" stroke="#fff6d9" stroke-width="8"/>
-  <circle cx="296" cy="312" r="31" fill="#f7d86b" stroke="#fff6d9" stroke-width="8"/>
-  <circle cx="432" cy="312" r="31" fill="#80b6a2" stroke="#fff6d9" stroke-width="8"/>
-  <rect x="178" y="360" width="156" height="42" rx="21" fill="#fff8e8" opacity=".96"/>
-  <text x="256" y="389" text-anchor="middle" font-family="Georgia, serif" font-size="24" font-weight="700" fill="#101820">RCH</text>
-  <text x="256" y="462" text-anchor="middle" font-family="Aptos, Segoe UI, sans-serif" font-size="20" font-weight="800" fill="#101820">context continuity</text>
-  <text x="256" y="488" text-anchor="middle" font-family="Aptos, Segoe UI, sans-serif" font-size="15" fill="#5d331e">hook events -> impact monitor</text>
+  <rect x="44" y="44" width="424" height="424" rx="108" fill="url(#sun)"/>
+  <rect x="82" y="92" width="348" height="328" rx="78" fill="url(#ink)" filter="url(#shadow)"/>
+  <rect x="122" y="136" width="114" height="76" rx="22" fill="#fff8e8"/>
+  <rect x="276" y="136" width="114" height="76" rx="22" fill="#fff8e8"/>
+  <rect x="122" y="284" width="114" height="76" rx="22" fill="#fff8e8"/>
+  <rect x="276" y="284" width="114" height="76" rx="22" fill="#fff8e8"/>
+  <line x1="236" y1="174" x2="276" y2="174" stroke="url(#wire)" stroke-width="16" stroke-linecap="round"/>
+  <line x1="179" y1="212" x2="179" y2="284" stroke="url(#wire)" stroke-width="16" stroke-linecap="round"/>
+  <line x1="333" y1="212" x2="333" y2="284" stroke="url(#wire)" stroke-width="16" stroke-linecap="round"/>
+  <line x1="236" y1="322" x2="276" y2="322" stroke="url(#wire)" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="179" cy="174" r="24" fill="#f7d86b" stroke="#fff6d9" stroke-width="8"/>
+  <circle cx="333" cy="174" r="24" fill="#80b6a2" stroke="#fff6d9" stroke-width="8"/>
+  <circle cx="179" cy="322" r="24" fill="#80b6a2" stroke="#fff6d9" stroke-width="8"/>
+  <circle cx="333" cy="322" r="24" fill="#f7d86b" stroke="#fff6d9" stroke-width="8"/>
+  <rect x="186" y="224" width="140" height="48" rx="24" fill="#fff8e8"/>
+  <text x="256" y="256" text-anchor="middle" font-family="Georgia, serif" font-size="25" font-weight="800" fill="#101820">RCH</text>
 </svg>

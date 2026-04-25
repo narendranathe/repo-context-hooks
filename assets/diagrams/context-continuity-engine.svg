@@ -1,83 +1,85 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="560" viewBox="0 0 1280 560" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
   <title id="title">Context Continuity Engine</title>
   <desc id="desc">A repo-context-hooks hero image showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, +70 uplift, and the next agent resumes warm.</desc>
+
   <defs>
     <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fff8e7"/>
-      <stop offset=".55" stop-color="#f2d6a4"/>
-      <stop offset="1" stop-color="#c78b4a"/>
+      <stop offset="0%" stop-color="#fff8e8"/>
+      <stop offset="58%" stop-color="#f2d6a4"/>
+      <stop offset="100%" stop-color="#c98d50"/>
     </linearGradient>
     <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#101820"/>
-      <stop offset="1" stop-color="#263a35"/>
+      <stop offset="0%" stop-color="#203a33"/>
+      <stop offset="100%" stop-color="#101820"/>
     </linearGradient>
     <linearGradient id="heat" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#b54720"/>
-      <stop offset=".5" stop-color="#e6a92f"/>
-      <stop offset="1" stop-color="#2f6f5e"/>
+      <stop offset="0%" stop-color="#b54720"/>
+      <stop offset="48%" stop-color="#e6a92f"/>
+      <stop offset="100%" stop-color="#2f6f5e"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
-      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#3a2410" flood-opacity=".22"/>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#3a2410" flood-opacity=".18"/>
     </filter>
-    <pattern id="grain" width="18" height="18" patternUnits="userSpaceOnUse">
-      <circle cx="2" cy="3" r="1" fill="#17120b" opacity=".08"/>
-      <circle cx="12" cy="11" r="1" fill="#17120b" opacity=".05"/>
-      <circle cx="7" cy="16" r="1" fill="#fff8e7" opacity=".2"/>
-    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#2f6f5e"/>
+    </marker>
   </defs>
-  <rect width="1280" height="560" rx="36" fill="url(#paper)"/>
-  <rect width="1280" height="560" rx="36" fill="url(#grain)" opacity=".48"/>
-  <circle cx="1080" cy="80" r="230" fill="#2f6f5e" opacity=".18"/>
-  <circle cx="240" cy="500" r="260" fill="#b54720" opacity=".18"/>
-  <g transform="translate(70 62)">
-    <text x="0" y="0" font-family="Georgia, serif" font-size="76" font-weight="700" letter-spacing="-5" fill="#17120b">Context Continuity Engine</text>
-    <text x="4" y="46" font-family="Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#7a3d1d" letter-spacing="3">repo-context-hooks turns repo memory into measurable agent momentum</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="74" y="166" width="246" height="188" rx="28" fill="#fffaf0" stroke="#17120b" stroke-opacity=".16"/>
-    <text x="104" y="215" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#17120b">README.md</text>
-    <text x="104" y="250" font-family="Segoe UI, sans-serif" font-size="15" fill="#5b4835">public product story</text>
-    <rect x="104" y="282" width="170" height="12" rx="6" fill="#e6a92f"/>
-    <rect x="104" y="306" width="126" height="12" rx="6" fill="#eacb82"/>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="354" y="134" width="282" height="250" rx="28" fill="#101820" stroke="#fff8e7" stroke-opacity=".32"/>
-    <text x="386" y="188" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#fff8e7">specs/README.md</text>
-    <text x="386" y="224" font-family="Segoe UI, sans-serif" font-size="15" fill="#e6d8bd">engineering memory</text>
-    <text x="386" y="268" font-family="Segoe UI, sans-serif" font-size="16" fill="#f6efe0">decisions</text>
-    <text x="386" y="300" font-family="Segoe UI, sans-serif" font-size="16" fill="#f6efe0">failures avoided</text>
-    <text x="386" y="332" font-family="Segoe UI, sans-serif" font-size="16" fill="#f6efe0">next work</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="670" y="166" width="220" height="188" rx="28" fill="#fffaf0" stroke="#17120b" stroke-opacity=".16"/>
-    <text x="702" y="215" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#17120b">AGENTS.md</text>
-    <text x="702" y="250" font-family="Segoe UI, sans-serif" font-size="15" fill="#5b4835">repo entry contract</text>
-    <path d="M704 300 C740 274 812 274 856 306" fill="none" stroke="#2f6f5e" stroke-width="12" stroke-linecap="round"/>
-  </g>
-  <g>
-    <path d="M320 255 C350 246 358 244 354 244" fill="none" stroke="#17120b" stroke-width="3" stroke-dasharray="8 9" opacity=".48"/>
-    <path d="M636 255 C660 246 672 244 670 244" fill="none" stroke="#17120b" stroke-width="3" stroke-dasharray="8 9" opacity=".48"/>
-    <path d="M890 256 C936 256 954 226 994 226" fill="none" stroke="url(#heat)" stroke-width="7" stroke-linecap="round"/>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="962" y="126" width="250" height="308" rx="32" fill="#101820"/>
-    <text x="994" y="180" font-family="Georgia, serif" font-size="32" font-weight="700" fill="#fff8e7">Impact monitor</text>
-    <text x="994" y="213" font-family="Segoe UI, sans-serif" font-size="15" fill="#e6d8bd">hook events over time</text>
-    <g transform="translate(994 246)">
-      <text x="0" y="0" font-family="Segoe UI, sans-serif" font-size="13" font-weight="800" fill="#e6a92f" letter-spacing="2">SCORE 90</text>
-      <rect x="0" y="18" width="182" height="14" rx="7" fill="#25342f"/>
-      <rect x="0" y="18" width="164" height="14" rx="7" fill="url(#heat)"/>
-      <text x="0" y="72" font-family="Segoe UI, sans-serif" font-size="13" font-weight="800" fill="#e6a92f" letter-spacing="2">+70 UPLIFT</text>
-      <rect x="0" y="90" width="182" height="14" rx="7" fill="#25342f"/>
-      <rect x="0" y="90" width="140" height="14" rx="7" fill="url(#heat)"/>
-      <text x="0" y="144" font-family="Segoe UI, sans-serif" font-size="13" font-weight="800" fill="#e6a92f" letter-spacing="2">24 HOOK EVENTS</text>
-      <path d="M0 178 L32 150 L64 166 L96 118 L128 126 L160 92 L188 96" fill="none" stroke="#f2d6a4" stroke-width="5" stroke-linecap="round"/>
-    </g>
-  </g>
-  <g transform="translate(84 430)">
-    <rect x="0" y="0" width="1092" height="72" rx="26" fill="#fff8e7" fill-opacity=".64" stroke="#17120b" stroke-opacity=".12"/>
-    <text x="34" y="45" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#17120b">hook events</text>
-    <text x="202" y="45" font-family="Segoe UI, sans-serif" font-size="18" fill="#5b4835">session-start -> pre-compact -> post-compact -> session-end</text>
-    <text x="750" y="45" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#2f6f5e">next agent resumes warm</text>
-  </g>
+
+
+  <style>
+    .eyebrow { font: 800 15px Aptos, Segoe UI, sans-serif; letter-spacing: 3px; text-transform: uppercase; fill: #8f3d22; }
+    .headline { font: 800 44px Georgia, serif; letter-spacing: -1.8px; fill: #17120b; }
+    .subhead { font: 600 19px Aptos, Segoe UI, sans-serif; fill: #5d4630; }
+    .card-title { font: 800 23px Georgia, serif; fill: #17120b; }
+    .card-title-light { font: 800 23px Georgia, serif; fill: #fff8e8; }
+    .label { font: 800 13px Aptos, Segoe UI, sans-serif; letter-spacing: 2px; text-transform: uppercase; fill: #8f3d22; }
+    .body { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #4f3e2d; }
+    .body-light { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #efe2c8; }
+    .small { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #6e5943; }
+    .small-light { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #d8c7a8; }
+  </style>
+
+  <rect width="1280" height="640" rx="42" fill="url(#paper)"/>
+  <circle cx="1090" cy="140" r="210" fill="#2f6f5e" opacity=".16"/>
+  <circle cx="180" cy="520" r="230" fill="#b54720" opacity=".14"/>
+  <text class="eyebrow" x="72" y="76">repo-context-hooks</text>
+  <text class="headline" x="72" y="126">Context Continuity Engine</text>
+  <text class="subhead" x="76" y="164">Repo memory becomes measurable agent momentum without leaving git.</text>
+
+  <rect x="72" y="230" width="250" height="176" rx="28" fill="#fffaf0" stroke="#17120b" stroke-opacity=".12" filter="url(#soft)"/>
+  <text class="card-title" x="104" y="280">README.md</text>
+  <text class="body" x="104" y="315">Public product story</text>
+  <text class="small" x="104" y="344">what it does</text>
+  <text class="small" x="104" y="370">who it supports</text>
+
+  <rect x="380" y="206" width="280" height="224" rx="30" fill="url(#ink)" filter="url(#soft)"/>
+  <text class="card-title-light" x="412" y="260">specs/README.md</text>
+  <text class="body-light" x="412" y="296">Engineering memory</text>
+  <text class="small-light" x="412" y="330">decisions</text>
+  <text class="small-light" x="412" y="356">failed attempts</text>
+  <text class="small-light" x="412" y="382">next work</text>
+
+  <rect x="718" y="230" width="232" height="176" rx="28" fill="#fffaf0" stroke="#17120b" stroke-opacity=".12" filter="url(#soft)"/>
+  <text class="card-title" x="750" y="280">AGENTS.md</text>
+  <text class="body" x="750" y="315">Agent entry rules</text>
+  <text class="small" x="750" y="344">same repo boundary</text>
+  <text class="small" x="750" y="370">different agents</text>
+
+  <line x1="326" y1="318" x2="372" y2="318" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <line x1="664" y1="318" x2="710" y2="318" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <line x1="954" y1="318" x2="1002" y2="318" stroke="url(#heat)" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <rect x="1008" y="194" width="210" height="270" rx="32" fill="url(#ink)" filter="url(#soft)"/>
+  <text class="card-title-light" x="1038" y="250">Impact</text>
+  <text class="card-title-light" x="1038" y="280">monitor</text>
+  <text class="label" x="1038" y="324" fill="#e6a92f">SCORE 90</text>
+  <rect x="1038" y="342" width="134" height="12" rx="6" fill="#2b3935"/>
+  <rect x="1038" y="342" width="120" height="12" rx="6" fill="url(#heat)"/>
+  <text class="label" x="1038" y="386" fill="#e6a92f">+70 UPLIFT</text>
+  <polyline points="1038,426 1066,404 1094,414 1122,386 1150,392 1176,374" fill="none" stroke="#f2d6a4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="104" y="506" width="1072" height="70" rx="28" fill="#fff8e8" fill-opacity=".72" stroke="#17120b" stroke-opacity=".12"/>
+  <text class="card-title" x="136" y="550">hook events</text>
+  <text class="body" x="296" y="550">session-start -> pre-compact -> post-compact -> session-end</text>
+  <text class="card-title" x="850" y="550" fill="#2f6f5e">next agent resumes warm</text>
 </svg>

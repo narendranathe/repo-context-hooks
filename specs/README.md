@@ -203,6 +203,29 @@ This file is the persistent project context for agents and maintainers.
 
 ## Session Checkpoints
 
+### 2026-04-24 - visual refresh branch
+
+- Branch: `feat/visual-refresh`
+- Goal: redesign README image assets because the first visual pass felt crowded and some artwork/text sat too close to image borders.
+- Design direction:
+  - editorial control-room style
+  - warm paper background
+  - dark ink cards
+  - fewer words per card
+  - no transform-based edge positioning
+  - direct coordinates with safe margins
+- Updated assets:
+  - `assets/brand/repo-context-hooks-logo.png`
+  - `assets/brand/repo-context-hooks-logo.svg`
+  - `assets/diagrams/context-continuity-engine.svg`
+  - `assets/diagrams/lifecycle-flow.svg`
+  - `assets/diagrams/repo-contract.svg`
+  - `assets/diagrams/before-after-continuity.svg`
+- Added visual safety tests:
+  - visible rect/text/circle elements stay inside safe margins
+  - visible paths, lines, and polylines stay inside the viewBox
+  - diagrams avoid transform-based layout so future overflow is easier to catch
+
 ### 2026-04-24 - evidence monitoring branch
 
 - Branch: `feat/evidence-monitoring`
