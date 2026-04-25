@@ -39,6 +39,13 @@ def _estimated_text_width(text: str, font_size: float) -> float:
     return len(text) * font_size * 0.64
 
 
+def _first_text(root: ET.Element, needle: str) -> ET.Element:
+    for element in _walk_visible(root):
+        if element.tag.rsplit("}", 1)[-1] == "text" and needle in _svg_text_value(element):
+            return element
+    raise AssertionError(f"missing text node containing {needle!r}")
+
+
 def _walk_visible(root: ET.Element):
     ignored = {"defs", "title", "desc", "marker", "pattern", "filter", "linearGradient", "radialGradient", "style"}
 
@@ -160,6 +167,24 @@ def test_monitoring_timeseries_svg_text_estimates_stay_inside_viewbox() -> None:
             f"{path.name} text may overflow right edge: {text!r} "
             f"estimated at {estimated_right_edge:.1f}px"
         )
+
+
+def test_monitoring_timeseries_legend_stays_above_plot_area() -> None:
+    path = MONITORING / "timeseries.svg"
+    root = _svg_root(path)
+    plot_rects = [
+        element
+        for element in _walk_visible(root)
+        if element.tag.rsplit("}", 1)[-1] == "rect"
+        and float(element.attrib.get("width", "0")) == 604
+    ]
+    assert plot_rects, "missing telemetry plot rectangle"
+    plot_y = float(plot_rects[0].attrib["y"])
+
+    for label in ("Events bars", "Score line"):
+        legend = _first_text(root, label)
+        legend_y = float(legend.attrib["y"])
+        assert legend_y < plot_y - 4, f"{label!r} should sit above the plot area"
 
 
 def test_brand_svg_keeps_visible_artwork_inside_logo_tile() -> None:

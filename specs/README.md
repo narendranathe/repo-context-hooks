@@ -350,6 +350,11 @@ This file is the persistent project context for agents and maintainers.
   - added a text-width regression guard for `docs/monitoring/timeseries.svg`
   - shortened crowded card copy, split previous/latest labels onto separate rows, and segmented metric sources
   - fixed the time-series plot frame so chart primitives align with the visible chart boundary
+- 2026-04-25 metric clarity correction:
+  - renamed SVG scope from `Repo` to `Measured repo` to make clear the public graph is a per-repo snapshot
+  - added README and monitoring-doc metric glossary entries explaining what each metric means and why it matters
+  - moved chart legend labels above the plot so event bars and score lines cannot cover explanatory text
+  - added visual regression coverage for legend placement relative to the plot frame
 - Agent/model comparison follow-up:
   - telemetry events now carry `agent_platform` and optional `model_name`
   - event sources infer platform where possible, with explicit environment overrides available

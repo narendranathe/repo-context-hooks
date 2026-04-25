@@ -70,6 +70,24 @@ Suggested README-facing metrics:
 - lifecycle coverage
 - resume, checkpoint, reload, and session-end counts
 
+## Metric Glossary
+
+The public graph is a per-repo snapshot. `Measured repo` names the repository whose sanitized snapshot generated the README SVG. Install the hooks in each project when you want separate evidence for `portfolio`, `tailor-resume`, `job-scout`, or any other folder.
+
+| Metric | What it measures | Why it matters |
+| --- | --- | --- |
+| Measured repo | The repo folder or remote-derived repo name for the current snapshot | Prevents confusion between one checked-in demo chart and hooks installed across many folders |
+| Continuity score | Current readiness from repo contract files, engineering memory, shared language, agent instructions, and hook setup signals | A higher score means a fresh agent has more checked-in context to resume from |
+| Model/session-only baseline | A conservative estimate of what the agent would have with README-level context and no continuity contract | It gives the comparison a realistic floor instead of pretending every improvement came from the model alone |
+| Uplift | Continuity score minus the model/session-only baseline | It shows the visible delta created by repo-native continuity work |
+| Observed hook events | Local JSONL events emitted by lifecycle scripts, such as session-start, pre-compact, post-compact, reload, and session-end | It proves the hooks actually ran instead of only being installed on paper |
+| Previous vs latest telemetry | The last two daily buckets from `time_series` in the public snapshot | It shows movement over time, which is more credible than a single static score |
+| Event mix | Counts by lifecycle event name from `event_counts` | It shows which parts of the continuity loop are active and which are missing |
+| Agent/model comparison | Event totals grouped by `agent_platform` and `model_name` when those labels are available | It helps compare agent usage without collecting prompts, source code, or compact summaries |
+| Agent sessions | Per-session event grouping from `agent_session_id` | It separates one long session from many separate attempts and makes trend data more meaningful |
+| Lifecycle coverage | Percent of expected lifecycle stages observed from resume, checkpoint, reload, and end-session activity | It answers whether the repo has a full handoff loop or only session-start evidence |
+| Metric sources | The snapshot fields used by the SVG renderer: `score`, `baseline`, `uplift`, `time_series`, `event_counts`, `agent_comparison`, `agent_sessions`, and `usability.lifecycle_coverage` | It keeps the README graphic inspectable because readers can trace the visual back to JSON fields |
+
 ## What Gets Measured
 
 The report includes:

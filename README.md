@@ -18,6 +18,21 @@ The graph compares a model/session-only baseline against repo continuity, then s
 
 ![Generated telemetry time-series chart from docs/monitoring/history.json showing daily hook events, score trend, event mix, and lifecycle coverage](docs/monitoring/timeseries.svg)
 
+Metric key:
+
+| Metric | What it means | Why it matters |
+| --- | --- | --- |
+| Measured repo | The specific repository whose local snapshot generated this chart | The hooks can be installed in every project, but each project gets its own per-repo evidence instead of one global number |
+| Score | Current continuity readiness from repo contract files, context docs, and installed hook signals | Shows whether a fresh agent can re-enter the repo with useful context |
+| Baseline | Estimated model/session-only readiness from README-level context | Gives a conservative "what would the agent have without repo-native continuity?" comparison |
+| Uplift | Score minus baseline | Turns the continuity work into a visible delta instead of a vague claim |
+| Hook events | Local lifecycle events such as session start, compact, reload, and session end | Proves the hooks actually fired during agent usage |
+| Previous vs latest | The last two daily telemetry buckets from the snapshot | Shows whether usage is changing over time instead of reporting a single static result |
+| Agent/model comparison | Events grouped by agent platform and model label when available | Helps compare Claude, Codex, Cursor, Kimi, or other agent sessions without exposing prompts |
+| Lifecycle coverage | Percent of expected lifecycle stages observed | Shows whether the continuity loop is complete or only partially wired |
+
+The SVG is derived from `score, baseline, uplift, time_series, event_counts, agent_comparison, agent_sessions, and usability.lifecycle_coverage` in `docs/monitoring/history.json`.
+
 Public evidence files:
 
 - Time-series chart: [docs/monitoring/timeseries.svg](docs/monitoring/timeseries.svg)

@@ -54,6 +54,8 @@ def test_readme_timeseries_visual_exists_and_uses_snapshot_data() -> None:
         "32 hook events",
         "session-start",
         "model/session only",
+        "measured repo",
+        "per-repo snapshot",
         "repo continuity",
         "metric sources",
         "previous:",
@@ -65,6 +67,35 @@ def test_readme_timeseries_visual_exists_and_uses_snapshot_data() -> None:
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_monitoring_docs_explain_metric_scope_and_glossary() -> None:
+    docs = (ROOT / "docs" / "monitoring.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    required_docs = [
+        "## Metric Glossary",
+        "Measured repo",
+        "per-repo snapshot",
+        "Install the hooks in each project",
+        "Continuity score",
+        "Model/session-only baseline",
+        "Uplift",
+        "Observed hook events",
+        "Previous vs latest telemetry",
+        "Agent/model comparison",
+        "Event mix",
+        "Lifecycle coverage",
+        "Metric sources",
+        "Why it matters",
+    ]
+    for snippet in required_docs:
+        assert snippet in docs
+
+    assert "Metric key" in readme
+    assert "Measured repo" in readme
+    assert "per-repo" in readme
+    assert "score, baseline, uplift, time_series, event_counts, agent_comparison, agent_sessions, and usability.lifecycle_coverage" in readme
 
 
 def test_readme_embeds_monitoring_brand_assets() -> None:

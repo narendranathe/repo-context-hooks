@@ -1412,9 +1412,9 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
     width = 1200
     height = 820
     chart_x = 104
-    chart_y = 468
+    chart_y = 512
     chart_width = 604
-    chart_height = 126
+    chart_height = 108
     max_events = max(max(int(item["events"]) for item in points), 1)
     point_start = chart_x + 64
     point_end = chart_x + chart_width - 64
@@ -1433,7 +1433,7 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
         x = point_start + step * index
         events = int(item["events"])
         item_score = int(item["score"])
-        bar_height = round(events / max_events * 104) if max_events else 0
+        bar_height = round(events / max_events * 84) if max_events else 0
         bar_x = round(x - bar_width / 2, 2)
         bar_y = chart_y + chart_height - bar_height
         score_y = chart_y + chart_height - round(item_score / 100 * chart_height)
@@ -1515,33 +1515,36 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
   <rect x="58" y="58" width="1084" height="704" rx="28" fill="#fff9ea" opacity="0.78"/>
   <text x="80" y="104" fill="#17120b" font-family="Georgia, serif" font-size="42" font-weight="700">Telemetry time series</text>
   <text x="80" y="138" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Generated from docs/monitoring/history.json with local telemetry snapshots</text>
-  <text x="80" y="166" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Repo: {repo}</text>
+  <text x="80" y="166" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Measured repo: {repo}</text>
+  <text x="80" y="184" fill="#8b6b3c" font-family="Segoe UI, sans-serif" font-size="13">Per-repo snapshot; install hooks in each project for separate evidence.</text>
 
-  <rect x="80" y="192" width="480" height="154" rx="24" fill="#17120b"/>
-  <text x="108" y="228" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">MODEL/SESSION ONLY</text>
-  <text x="108" y="256" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="17">Model/session only</text>
-  <rect x="108" y="280" width="328" height="18" rx="9" fill="#354250"/>
-  <rect x="108" y="280" width="{baseline_width}" height="18" rx="9" fill="#d2852f"/>
-  <text x="454" y="297" fill="#f6efe0" font-family="Georgia, serif" font-size="28" font-weight="700">{baseline}</text>
-  <text x="108" y="324" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="15">README-only context before handoff.</text>
+  <rect x="80" y="202" width="480" height="144" rx="24" fill="#17120b"/>
+  <text x="108" y="234" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">MODEL/SESSION ONLY</text>
+  <text x="108" y="262" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="17">Model/session only</text>
+  <rect x="108" y="286" width="328" height="18" rx="9" fill="#354250"/>
+  <rect x="108" y="286" width="{baseline_width}" height="18" rx="9" fill="#d2852f"/>
+  <text x="454" y="303" fill="#f6efe0" font-family="Georgia, serif" font-size="28" font-weight="700">{baseline}</text>
+  <text x="108" y="330" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="15">README-only context before handoff.</text>
 
-  <rect x="584" y="192" width="536" height="154" rx="24" fill="#f3dfb8" stroke="#d0ad72" stroke-width="2"/>
-  <text x="612" y="228" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">REPO CONTINUITY</text>
-  <text x="612" y="256" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17">Repo continuity: contracts + hooks</text>
-  <rect x="612" y="280" width="328" height="18" rx="9" fill="#dac18b"/>
-  <rect x="612" y="280" width="{score_width}" height="18" rx="9" fill="url(#line)"/>
-  <text x="960" y="297" fill="#17120b" font-family="Georgia, serif" font-size="28" font-weight="700">{score}</text>
-  <text x="612" y="324" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="15">Adds +{uplift} with {observed_events} hook events.</text>
+  <rect x="584" y="202" width="536" height="144" rx="24" fill="#f3dfb8" stroke="#d0ad72" stroke-width="2"/>
+  <text x="612" y="234" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">REPO CONTINUITY</text>
+  <text x="612" y="262" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17">Repo continuity: contracts + hooks</text>
+  <rect x="612" y="286" width="328" height="18" rx="9" fill="#dac18b"/>
+  <rect x="612" y="286" width="{score_width}" height="18" rx="9" fill="url(#line)"/>
+  <text x="960" y="303" fill="#17120b" font-family="Georgia, serif" font-size="28" font-weight="700">{score}</text>
+  <text x="612" y="330" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="15">Adds +{uplift} with {observed_events} hook events.</text>
 
   <rect x="80" y="368" width="652" height="340" rx="24" fill="#fff3d4" stroke="#d0ad72" stroke-width="2"/>
   <text x="108" y="406" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="20" font-weight="800">Previous vs latest telemetry</text>
   <text x="108" y="432" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Previous: {previous_label} ({int(previous["events"])} events, score {int(previous["score"])})</text>
   <text x="108" y="456" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Latest: {latest_label} ({int(latest["events"])} events, score {int(latest["score"])})</text>
+  <rect x="108" y="472" width="134" height="28" rx="14" fill="#fff9ea" stroke="#d0ad72" stroke-width="1"/>
+  <text x="122" y="491" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">Events bars</text>
+  <rect x="260" y="472" width="120" height="28" rx="14" fill="#fff9ea" stroke="#d0ad72" stroke-width="1"/>
+  <text x="274" y="491" fill="#2f6957" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">Score line</text>
   <rect x="{chart_x}" y="{chart_y}" width="{chart_width}" height="{chart_height}" rx="20" fill="#f8e9c8" stroke="#d0ad72" stroke-width="2"/>
   <line x1="{chart_x}" y1="{chart_y + chart_height}" x2="{chart_x + chart_width}" y2="{chart_y + chart_height}" stroke="#9a7a4d" stroke-width="2"/>
-  <line x1="{chart_x}" y1="{chart_y + 110}" x2="{chart_x + chart_width}" y2="{chart_y + 110}" stroke="#dec18d" stroke-width="2" stroke-dasharray="10 10"/>
-  <text x="112" y="{chart_y + 30}" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="15">Daily hook events as bars</text>
-  <text x="112" y="{chart_y + 54}" fill="#2f6957" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">Score trend as line</text>
+  <line x1="{chart_x}" y1="{chart_y + 88}" x2="{chart_x + chart_width}" y2="{chart_y + 88}" stroke="#dec18d" stroke-width="2" stroke-dasharray="10 10"/>
   {"".join(bars)}
   <polyline points="{" ".join(line_points)}" fill="none" stroke="url(#line)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
   {"".join(markers)}
@@ -1556,11 +1559,8 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
   <text x="796" y="718" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="16">Lifecycle coverage: {lifecycle}%</text>
 
   <rect x="80" y="746" width="1040" height="42" rx="18" fill="#f6e3bb"/>
-  <text x="108" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">Metric sources</text>
-  <text x="250" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">score / baseline / uplift</text>
-  <text x="486" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">time_series / event_counts</text>
-  <text x="760" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">agent_comparison / agent_sessions</text>
-  <text x="1044" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">lifecycle</text>
+  <text x="108" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="13" font-weight="800">Metric sources</text>
+  <text x="234" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="12">Readiness(score/baseline/uplift) Trend(time_series/event_counts) Agents(agent_comparison/sessions) Lifecycle</text>
 </svg>
 """
 

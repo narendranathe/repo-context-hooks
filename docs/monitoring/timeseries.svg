@@ -16,40 +16,43 @@
   <rect x="58" y="58" width="1084" height="704" rx="28" fill="#fff9ea" opacity="0.78"/>
   <text x="80" y="104" fill="#17120b" font-family="Georgia, serif" font-size="42" font-weight="700">Telemetry time series</text>
   <text x="80" y="138" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Generated from docs/monitoring/history.json with local telemetry snapshots</text>
-  <text x="80" y="166" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Repo: repo-context-hooks</text>
+  <text x="80" y="166" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Measured repo: repo-context-hooks</text>
+  <text x="80" y="184" fill="#8b6b3c" font-family="Segoe UI, sans-serif" font-size="13">Per-repo snapshot; install hooks in each project for separate evidence.</text>
 
-  <rect x="80" y="192" width="480" height="154" rx="24" fill="#17120b"/>
-  <text x="108" y="228" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">MODEL/SESSION ONLY</text>
-  <text x="108" y="256" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="17">Model/session only</text>
-  <rect x="108" y="280" width="328" height="18" rx="9" fill="#354250"/>
-  <rect x="108" y="280" width="66" height="18" rx="9" fill="#d2852f"/>
-  <text x="454" y="297" fill="#f6efe0" font-family="Georgia, serif" font-size="28" font-weight="700">20</text>
-  <text x="108" y="324" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="15">README-only context before handoff.</text>
+  <rect x="80" y="202" width="480" height="144" rx="24" fill="#17120b"/>
+  <text x="108" y="234" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">MODEL/SESSION ONLY</text>
+  <text x="108" y="262" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="17">Model/session only</text>
+  <rect x="108" y="286" width="328" height="18" rx="9" fill="#354250"/>
+  <rect x="108" y="286" width="66" height="18" rx="9" fill="#d2852f"/>
+  <text x="454" y="303" fill="#f6efe0" font-family="Georgia, serif" font-size="28" font-weight="700">20</text>
+  <text x="108" y="330" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="15">README-only context before handoff.</text>
 
-  <rect x="584" y="192" width="536" height="154" rx="24" fill="#f3dfb8" stroke="#d0ad72" stroke-width="2"/>
-  <text x="612" y="228" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">REPO CONTINUITY</text>
-  <text x="612" y="256" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17">Repo continuity: contracts + hooks</text>
-  <rect x="612" y="280" width="328" height="18" rx="9" fill="#dac18b"/>
-  <rect x="612" y="280" width="295" height="18" rx="9" fill="url(#line)"/>
-  <text x="960" y="297" fill="#17120b" font-family="Georgia, serif" font-size="28" font-weight="700">90</text>
-  <text x="612" y="324" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="15">Adds +70 with 32 hook events.</text>
+  <rect x="584" y="202" width="536" height="144" rx="24" fill="#f3dfb8" stroke="#d0ad72" stroke-width="2"/>
+  <text x="612" y="234" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">REPO CONTINUITY</text>
+  <text x="612" y="262" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17">Repo continuity: contracts + hooks</text>
+  <rect x="612" y="286" width="328" height="18" rx="9" fill="#dac18b"/>
+  <rect x="612" y="286" width="295" height="18" rx="9" fill="url(#line)"/>
+  <text x="960" y="303" fill="#17120b" font-family="Georgia, serif" font-size="28" font-weight="700">90</text>
+  <text x="612" y="330" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="15">Adds +70 with 32 hook events.</text>
 
   <rect x="80" y="368" width="652" height="340" rx="24" fill="#fff3d4" stroke="#d0ad72" stroke-width="2"/>
   <text x="108" y="406" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="20" font-weight="800">Previous vs latest telemetry</text>
   <text x="108" y="432" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Previous: 2026-04-24 (30 events, score 90)</text>
   <text x="108" y="456" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Latest: 2026-04-25 (2 events, score 90)</text>
-  <rect x="104" y="468" width="604" height="126" rx="20" fill="#f8e9c8" stroke="#d0ad72" stroke-width="2"/>
-  <line x1="104" y1="594" x2="708" y2="594" stroke="#9a7a4d" stroke-width="2"/>
-  <line x1="104" y1="578" x2="708" y2="578" stroke="#dec18d" stroke-width="2" stroke-dasharray="10 10"/>
-  <text x="112" y="498" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="15">Daily hook events as bars</text>
-  <text x="112" y="522" fill="#2f6957" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">Score trend as line</text>
-  <rect x="133.0" y="490" width="70" height="104" rx="10" fill="#d2852f"/><rect x="609.0" y="587" width="70" height="7" rx="10" fill="#d2852f"/>
-  <polyline points="168.0,481 644.0,481" fill="none" stroke="url(#line)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="168.0" cy="481" r="8" fill="#f6efe0" stroke="#2f6957" stroke-width="5"/>
-<text x="114.0" y="628" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="16">2026-04-24</text>
-<text x="124.0" y="652" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17" font-weight="800">30 events</text><circle cx="644.0" cy="481" r="8" fill="#f6efe0" stroke="#2f6957" stroke-width="5"/>
-<text x="590.0" y="628" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="16">2026-04-25</text>
-<text x="600.0" y="652" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17" font-weight="800">2 events</text>
+  <rect x="108" y="472" width="134" height="28" rx="14" fill="#fff9ea" stroke="#d0ad72" stroke-width="1"/>
+  <text x="122" y="491" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">Events bars</text>
+  <rect x="260" y="472" width="120" height="28" rx="14" fill="#fff9ea" stroke="#d0ad72" stroke-width="1"/>
+  <text x="274" y="491" fill="#2f6957" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">Score line</text>
+  <rect x="104" y="512" width="604" height="108" rx="20" fill="#f8e9c8" stroke="#d0ad72" stroke-width="2"/>
+  <line x1="104" y1="620" x2="708" y2="620" stroke="#9a7a4d" stroke-width="2"/>
+  <line x1="104" y1="600" x2="708" y2="600" stroke="#dec18d" stroke-width="2" stroke-dasharray="10 10"/>
+  <rect x="133.0" y="536" width="70" height="84" rx="10" fill="#d2852f"/><rect x="609.0" y="614" width="70" height="6" rx="10" fill="#d2852f"/>
+  <polyline points="168.0,523 644.0,523" fill="none" stroke="url(#line)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="168.0" cy="523" r="8" fill="#f6efe0" stroke="#2f6957" stroke-width="5"/>
+<text x="114.0" y="654" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="16">2026-04-24</text>
+<text x="124.0" y="678" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17" font-weight="800">30 events</text><circle cx="644.0" cy="523" r="8" fill="#f6efe0" stroke="#2f6957" stroke-width="5"/>
+<text x="590.0" y="654" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="16">2026-04-25</text>
+<text x="600.0" y="678" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17" font-weight="800">2 events</text>
 
   <rect x="764" y="368" width="356" height="364" rx="24" fill="#17120b"/>
   <text x="796" y="406" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="16" font-weight="800">Agent/model comparison</text>
@@ -71,9 +74,6 @@
   <text x="796" y="718" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="16">Lifecycle coverage: 100%</text>
 
   <rect x="80" y="746" width="1040" height="42" rx="18" fill="#f6e3bb"/>
-  <text x="108" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">Metric sources</text>
-  <text x="250" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">score / baseline / uplift</text>
-  <text x="486" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">time_series / event_counts</text>
-  <text x="760" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">agent_comparison / agent_sessions</text>
-  <text x="1044" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">lifecycle</text>
+  <text x="108" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="13" font-weight="800">Metric sources</text>
+  <text x="234" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="12">Readiness(score/baseline/uplift) Trend(time_series/event_counts) Agents(agent_comparison/sessions) Lifecycle</text>
 </svg>
