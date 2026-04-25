@@ -2,7 +2,9 @@
 
 `repo-context-hooks` includes local monitoring so maintainers can prove the continuity loop is active and compare a repo's current readiness against a no-continuity baseline.
 
-This is not a hosted analytics product. It is a local evidence layer for agent-enabled repositories.
+This is not a hosted analytics product. It is a local evidence layer for agent sessions inside agent-enabled repositories.
+
+Installed lifecycle hooks automatically record agent-session telemetry at session start, compact, reload, and session end. The `measure` command reads that already-collected evidence for inspection, export, and public snapshot generation.
 
 Remote telemetry is not enabled in the MVP. If remote community metrics are added later, they must be explicit opt-in and follow [Telemetry Policy](telemetry-policy.md).
 
@@ -72,6 +74,7 @@ Suggested README-facing metrics:
 
 The report includes:
 
+- agent-session ids generated or inherited from hook environment
 - current continuity score
 - estimated baseline score without repo continuity
 - estimated uplift

@@ -48,6 +48,7 @@ def test_record_event_writes_local_jsonl_outside_repo() -> None:
     assert payload["source"] == "test-hook"
     assert payload["agent_platform"] == "unknown"
     assert payload["model_name"] == "unknown"
+    assert payload["agent_session_id"]
     assert payload["repo_name"] == "repo"
     assert payload["repo_id"]
     assert payload["repo_contract_score"] > 0
@@ -74,6 +75,48 @@ def test_record_event_stores_agent_platform_and_model_name() -> None:
 
     assert payload["agent_platform"] == "codex"
     assert payload["model_name"] == "gpt-test"
+    assert payload["agent_session_id"]
+
+
+def test_record_event_reuses_agent_session_for_one_lifecycle() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+    telemetry_base = tmp_path / "telemetry"
+
+    first_path = record_event(
+        repo,
+        "session-start",
+        source="repo_specs_memory",
+        telemetry_base=telemetry_base,
+        agent_platform="claude",
+        model_name="sonnet-test",
+    )
+    record_event(
+        repo,
+        "session-context-session-start",
+        source="session_context",
+        telemetry_base=telemetry_base,
+        agent_platform="claude",
+        model_name="sonnet-test",
+    )
+    record_event(
+        repo,
+        "pre-compact",
+        source="repo_specs_memory",
+        telemetry_base=telemetry_base,
+        agent_platform="claude",
+        model_name="sonnet-test",
+    )
+
+    events = [
+        json.loads(line)
+        for line in first_path.read_text(encoding="utf-8").splitlines()
+    ]
+    session_ids = {event["agent_session_id"] for event in events}
+
+    assert len(session_ids) == 1
 
 
 def test_measure_impact_aggregates_agent_model_comparison() -> None:
@@ -106,16 +149,22 @@ def test_measure_impact_aggregates_agent_model_comparison() -> None:
 
     report = measure_impact(repo, telemetry_base=telemetry_base)
     comparison = report.to_dict()["agent_comparison"]
+    sessions = report.to_dict()["agent_sessions"]
 
     assert comparison[0]["agent_platform"] == "claude"
     assert comparison[0]["model_name"] == "sonnet-test"
     assert comparison[0]["events"] == 2
+    assert comparison[0]["sessions"] == 1
     assert comparison[0]["latest_score"] == report.current_score
     assert comparison[0]["baseline"] == report.estimated_baseline_score
     assert comparison[0]["uplift"] == report.uplift
     assert comparison[1]["agent_platform"] == "codex"
     assert comparison[1]["model_name"] == "gpt-test"
     assert comparison[1]["events"] == 1
+    assert comparison[1]["sessions"] == 1
+    assert sessions[0]["agent_session_id"]
+    assert sessions[0]["events"] == 2
+    assert sessions[0]["agent_platform"] == "claude"
 
 
 def test_measure_impact_compares_current_state_to_no_contract_baseline() -> None:
@@ -230,6 +279,8 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
     assert history["score"] == report.current_score
     assert history["observed_events"] == report.observed_events
     assert history["agent_comparison"][0]["agent_platform"]
+    assert history["agent_comparison"][0]["sessions"] >= 1
+    assert history["agent_sessions"][0]["agent_session_id"]
     assert history["usability"]["active_days"] == 1
     assert "Continuity Impact Monitor" in dashboard
     assert "Public snapshot" in dashboard
@@ -241,6 +292,7 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
     assert "REPO CONTINUITY" in chart
     assert "Metric sources" in chart
     assert "Agent/model comparison" in chart
+    assert "Agent sessions" in chart
     assert "agent_comparison" in chart
     assert str(tmp_path) not in dashboard
     assert str(tmp_path) not in json.dumps(history)
@@ -269,6 +321,7 @@ def test_render_public_time_series_svg_uses_snapshot_data_not_manual_claims() ->
                 "agent_platform": "claude",
                 "model_name": "sonnet-test",
                 "events": 30,
+                "sessions": 2,
                 "latest_score": 90,
                 "baseline": 20,
                 "uplift": 70,
@@ -278,9 +331,28 @@ def test_render_public_time_series_svg_uses_snapshot_data_not_manual_claims() ->
                 "agent_platform": "codex",
                 "model_name": "gpt-test",
                 "events": 2,
+                "sessions": 1,
                 "latest_score": 90,
                 "baseline": 20,
                 "uplift": 70,
+                "lifecycle_coverage": 25,
+            },
+        ],
+        "agent_sessions": [
+            {
+                "agent_session_id": "claude-session",
+                "agent_platform": "claude",
+                "model_name": "sonnet-test",
+                "events": 30,
+                "latest_score": 90,
+                "lifecycle_coverage": 100,
+            },
+            {
+                "agent_session_id": "codex-session",
+                "agent_platform": "codex",
+                "model_name": "gpt-test",
+                "events": 2,
+                "latest_score": 90,
                 "lifecycle_coverage": 25,
             },
         ],
@@ -309,9 +381,11 @@ def test_render_public_time_series_svg_uses_snapshot_data_not_manual_claims() ->
     assert "Metric sources" in chart
     assert "score, baseline, uplift" in chart
     assert "Agent/model comparison" in chart
+    assert "Agent sessions" in chart
     assert "claude / sonnet-test" in chart
     assert "codex / gpt-test" in chart
     assert "agent_comparison" in chart
+    assert "2 sessions" in chart
     assert "session-start" in chart
     assert "28" in chart
     assert "manual proof card" not in chart.lower()
@@ -336,6 +410,7 @@ def test_render_prometheus_metrics_exports_safe_aggregate_evidence() -> None:
     assert f'repo_context_hooks_observed_events_total{{repo="{report.repo_name}"}} 2' in metrics
     assert f'repo_context_hooks_lifecycle_coverage_percent{{repo="{report.repo_name}"}}' in metrics
     assert "repo_context_hooks_agent_events_total" in metrics
+    assert "repo_context_hooks_agent_sessions_total" in metrics
     assert (
         f'repo_context_hooks_event_count{{repo="{report.repo_name}",event_name="session-start"}} 1'
         in metrics

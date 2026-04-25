@@ -9,9 +9,11 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 
 EVENTS_FILE = "events.jsonl"
+CURRENT_SESSION_FILE = "current-session.json"
 
 
 def _git_output(repo_root: Path, *args: str) -> str:
@@ -151,6 +153,120 @@ def _event_model_name(event: dict[str, Any]) -> str:
     )
 
 
+def _event_agent_session_id(event: dict[str, Any]) -> str:
+    return _clean_dimension(event.get("agent_session_id"), "unknown-session")
+
+
+def _current_session_state_path(events_path: Path) -> Path:
+    return events_path.with_name(CURRENT_SESSION_FILE)
+
+
+def _read_current_session(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _is_recent_session_start(state: dict[str, Any] | None) -> bool:
+    if not state:
+        return False
+    timestamp = _parse_timestamp(str(state.get("started_at", "")))
+    if timestamp is None:
+        return False
+    age = dt.datetime.now(dt.timezone.utc) - timestamp
+    return dt.timedelta(seconds=0) <= age <= dt.timedelta(minutes=5)
+
+
+def _new_agent_session_id(agent_platform: str) -> str:
+    timestamp = (
+        dt.datetime.now(dt.timezone.utc)
+        .replace(microsecond=0)
+        .strftime("%Y%m%dT%H%M%SZ")
+    )
+    safe_platform = "".join(
+        char.lower() if char.isalnum() else "-"
+        for char in agent_platform
+    ).strip("-") or "agent"
+    return f"{timestamp}-{safe_platform}-{uuid4().hex[:8]}"
+
+
+def _write_current_session(
+    path: Path,
+    *,
+    agent_session_id: str,
+    agent_platform: str,
+    model_name: str,
+) -> None:
+    payload = {
+        "agent_session_id": agent_session_id,
+        "agent_platform": agent_platform,
+        "model_name": model_name,
+        "started_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+    }
+    try:
+        path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _resolve_agent_session_id(
+    *,
+    event_name: str,
+    events_path: Path,
+    agent_platform: str,
+    model_name: str,
+    explicit_session_id: str | None = None,
+) -> str:
+    state_path = _current_session_state_path(events_path)
+    state = _read_current_session(state_path)
+    if explicit_session_id:
+        session_id = _clean_dimension(explicit_session_id, "unknown-session")
+        _write_current_session(
+            state_path,
+            agent_session_id=session_id,
+            agent_platform=agent_platform,
+            model_name=model_name,
+        )
+        return session_id
+
+    normalized_event = event_name.lower()
+    if "session-start" in normalized_event:
+        existing = _clean_dimension(
+            state.get("agent_session_id") if state else None,
+            "",
+        )
+        if existing and _is_recent_session_start(state):
+            return existing
+        session_id = _new_agent_session_id(agent_platform)
+        _write_current_session(
+            state_path,
+            agent_session_id=session_id,
+            agent_platform=agent_platform,
+            model_name=model_name,
+        )
+        return session_id
+
+    existing = _clean_dimension(
+        state.get("agent_session_id") if state else None,
+        "",
+    )
+    if existing:
+        return existing
+
+    session_id = _new_agent_session_id(agent_platform)
+    _write_current_session(
+        state_path,
+        agent_session_id=session_id,
+        agent_platform=agent_platform,
+        model_name=model_name,
+    )
+    return session_id
+
+
 def contract_signals(repo_root: Path) -> dict[str, Any]:
     docs = {
         "README.md": repo_root / "README.md",
@@ -218,10 +334,12 @@ def record_event(
     details: dict[str, Any] | None = None,
     agent_platform: str | None = None,
     model_name: str | None = None,
+    agent_session_id: str | None = None,
 ) -> Path:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)
     details = dict(details or {})
+    path = telemetry_events_path(repo_root, base=telemetry_base)
     resolved_platform = _clean_dimension(
         agent_platform
         or details.get("agent_platform")
@@ -237,12 +355,24 @@ def record_event(
         or os.environ.get("CLAUDE_MODEL"),
         "unknown",
     )
+    resolved_session_id = _resolve_agent_session_id(
+        event_name=event_name,
+        events_path=path,
+        agent_platform=resolved_platform,
+        model_name=resolved_model,
+        explicit_session_id=agent_session_id
+        or details.get("agent_session_id")
+        or os.environ.get("REPO_CONTEXT_HOOKS_AGENT_SESSION_ID")
+        or os.environ.get("CLAUDE_SESSION_ID")
+        or os.environ.get("CODEX_SESSION_ID"),
+    )
     event = {
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
         "event_name": event_name,
         "source": source,
         "agent_platform": resolved_platform,
         "model_name": resolved_model,
+        "agent_session_id": resolved_session_id,
         "repo_id": repo_id(repo_root),
         "repo_name": repo_root.name,
         "branch": _git_output(repo_root, "branch", "--show-current") or "unknown",
@@ -250,7 +380,6 @@ def record_event(
         "estimated_baseline_score": signals["estimated_baseline_score"],
         "details": details,
     }
-    path = telemetry_events_path(repo_root, base=telemetry_base)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, sort_keys=True) + "\n")
     try:
@@ -335,6 +464,7 @@ class ImpactReport:
     observed_events: int
     event_counts: dict[str, int]
     agent_comparison: tuple[dict[str, Any], ...]
+    agent_sessions: tuple[dict[str, Any], ...]
     dashboard_path: Path
     history: ImpactHistory
     usability: UsabilityMetrics
@@ -376,6 +506,8 @@ class ImpactReport:
                 )
                 for item in self.agent_comparison
             )
+        if self.agent_sessions:
+            lines.append(f"Agent sessions observed: {len(self.agent_sessions)}")
         if self.recommendations:
             lines.append("Recommendations:")
             lines.extend(f"- {item}" for item in self.recommendations)
@@ -392,6 +524,7 @@ class ImpactReport:
             "observed_events": self.observed_events,
             "event_counts": self.event_counts,
             "agent_comparison": list(self.agent_comparison),
+            "agent_sessions": list(self.agent_sessions),
             "dashboard_path": str(self.dashboard_path),
             "history": self.history.to_dict(),
             "usability": self.usability.to_dict(),
@@ -514,6 +647,8 @@ def render_prometheus_metrics(report: ImpactReport) -> str:
             "# TYPE repo_context_hooks_agent_events_total counter",
             "# HELP repo_context_hooks_agent_latest_score Latest continuity score by agent platform and model.",
             "# TYPE repo_context_hooks_agent_latest_score gauge",
+            "# HELP repo_context_hooks_agent_sessions_total Observed agent sessions by agent platform and model.",
+            "# TYPE repo_context_hooks_agent_sessions_total counter",
         ]
     )
     for item in report.agent_comparison:
@@ -533,6 +668,13 @@ def render_prometheus_metrics(report: ImpactReport) -> str:
             _prometheus_line(
                 "repo_context_hooks_agent_latest_score",
                 int(item["latest_score"]),
+                labels=labels,
+            )
+        )
+        metrics.append(
+            _prometheus_line(
+                "repo_context_hooks_agent_sessions_total",
+                int(item.get("sessions", 0)),
                 labels=labels,
             )
         )
@@ -678,11 +820,18 @@ def _build_agent_comparison(
         history = _build_history(group)
         usability = _build_usability(group, history)
         latest_score = history.latest_score or _event_score(group[-1])
+        session_count = len(
+            {
+                _event_agent_session_id(event)
+                for event in group
+            }
+        )
         rows.append(
             {
                 "agent_platform": agent_platform,
                 "model_name": model_name,
                 "events": len(group),
+                "sessions": session_count,
                 "latest_score": latest_score,
                 "baseline": baseline,
                 "uplift": latest_score - baseline,
@@ -702,6 +851,51 @@ def _build_agent_comparison(
                 str(item["agent_platform"]),
                 str(item["model_name"]),
             ),
+        )
+    )
+
+
+def _build_agent_sessions(
+    events: list[dict[str, Any]],
+    *,
+    baseline: int,
+) -> tuple[dict[str, Any], ...]:
+    grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    for event in events:
+        key = (
+            _event_agent_session_id(event),
+            _event_agent_platform(event),
+            _event_model_name(event),
+        )
+        grouped.setdefault(key, []).append(event)
+
+    rows: list[dict[str, Any]] = []
+    for (session_id, agent_platform, model_name), group in grouped.items():
+        history = _build_history(group)
+        usability = _build_usability(group, history)
+        latest_score = history.latest_score or _event_score(group[-1])
+        rows.append(
+            {
+                "agent_session_id": session_id,
+                "agent_platform": agent_platform,
+                "model_name": model_name,
+                "events": len(group),
+                "latest_score": latest_score,
+                "baseline": baseline,
+                "uplift": latest_score - baseline,
+                "lifecycle_coverage": usability.lifecycle_coverage,
+                "first_seen": history.first_seen,
+                "latest_seen": history.latest_seen,
+            }
+        )
+    return tuple(
+        sorted(
+            rows,
+            key=lambda item: (
+                int(item["events"]),
+                str(item["agent_platform"]),
+            ),
+            reverse=True,
         )
     )
 
@@ -1076,6 +1270,7 @@ def public_monitoring_snapshot(report: ImpactReport) -> dict[str, Any]:
         "usability": report.usability.to_dict(),
         "event_counts": dict(sorted(report.event_counts.items())),
         "agent_comparison": list(report.agent_comparison),
+        "agent_sessions": list(report.agent_sessions),
     }
 
 
@@ -1169,6 +1364,10 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
         except (TypeError, ValueError):
             events = 0
         try:
+            sessions = int(item.get("sessions", 1))
+        except (TypeError, ValueError):
+            sessions = 1
+        try:
             latest_score = int(item.get("latest_score", score))
         except (TypeError, ValueError):
             latest_score = score
@@ -1185,6 +1384,7 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
                 ),
                 "model_name": "unknown model" if model == "unknown" else model,
                 "events": max(0, events),
+                "sessions": max(1, sessions),
                 "latest_score": max(0, min(100, latest_score)),
                 "uplift": item_uplift,
             }
@@ -1195,6 +1395,7 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
                 "agent_platform": "unknown",
                 "model_name": "unknown model",
                 "events": observed_events,
+                "sessions": 1,
                 "latest_score": score,
                 "uplift": uplift,
             }
@@ -1279,12 +1480,15 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
             f"{item['agent_platform']} / {item['model_name']}",
             25,
         )
+        session_count = int(item["sessions"])
+        session_word = "session" if session_count == 1 else "sessions"
         agent_rows.append(
             "\n".join(
                 [
                     f'<text x="796" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15">{_svg_text(label)}</text>',
                     f'<rect x="988" y="{y - 14}" width="{width_for_events}" height="16" rx="8" fill="#2f6957"/>',
                     f'<text x="1076" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">{int(item["events"])} ev</text>',
+                    f'<text x="988" y="{y + 20}" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">Agent sessions: {session_count} {session_word}</text>',
                     f'<text x="796" y="{y + 20}" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">score {int(item["latest_score"])} / uplift {int(item["uplift"]):+d}</text>',
                 ]
             )
@@ -1439,6 +1643,7 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
     usability = _build_usability(events, history)
     baseline = int(signals["estimated_baseline_score"])
     agent_comparison = _build_agent_comparison(events, baseline=baseline)
+    agent_sessions = _build_agent_sessions(events, baseline=baseline)
     dashboard_path = _dashboard_path(path)
 
     report = ImpactReport(
@@ -1450,6 +1655,7 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
         observed_events=len(events),
         event_counts=event_counts,
         agent_comparison=agent_comparison,
+        agent_sessions=agent_sessions,
         dashboard_path=dashboard_path,
         history=history,
         usability=usability,

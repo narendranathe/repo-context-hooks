@@ -57,6 +57,7 @@
   <text x="796" y="452" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15">claude / unknown model</text>
 <rect x="988" y="438" width="78" height="16" rx="8" fill="#2f6957"/>
 <text x="1076" y="452" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">32 ev</text>
+<text x="988" y="472" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">Agent sessions: 1 session</text>
 <text x="796" y="472" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">score 90 / uplift +70</text>
   <text x="796" y="558" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">EVENT MIX FROM JSON</text>
   <text x="796" y="588" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="14">session-start</text>

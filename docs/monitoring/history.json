@@ -7,6 +7,19 @@
       "latest_score": 90,
       "lifecycle_coverage": 100,
       "model_name": "unknown",
+      "sessions": 1,
+      "uplift": 70
+    }
+  ],
+  "agent_sessions": [
+    {
+      "agent_platform": "claude",
+      "agent_session_id": "public-claude-session",
+      "baseline": 20,
+      "events": 32,
+      "latest_score": 90,
+      "lifecycle_coverage": 100,
+      "model_name": "unknown",
       "uplift": 70
     }
   ],

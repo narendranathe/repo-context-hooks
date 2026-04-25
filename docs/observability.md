@@ -2,6 +2,8 @@
 
 `repo-context-hooks` can export local continuity evidence as Prometheus/OpenMetrics text. That gives developers a practical monitoring story without turning the MVP into a hosted analytics product.
 
+Telemetry collection happens at the agent-session level. Installed lifecycle hooks record events automatically; the CLI measurement commands read that evidence for inspection and export.
+
 The goal is useful proof:
 
 - show that hooks are firing over time
@@ -88,6 +90,7 @@ For explicit platform/model labels in new telemetry events, set:
 ```bash
 REPO_CONTEXT_HOOKS_AGENT_PLATFORM=codex
 REPO_CONTEXT_HOOKS_MODEL_NAME=gpt-5.5
+REPO_CONTEXT_HOOKS_AGENT_SESSION_ID=optional-session-id
 ```
 
 If labels are not supplied, repo hook sources are inferred when possible and the public graph falls back to `unknown model`.

@@ -351,6 +351,12 @@ This file is the persistent project context for agents and maintainers.
   - public snapshots now include `agent_comparison`
   - Prometheus output now includes agent/model event and latest-score metrics
   - README SVG now renders an agent/model comparison panel from the public snapshot
+- Agent-session telemetry correction:
+  - telemetry now records `agent_session_id` per lifecycle event
+  - session-start hooks create or reuse a current agent-session id so sequential hook scripts join the same session
+  - compact/reload/session-end hooks reuse the current agent-session id
+  - public snapshots include agent-session rows and session counts
+  - `measure` is positioned as inspection/export; hooks are the automatic collection layer
 - Claim boundary:
   - the project now has a real local observability export
   - Grafana and Datadog are documented integration paths over OpenMetrics

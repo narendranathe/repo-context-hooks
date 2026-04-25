@@ -131,6 +131,8 @@ def test_readme_documents_impact_measurement() -> None:
     assert "Grafana" in text
     assert "Datadog" in text
     assert "agent/model" in text
+    assert "agent-session" in text
+    assert "automatically record" in text
     assert "model/session-only baseline" in text
     assert "Observable Plot" in text
     assert "Vega-Lite" in text

@@ -38,6 +38,8 @@ As more hook events accumulate, rerun `repo-context-hooks measure --snapshot-dir
 
 For explicit agent/model comparisons, set `REPO_CONTEXT_HOOKS_AGENT_PLATFORM` and `REPO_CONTEXT_HOOKS_MODEL_NAME` before a session or hook run. If model labels are unavailable, the graph keeps the platform comparison and marks the model as `unknown model`.
 
+Telemetry collection is agent-session first: installed hooks automatically record lifecycle events at session start, compact, reload, and session end. `repo-context-hooks measure` is for inspection and export, not for starting telemetry collection.
+
 ```bash
 python -m pip install -e .
 ```

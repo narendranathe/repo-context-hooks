@@ -59,6 +59,7 @@ def test_readme_timeseries_visual_exists_and_uses_snapshot_data() -> None:
         "previous:",
         "latest:",
         "agent/model comparison",
+        "agent sessions",
         "claude",
         "unknown model",
     ]
