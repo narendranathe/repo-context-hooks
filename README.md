@@ -2,6 +2,10 @@
 
 Repo-native continuity for coding agents.
 
+<p align="center">
+  <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">
+</p>
+
 ![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
 
 `repo-context-hooks` keeps interrupted work, next-step context, and handoff notes in the repository instead of leaving them trapped in chat history. The goal is simple: a new session should be able to reopen the repo, understand the work in progress, and continue without rediscovering everything from scratch.
@@ -195,8 +199,27 @@ Current repo snapshot:
 - Active days `2`
 - Lifecycle coverage `100%`
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
+- Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
 
 Remote telemetry is not enabled in the MVP. Any future community usage metrics must be explicit opt-in and follow [docs/telemetry-policy.md](docs/telemetry-policy.md).
+
+## Telemetry Visibility
+
+The landing-page proof surface is designed to be inspectable, portable, and honest. The repo does not ask users to trust a hidden service; it gives them local telemetry, a generated HTML monitor, and a checked-in JSON snapshot they can visualize anywhere.
+
+| Surface | What it shows | How to use it |
+| --- | --- | --- |
+| [Impact monitor](docs/monitoring/index.html) | Score, uplift, lifecycle coverage, event mix, and recent hook evidence | Open it directly from GitHub or publish it with GitHub Pages |
+| [History JSON](docs/monitoring/history.json) | Time-series score, daily hook events, and usability metrics | Import into Observable Plot, Vega-Lite, Evidence, DuckDB, or a docs site |
+| Local dashboard | Private per-repo `monitoring.html` generated beside the local event log | Run `repo-context-hooks measure` after real agent sessions |
+| Public snapshot | Sanitized dashboard and `history.json` for a README, demo, or adoption note | Run `repo-context-hooks measure --snapshot-dir docs/monitoring` |
+
+Visualization tools that fit the current MVP:
+
+- Observable Plot for a lightweight public notebook over `docs/monitoring/history.json`.
+- Vega-Lite for an embeddable JSON-driven chart in docs or a portfolio case study.
+- GitHub Pages for hosting `docs/monitoring/index.html` without adding a backend.
+- DuckDB or SQLite for local trend analysis once the JSONL log grows across many sessions.
 
 ## Concrete Stories
 

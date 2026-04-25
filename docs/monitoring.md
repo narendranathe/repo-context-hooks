@@ -40,6 +40,27 @@ repo-context-hooks measure --snapshot-dir docs/monitoring
 
 The public snapshot for this repo lives at [docs/monitoring/index.html](monitoring/index.html). It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory. The public snapshot writer sanitizes local paths and publishes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
 
+## Visualization Tools
+
+The MVP intentionally keeps visualization boring in the best way: one static HTML dashboard plus one portable JSON file. That makes the data easy to inspect without introducing a hosted telemetry service.
+
+Good next visualization surfaces:
+
+- GitHub README: link to `docs/monitoring/index.html` and `docs/monitoring/history.json`.
+- GitHub Pages: publish the static monitor as a shareable dashboard.
+- Observable Plot: import `docs/monitoring/history.json` and chart score, event volume, and lifecycle coverage.
+- Vega-Lite: embed a declarative time-series chart in docs or a portfolio case study.
+- Evidence, DuckDB, or SQLite: analyze longer local telemetry history across many repos or sessions.
+
+Suggested README-facing metrics:
+
+- continuity score
+- uplift over the README-only baseline
+- observed hook events
+- active days
+- lifecycle coverage
+- resume, checkpoint, reload, and session-end counts
+
 ## What Gets Measured
 
 The report includes:

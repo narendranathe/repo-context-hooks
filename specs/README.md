@@ -229,6 +229,8 @@ This file is the persistent project context for agents and maintainers.
   - local `monitoring.html` dashboard generated from the telemetry log
   - sanitized checked-in public snapshot at `docs/monitoring/index.html`
   - generated public history at `docs/monitoring/history.json`
+  - README telemetry visibility section for Observable Plot, Vega-Lite, GitHub Pages, and local analysis workflows
+  - PNG/SVG brand assets at `assets/brand/repo-context-hooks-logo.*`
   - checked-in visual brand asset at `assets/diagrams/context-continuity-engine.svg`
   - hook-script telemetry emission from `repo_specs_memory.py` and `session_context.py`
   - README and monitoring guide updates

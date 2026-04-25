@@ -20,6 +20,7 @@ def test_readme_has_public_facing_sections_in_order() -> None:
         "## Supported Today",
         "## Platform Support",
         "## Prove Impact",
+        "## Telemetry Visibility",
         "## Concrete Stories",
         "## See Also",
         "## Development",
@@ -121,6 +122,9 @@ def test_readme_documents_impact_measurement() -> None:
     assert "repo-context-hooks measure --json" in text
     assert "repo-context-hooks measure --snapshot-dir docs/monitoring" in text
     assert "docs/monitoring.md" in text
+    assert "docs/monitoring/history.json" in text
+    assert "Observable Plot" in text
+    assert "Vega-Lite" in text
     assert (ROOT / "docs" / "monitoring.md").exists()
 
 
@@ -145,6 +149,7 @@ def test_readme_avoids_internal_operator_heavy_sections() -> None:
 def test_readme_embeds_required_diagrams() -> None:
     text = readme_text()
     expected_assets = [
+        "assets/brand/repo-context-hooks-logo.png",
         "assets/diagrams/context-continuity-engine.svg",
         "assets/diagrams/lifecycle-flow.svg",
         "assets/diagrams/repo-contract.svg",
