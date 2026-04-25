@@ -102,6 +102,55 @@ def _file_size(path: Path) -> int:
         return 0
 
 
+def _clean_dimension(value: object, default: str) -> str:
+    text = str(value or "").strip()
+    return text if text else default
+
+
+def _agent_platform_from_source(source: str) -> str:
+    normalized = source.lower()
+    if "claude" in normalized or normalized in {
+        "repo_specs_memory",
+        "session_context",
+    }:
+        return "claude"
+    for platform in (
+        "codex",
+        "cursor",
+        "replit",
+        "windsurf",
+        "lovable",
+        "openclaw",
+        "ollama",
+        "kimi",
+    ):
+        if platform in normalized:
+            return platform
+    return "unknown"
+
+
+def _event_agent_platform(event: dict[str, Any]) -> str:
+    details = event.get("details", {})
+    if not isinstance(details, dict):
+        details = {}
+    return _clean_dimension(
+        event.get("agent_platform")
+        or details.get("agent_platform")
+        or _agent_platform_from_source(str(event.get("source", ""))),
+        "unknown",
+    )
+
+
+def _event_model_name(event: dict[str, Any]) -> str:
+    details = event.get("details", {})
+    if not isinstance(details, dict):
+        details = {}
+    return _clean_dimension(
+        event.get("model_name") or details.get("model_name"),
+        "unknown",
+    )
+
+
 def contract_signals(repo_root: Path) -> dict[str, Any]:
     docs = {
         "README.md": repo_root / "README.md",
@@ -167,19 +216,39 @@ def record_event(
     source: str = "repo-context-hooks",
     telemetry_base: Path | None = None,
     details: dict[str, Any] | None = None,
+    agent_platform: str | None = None,
+    model_name: str | None = None,
 ) -> Path:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)
+    details = dict(details or {})
+    resolved_platform = _clean_dimension(
+        agent_platform
+        or details.get("agent_platform")
+        or os.environ.get("REPO_CONTEXT_HOOKS_AGENT_PLATFORM")
+        or _agent_platform_from_source(source),
+        "unknown",
+    )
+    resolved_model = _clean_dimension(
+        model_name
+        or details.get("model_name")
+        or os.environ.get("REPO_CONTEXT_HOOKS_MODEL_NAME")
+        or os.environ.get("CODEX_MODEL")
+        or os.environ.get("CLAUDE_MODEL"),
+        "unknown",
+    )
     event = {
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
         "event_name": event_name,
         "source": source,
+        "agent_platform": resolved_platform,
+        "model_name": resolved_model,
         "repo_id": repo_id(repo_root),
         "repo_name": repo_root.name,
         "branch": _git_output(repo_root, "branch", "--show-current") or "unknown",
         "repo_contract_score": signals["score"],
         "estimated_baseline_score": signals["estimated_baseline_score"],
-        "details": details or {},
+        "details": details,
     }
     path = telemetry_events_path(repo_root, base=telemetry_base)
     with path.open("a", encoding="utf-8") as handle:
@@ -265,6 +334,7 @@ class ImpactReport:
     estimated_baseline_score: int
     observed_events: int
     event_counts: dict[str, int]
+    agent_comparison: tuple[dict[str, Any], ...]
     dashboard_path: Path
     history: ImpactHistory
     usability: UsabilityMetrics
@@ -296,6 +366,16 @@ class ImpactReport:
                 f"- {name}: {count}"
                 for name, count in sorted(self.event_counts.items())
             )
+        if self.agent_comparison:
+            lines.append("Agent/model comparison:")
+            lines.extend(
+                (
+                    "- "
+                    f"{item['agent_platform']} / {item['model_name']}: "
+                    f"{item['events']} events, score {item['latest_score']}"
+                )
+                for item in self.agent_comparison
+            )
         if self.recommendations:
             lines.append("Recommendations:")
             lines.extend(f"- {item}" for item in self.recommendations)
@@ -311,6 +391,7 @@ class ImpactReport:
             "uplift": self.uplift,
             "observed_events": self.observed_events,
             "event_counts": self.event_counts,
+            "agent_comparison": list(self.agent_comparison),
             "dashboard_path": str(self.dashboard_path),
             "history": self.history.to_dict(),
             "usability": self.usability.to_dict(),
@@ -425,6 +506,34 @@ def render_prometheus_metrics(report: ImpactReport) -> str:
                 "repo_context_hooks_event_count",
                 count,
                 labels={"repo": report.repo_name, "event_name": event_name},
+            )
+        )
+    metrics.extend(
+        [
+            "# HELP repo_context_hooks_agent_events_total Local continuity events by agent platform and model.",
+            "# TYPE repo_context_hooks_agent_events_total counter",
+            "# HELP repo_context_hooks_agent_latest_score Latest continuity score by agent platform and model.",
+            "# TYPE repo_context_hooks_agent_latest_score gauge",
+        ]
+    )
+    for item in report.agent_comparison:
+        labels = {
+            "repo": report.repo_name,
+            "agent_platform": str(item["agent_platform"]),
+            "model_name": str(item["model_name"]),
+        }
+        metrics.append(
+            _prometheus_line(
+                "repo_context_hooks_agent_events_total",
+                int(item["events"]),
+                labels=labels,
+            )
+        )
+        metrics.append(
+            _prometheus_line(
+                "repo_context_hooks_agent_latest_score",
+                int(item["latest_score"]),
+                labels=labels,
             )
         )
     return "\n".join(metrics) + "\n"
@@ -551,6 +660,49 @@ def _build_usability(events: list[dict[str, Any]], history: ImpactHistory) -> Us
         session_end_events=sum(1 for name in names if name == "session-end"),
         lifecycle_coverage=round(len(unique_lifecycle) / 4 * 100),
         readiness_minutes_since_last_event=minutes_since_last,
+    )
+
+
+def _build_agent_comparison(
+    events: list[dict[str, Any]],
+    *,
+    baseline: int,
+) -> tuple[dict[str, Any], ...]:
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for event in events:
+        key = (_event_agent_platform(event), _event_model_name(event))
+        grouped.setdefault(key, []).append(event)
+
+    rows: list[dict[str, Any]] = []
+    for (agent_platform, model_name), group in grouped.items():
+        history = _build_history(group)
+        usability = _build_usability(group, history)
+        latest_score = history.latest_score or _event_score(group[-1])
+        rows.append(
+            {
+                "agent_platform": agent_platform,
+                "model_name": model_name,
+                "events": len(group),
+                "latest_score": latest_score,
+                "baseline": baseline,
+                "uplift": latest_score - baseline,
+                "lifecycle_coverage": usability.lifecycle_coverage,
+                "resume_events": usability.resume_events,
+                "checkpoint_events": usability.checkpoint_events,
+                "reload_events": usability.reload_events,
+                "session_end_events": usability.session_end_events,
+                "latest_seen": history.latest_seen,
+            }
+        )
+    return tuple(
+        sorted(
+            rows,
+            key=lambda item: (
+                -int(item["events"]),
+                str(item["agent_platform"]),
+                str(item["model_name"]),
+            ),
+        )
     )
 
 
@@ -923,6 +1075,7 @@ def public_monitoring_snapshot(report: ImpactReport) -> dict[str, Any]:
         "time_series": _public_time_series(report),
         "usability": report.usability.to_dict(),
         "event_counts": dict(sorted(report.event_counts.items())),
+        "agent_comparison": list(report.agent_comparison),
     }
 
 
@@ -1003,7 +1156,57 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
     top_events = sorted(
         event_count_items,
         key=lambda item: (-item[1], item[0]),
-    )[:5]
+    )[:3]
+
+    agent_rows_raw = snapshot.get("agent_comparison", [])
+    agent_rows_input = agent_rows_raw if isinstance(agent_rows_raw, list) else []
+    agent_items: list[dict[str, Any]] = []
+    for item in agent_rows_input:
+        if not isinstance(item, dict):
+            continue
+        try:
+            events = int(item.get("events", 0))
+        except (TypeError, ValueError):
+            events = 0
+        try:
+            latest_score = int(item.get("latest_score", score))
+        except (TypeError, ValueError):
+            latest_score = score
+        try:
+            item_uplift = int(item.get("uplift", latest_score - baseline))
+        except (TypeError, ValueError):
+            item_uplift = latest_score - baseline
+        model = _clean_dimension(item.get("model_name"), "unknown")
+        agent_items.append(
+            {
+                "agent_platform": _clean_dimension(
+                    item.get("agent_platform"),
+                    "unknown",
+                ),
+                "model_name": "unknown model" if model == "unknown" else model,
+                "events": max(0, events),
+                "latest_score": max(0, min(100, latest_score)),
+                "uplift": item_uplift,
+            }
+        )
+    if not agent_items:
+        agent_items.append(
+            {
+                "agent_platform": "unknown",
+                "model_name": "unknown model",
+                "events": observed_events,
+                "latest_score": score,
+                "uplift": uplift,
+            }
+        )
+    agent_items = sorted(
+        agent_items,
+        key=lambda item: (
+            -int(item["events"]),
+            str(item["agent_platform"]),
+            str(item["model_name"]),
+        ),
+    )[:3]
 
     width = 1200
     height = 760
@@ -1050,21 +1253,41 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
     event_rows: list[str] = []
     max_count = max((count for _, count in top_events), default=1)
     for index, (name, count) in enumerate(top_events):
-        y = 482 + index * 38
+        y = 588 + index * 30
         bar = max(8, round(count / max_count * 76))
         label = _truncate_svg_label(name, 21)
         event_rows.append(
             "\n".join(
                 [
-                    f'<text x="796" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="16">{_svg_text(label)}</text>',
-                    f'<rect x="978" y="{y - 16}" width="{bar}" height="18" rx="9" fill="#e5a92f"/>',
-                    f'<text x="1070" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="17" font-weight="800">{count}</text>',
+                    f'<text x="796" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="14">{_svg_text(label)}</text>',
+                    f'<rect x="978" y="{y - 14}" width="{bar}" height="16" rx="8" fill="#e5a92f"/>',
+                    f'<text x="1070" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">{count}</text>',
                 ]
             )
         )
     if not event_rows:
         event_rows.append(
-            '<text x="796" y="482" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="16">No events observed yet</text>'
+            '<text x="796" y="588" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="14">No events observed yet</text>'
+        )
+
+    agent_rows: list[str] = []
+    max_agent_events = max((int(item["events"]) for item in agent_items), default=1)
+    for index, item in enumerate(agent_items):
+        y = 452 + index * 40
+        width_for_events = max(10, round(int(item["events"]) / max_agent_events * 78))
+        label = _truncate_svg_label(
+            f"{item['agent_platform']} / {item['model_name']}",
+            25,
+        )
+        agent_rows.append(
+            "\n".join(
+                [
+                    f'<text x="796" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15">{_svg_text(label)}</text>',
+                    f'<rect x="988" y="{y - 14}" width="{width_for_events}" height="16" rx="8" fill="#2f6957"/>',
+                    f'<text x="1076" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">{int(item["events"])} ev</text>',
+                    f'<text x="796" y="{y + 20}" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">score {int(item["latest_score"])} / uplift {int(item["uplift"]):+d}</text>',
+                ]
+            )
         )
 
     baseline_width = max(4, round(baseline / 100 * 328))
@@ -1120,12 +1343,15 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
   {"".join(markers)}
 
   <rect x="764" y="368" width="356" height="304" rx="24" fill="#17120b"/>
-  <text x="796" y="406" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="16" font-weight="800">EVENT MIX FROM JSON</text>
+  <text x="796" y="406" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="16" font-weight="800">Agent/model comparison</text>
+  <text x="796" y="430" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="14">Grouped from event agent_platform and model_name</text>
+  {"".join(agent_rows)}
+  <text x="796" y="558" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">EVENT MIX FROM JSON</text>
   {"".join(event_rows)}
   <text x="796" y="672" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="16">Lifecycle coverage: {lifecycle}%</text>
 
   <rect x="80" y="690" width="1040" height="32" rx="16" fill="#f6e3bb"/>
-  <text x="108" y="712" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="15">Metric sources: score, baseline, uplift, observed_events, time_series, event_counts, usability.lifecycle_coverage</text>
+  <text x="108" y="712" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="15">Metric sources: score, baseline, uplift, observed_events, time_series, event_counts, agent_comparison, usability.lifecycle_coverage</text>
 </svg>
 """
 
@@ -1211,6 +1437,8 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
         event_counts[name] = event_counts.get(name, 0) + 1
     history = _build_history(events)
     usability = _build_usability(events, history)
+    baseline = int(signals["estimated_baseline_score"])
+    agent_comparison = _build_agent_comparison(events, baseline=baseline)
     dashboard_path = _dashboard_path(path)
 
     report = ImpactReport(
@@ -1218,9 +1446,10 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
         repo_id=repo_id(repo_root),
         telemetry_path=path,
         current_score=int(signals["score"]),
-        estimated_baseline_score=int(signals["estimated_baseline_score"]),
+        estimated_baseline_score=baseline,
         observed_events=len(events),
         event_counts=event_counts,
+        agent_comparison=agent_comparison,
         dashboard_path=dashboard_path,
         history=history,
         usability=usability,

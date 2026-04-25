@@ -46,11 +46,76 @@ def test_record_event_writes_local_jsonl_outside_repo() -> None:
     payload = json.loads(event_path.read_text(encoding="utf-8").splitlines()[0])
     assert payload["event_name"] == "session-start"
     assert payload["source"] == "test-hook"
+    assert payload["agent_platform"] == "unknown"
+    assert payload["model_name"] == "unknown"
     assert payload["repo_name"] == "repo"
     assert payload["repo_id"]
     assert payload["repo_contract_score"] > 0
     assert payload["details"]["context_bytes"] == 123
     assert (event_path.parent / "monitoring.html").exists()
+
+
+def test_record_event_stores_agent_platform_and_model_name() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    event_path = record_event(
+        repo,
+        "session-start",
+        source="codex-hook",
+        telemetry_base=tmp_path / "telemetry",
+        agent_platform="codex",
+        model_name="gpt-test",
+    )
+
+    payload = json.loads(event_path.read_text(encoding="utf-8").splitlines()[0])
+
+    assert payload["agent_platform"] == "codex"
+    assert payload["model_name"] == "gpt-test"
+
+
+def test_measure_impact_aggregates_agent_model_comparison() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+    telemetry_base = tmp_path / "telemetry"
+    record_event(
+        repo,
+        "session-start",
+        telemetry_base=telemetry_base,
+        agent_platform="claude",
+        model_name="sonnet-test",
+    )
+    record_event(
+        repo,
+        "pre-compact",
+        telemetry_base=telemetry_base,
+        agent_platform="claude",
+        model_name="sonnet-test",
+    )
+    record_event(
+        repo,
+        "session-start",
+        telemetry_base=telemetry_base,
+        agent_platform="codex",
+        model_name="gpt-test",
+    )
+
+    report = measure_impact(repo, telemetry_base=telemetry_base)
+    comparison = report.to_dict()["agent_comparison"]
+
+    assert comparison[0]["agent_platform"] == "claude"
+    assert comparison[0]["model_name"] == "sonnet-test"
+    assert comparison[0]["events"] == 2
+    assert comparison[0]["latest_score"] == report.current_score
+    assert comparison[0]["baseline"] == report.estimated_baseline_score
+    assert comparison[0]["uplift"] == report.uplift
+    assert comparison[1]["agent_platform"] == "codex"
+    assert comparison[1]["model_name"] == "gpt-test"
+    assert comparison[1]["events"] == 1
 
 
 def test_measure_impact_compares_current_state_to_no_contract_baseline() -> None:
@@ -164,6 +229,7 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
 
     assert history["score"] == report.current_score
     assert history["observed_events"] == report.observed_events
+    assert history["agent_comparison"][0]["agent_platform"]
     assert history["usability"]["active_days"] == 1
     assert "Continuity Impact Monitor" in dashboard
     assert "Public snapshot" in dashboard
@@ -174,6 +240,8 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
     assert "MODEL/SESSION ONLY" in chart
     assert "REPO CONTINUITY" in chart
     assert "Metric sources" in chart
+    assert "Agent/model comparison" in chart
+    assert "agent_comparison" in chart
     assert str(tmp_path) not in dashboard
     assert str(tmp_path) not in json.dumps(history)
     assert str(tmp_path) not in chart
@@ -196,6 +264,26 @@ def test_render_public_time_series_svg_uses_snapshot_data_not_manual_claims() ->
             "post-compact": 1,
             "session-end": 1,
         },
+        "agent_comparison": [
+            {
+                "agent_platform": "claude",
+                "model_name": "sonnet-test",
+                "events": 30,
+                "latest_score": 90,
+                "baseline": 20,
+                "uplift": 70,
+                "lifecycle_coverage": 100,
+            },
+            {
+                "agent_platform": "codex",
+                "model_name": "gpt-test",
+                "events": 2,
+                "latest_score": 90,
+                "baseline": 20,
+                "uplift": 70,
+                "lifecycle_coverage": 25,
+            },
+        ],
         "usability": {
             "active_days": 2,
             "lifecycle_coverage": 100,
@@ -220,6 +308,10 @@ def test_render_public_time_series_svg_uses_snapshot_data_not_manual_claims() ->
     assert "Repo continuity" in chart
     assert "Metric sources" in chart
     assert "score, baseline, uplift" in chart
+    assert "Agent/model comparison" in chart
+    assert "claude / sonnet-test" in chart
+    assert "codex / gpt-test" in chart
+    assert "agent_comparison" in chart
     assert "session-start" in chart
     assert "28" in chart
     assert "manual proof card" not in chart.lower()
@@ -243,6 +335,7 @@ def test_render_prometheus_metrics_exports_safe_aggregate_evidence() -> None:
     assert f'repo_context_hooks_uplift{{repo="{report.repo_name}"}}' in metrics
     assert f'repo_context_hooks_observed_events_total{{repo="{report.repo_name}"}} 2' in metrics
     assert f'repo_context_hooks_lifecycle_coverage_percent{{repo="{report.repo_name}"}}' in metrics
+    assert "repo_context_hooks_agent_events_total" in metrics
     assert (
         f'repo_context_hooks_event_count{{repo="{report.repo_name}",event_name="session-start"}} 1'
         in metrics

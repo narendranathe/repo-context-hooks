@@ -345,6 +345,12 @@ This file is the persistent project context for agents and maintainers.
   - added previous-vs-latest telemetry day labels
   - added metric-source copy inside the SVG so readers can see which snapshot fields derive the graph
   - added visual contract coverage for the README telemetry graph
+- Agent/model comparison follow-up:
+  - telemetry events now carry `agent_platform` and optional `model_name`
+  - event sources infer platform where possible, with explicit environment overrides available
+  - public snapshots now include `agent_comparison`
+  - Prometheus output now includes agent/model event and latest-score metrics
+  - README SVG now renders an agent/model comparison panel from the public snapshot
 - Claim boundary:
   - the project now has a real local observability export
   - Grafana and Datadog are documented integration paths over OpenMetrics

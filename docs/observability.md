@@ -27,9 +27,11 @@ repo_context_hooks_observed_events_total
 repo_context_hooks_lifecycle_coverage_percent
 repo_context_hooks_active_days
 repo_context_hooks_event_count
+repo_context_hooks_agent_events_total
+repo_context_hooks_agent_latest_score
 ```
 
-The exporter uses aggregate labels such as `repo` and `event_name`. It does not export the local telemetry path, prompt text, source files, or compact summaries.
+The exporter uses aggregate labels such as `repo`, `event_name`, `agent_platform`, and `model_name`. It does not export the local telemetry path, prompt text, source files, or compact summaries.
 
 ## Grafana Panels
 
@@ -44,6 +46,8 @@ Useful starter panels:
 | Lifecycle coverage | `repo_context_hooks_lifecycle_coverage_percent` |
 | Observed events | `repo_context_hooks_observed_events_total` |
 | Event mix | `sum by (event_name) (repo_context_hooks_event_count)` |
+| Agent/model usage | `sum by (agent_platform, model_name) (repo_context_hooks_agent_events_total)` |
+| Agent/model score | `repo_context_hooks_agent_latest_score` |
 
 For a local Prometheus setup, write the metrics into a textfile collector path on a schedule:
 
@@ -79,6 +83,15 @@ That writes:
 
 The README should embed `docs/monitoring/timeseries.svg` when you want the repo landing page to show a real graph. The SVG is generated from `history.json`, so it changes as local telemetry history grows and you refresh the public snapshot.
 
+For explicit platform/model labels in new telemetry events, set:
+
+```bash
+REPO_CONTEXT_HOOKS_AGENT_PLATFORM=codex
+REPO_CONTEXT_HOOKS_MODEL_NAME=gpt-5.5
+```
+
+If labels are not supplied, repo hook sources are inferred when possible and the public graph falls back to `unknown model`.
+
 The checked-in snapshot is intentionally aggregate-only. It is safe to review before commit and does not require any remote telemetry account.
 
 ## Privacy Boundary
@@ -92,6 +105,7 @@ Exported metrics include:
 - uplift
 - observed event totals
 - event counts by event name
+- event counts by agent platform and model name
 - lifecycle coverage
 - active days
 

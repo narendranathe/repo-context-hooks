@@ -130,6 +130,8 @@ def test_readme_documents_impact_measurement() -> None:
     assert "Prometheus" in text
     assert "Grafana" in text
     assert "Datadog" in text
+    assert "agent/model" in text
+    assert "model/session-only baseline" in text
     assert "Observable Plot" in text
     assert "Vega-Lite" in text
     assert (ROOT / "docs" / "monitoring.md").exists()

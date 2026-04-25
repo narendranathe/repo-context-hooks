@@ -43,7 +43,7 @@ The public snapshot for this repo lives at [docs/monitoring/index.html](monitori
 
 The README-facing graph lives at [docs/monitoring/timeseries.svg](monitoring/timeseries.svg). It is generated from the same `history.json` snapshot, so the public graphic is evidence-backed instead of a hand-authored metric claim.
 
-The graph intentionally compares the model/session-only baseline against repo continuity. It also shows previous-vs-latest telemetry days, score trend, hook-event volume, event mix, lifecycle coverage, and the source fields used by the renderer.
+The graph intentionally compares the model/session-only baseline against repo continuity. It also shows previous-vs-latest telemetry days, score trend, hook-event volume, agent/model comparison, event mix, lifecycle coverage, and the source fields used by the renderer.
 
 For Prometheus/OpenMetrics, Grafana, and Datadog usage paths, see [Observability Integrations](observability.md).
 
@@ -75,6 +75,7 @@ The report includes:
 - current continuity score
 - estimated baseline score without repo continuity
 - estimated uplift
+- agent platform and model-name comparison
 - observed hook and skill events
 - event counts by lifecycle stage
 - score time series
@@ -134,6 +135,8 @@ Events include:
 - timestamp
 - event name
 - event source
+- agent platform
+- model name when provided
 - hashed repo id
 - repo folder name
 - git branch name
@@ -142,6 +145,16 @@ Events include:
 - small event details such as counts and local file paths
 
 Events do not upload code, prompts, compact summaries, issue bodies, or file contents.
+
+Set these environment variables when you want explicit platform/model labels in new telemetry events:
+
+```bash
+REPO_CONTEXT_HOOKS_AGENT_PLATFORM=codex
+REPO_CONTEXT_HOOKS_MODEL_NAME=gpt-5.5
+repo-context-hooks measure
+```
+
+If they are not set, hook sources such as Claude lifecycle scripts are inferred when possible and the model is shown as `unknown model` in public graphs.
 
 No cookies are used by the CLI. Cookies are only appropriate for a future optional web dashboard, not for hook or MCP telemetry.
 

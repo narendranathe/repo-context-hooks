@@ -14,7 +14,7 @@ Repo-native continuity for coding agents.
 
 This repo now shows continuity evidence on the landing page instead of hiding it in a secondary report. The chart below is generated from the same `docs/monitoring/history.json` that users can inspect, so the visual and the data source travel together.
 
-The graph compares a model/session-only baseline against repo continuity, then shows previous-vs-latest telemetry days, score trend, hook-event volume, event mix, lifecycle coverage, and the exact snapshot fields used to derive the metrics.
+The graph compares a model/session-only baseline against repo continuity, then shows previous-vs-latest telemetry days, score trend, hook-event volume, agent/model comparison, event mix, lifecycle coverage, and the exact snapshot fields used to derive the metrics.
 
 ![Generated telemetry time-series chart from docs/monitoring/history.json showing daily hook events, score trend, event mix, and lifecycle coverage](docs/monitoring/timeseries.svg)
 
@@ -35,6 +35,8 @@ repo-context-hooks measure --snapshot-dir docs/monitoring
 Prometheus/OpenMetrics output gives teams a clean path to Grafana dashboards and Datadog OpenMetrics collectors while keeping the default telemetry local-only. See [docs/observability.md](docs/observability.md) for the monitoring setup notes.
 
 As more hook events accumulate, rerun `repo-context-hooks measure --snapshot-dir docs/monitoring`. That refreshes the source JSON, generated README graph, and HTML monitor together.
+
+For explicit agent/model comparisons, set `REPO_CONTEXT_HOOKS_AGENT_PLATFORM` and `REPO_CONTEXT_HOOKS_MODEL_NAME` before a session or hook run. If model labels are unavailable, the graph keeps the platform comparison and marks the model as `unknown model`.
 
 ```bash
 python -m pip install -e .

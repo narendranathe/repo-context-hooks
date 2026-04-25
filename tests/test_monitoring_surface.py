@@ -58,6 +58,9 @@ def test_readme_timeseries_visual_exists_and_uses_snapshot_data() -> None:
         "metric sources",
         "previous:",
         "latest:",
+        "agent/model comparison",
+        "claude",
+        "unknown model",
     ]
     for snippet in required:
         assert snippet in text
