@@ -10,7 +10,11 @@ from .platforms import get_registry
 from .recommend import recommend_setup
 from .repo_contract import init_repo_contract
 from .doctor import diagnose_repo_contract
-from .telemetry import measure_impact, write_public_monitoring_snapshot
+from .telemetry import (
+    measure_impact,
+    render_prometheus_metrics,
+    write_public_monitoring_snapshot,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -117,10 +121,16 @@ def build_parser() -> argparse.ArgumentParser:
         default=".",
         help="Repository root to inspect (default: current directory).",
     )
-    measure.add_argument(
+    measure_output = measure.add_mutually_exclusive_group()
+    measure_output.add_argument(
         "--json",
         action="store_true",
         help="Print machine-readable JSON output.",
+    )
+    measure_output.add_argument(
+        "--prometheus",
+        action="store_true",
+        help="Print Prometheus/OpenMetrics text exposition output.",
     )
     measure.add_argument(
         "--snapshot-dir",
@@ -258,7 +268,9 @@ def _measure(args: argparse.Namespace) -> int:
             report,
             output_dir.resolve(),
         )
-    if getattr(args, "json", False):
+    if getattr(args, "prometheus", False):
+        print(render_prometheus_metrics(report), end="")
+    elif getattr(args, "json", False):
         payload = report.to_dict()
         if snapshot is not None:
             payload["public_snapshot"] = snapshot

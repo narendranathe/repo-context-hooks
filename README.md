@@ -10,6 +10,33 @@ Repo-native continuity for coding agents.
 
 `repo-context-hooks` keeps interrupted work, next-step context, and handoff notes in the repository instead of leaving them trapped in chat history. The goal is simple: a new session should be able to reopen the repo, understand the work in progress, and continue without rediscovering everything from scratch.
 
+## Live Evidence Snapshot
+
+This repo now shows its own continuity evidence on the landing page instead of hiding it in a secondary report. The snapshot below is generated from local hook events, sanitized before commit, and designed to plug into standard monitoring tools.
+
+![Telemetry proof strip showing continuity score 90, +70 uplift, 32 hook events, 100% lifecycle coverage, Prometheus-ready metrics, Grafana dashboard path, Datadog via OpenMetrics, and local-only telemetry](assets/diagrams/telemetry-proof-strip.svg)
+
+Current public snapshot:
+
+- Score `90`
+- Baseline `20`
+- Uplift `+70`
+- Observed hook events `32`
+- Active days `2`
+- Lifecycle coverage `100%`
+- Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
+- Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
+
+Use the same evidence locally:
+
+```bash
+repo-context-hooks measure
+repo-context-hooks measure --prometheus
+repo-context-hooks measure --snapshot-dir docs/monitoring
+```
+
+Prometheus/OpenMetrics output gives teams a clean path to Grafana dashboards and Datadog OpenMetrics collectors while keeping the default telemetry local-only. See [docs/observability.md](docs/observability.md) for the monitoring setup notes.
+
 ```bash
 python -m pip install -e .
 ```
@@ -172,6 +199,7 @@ repo-context-hooks measure --json
 ```bash
 repo-context-hooks measure
 repo-context-hooks measure --json
+repo-context-hooks measure --prometheus
 repo-context-hooks measure --snapshot-dir docs/monitoring
 ```
 
@@ -188,7 +216,7 @@ repo-context-hooks install --platform claude
 repo-context-hooks measure
 ```
 
-The output is intentionally operational rather than magical: it shows repo-contract readiness, observed lifecycle events, evidence-log location, and concrete recommendations. See [docs/monitoring.md](docs/monitoring.md) for the metric definitions, privacy boundary, and before/after workflow.
+The output is intentionally operational rather than magical: it shows repo-contract readiness, observed lifecycle events, evidence-log location, and concrete recommendations. See [docs/monitoring.md](docs/monitoring.md) for the metric definitions, privacy boundary, and before/after workflow, and [docs/observability.md](docs/observability.md) for Prometheus, Grafana, and Datadog usage paths.
 
 Current repo snapshot:
 
@@ -216,6 +244,9 @@ The landing-page proof surface is designed to be inspectable, portable, and hone
 
 Visualization tools that fit the current MVP:
 
+- Prometheus/OpenMetrics for scraping `repo-context-hooks measure --prometheus`.
+- Grafana for score, uplift, lifecycle coverage, and event mix panels.
+- Datadog through an OpenMetrics-compatible collector path.
 - Observable Plot for a lightweight public notebook over `docs/monitoring/history.json`.
 - Vega-Lite for an embeddable JSON-driven chart in docs or a portfolio case study.
 - GitHub Pages for hosting `docs/monitoring/index.html` without adding a backend.
@@ -244,6 +275,7 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 - [Ubiquitous language](UBIQUITOUS_LANGUAGE.md)
 - [Architecture](docs/architecture.md)
 - [Monitoring and impact evidence](docs/monitoring.md)
+- [Prometheus, Grafana, and Datadog observability](docs/observability.md)
 - [Telemetry policy](docs/telemetry-policy.md)
 - [Competitive analysis](docs/competitive-analysis.md)
 - [Minimal repo example](examples/minimal-repo/)

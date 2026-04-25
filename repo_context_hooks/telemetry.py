@@ -318,6 +318,118 @@ class ImpactReport:
         }
 
 
+def _prometheus_label(value: str) -> str:
+    return (
+        value.replace("\\", "\\\\")
+        .replace("\n", "\\n")
+        .replace('"', '\\"')
+    )
+
+
+def _prometheus_line(
+    metric: str,
+    value: int | float,
+    *,
+    labels: dict[str, str] | None = None,
+) -> str:
+    label_text = ""
+    if labels:
+        rendered = ",".join(
+            f'{name}="{_prometheus_label(label_value)}"'
+            for name, label_value in labels.items()
+        )
+        label_text = f"{{{rendered}}}"
+    return f"{metric}{label_text} {value}"
+
+
+def render_prometheus_metrics(report: ImpactReport) -> str:
+    """Render aggregate continuity evidence in Prometheus text exposition format."""
+    repo_label = {"repo": report.repo_name}
+    metrics: list[str] = [
+        "# HELP repo_context_hooks_continuity_score Current repo continuity score from the checked-in repo contract.",
+        "# TYPE repo_context_hooks_continuity_score gauge",
+        _prometheus_line(
+            "repo_context_hooks_continuity_score",
+            report.current_score,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_baseline_score Estimated score for a README-only repo without continuity hooks.",
+        "# TYPE repo_context_hooks_baseline_score gauge",
+        _prometheus_line(
+            "repo_context_hooks_baseline_score",
+            report.estimated_baseline_score,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_uplift Difference between current continuity score and estimated baseline.",
+        "# TYPE repo_context_hooks_uplift gauge",
+        _prometheus_line(
+            "repo_context_hooks_uplift",
+            report.uplift,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_observed_events_total Total observed local hook and skill telemetry events.",
+        "# TYPE repo_context_hooks_observed_events_total counter",
+        _prometheus_line(
+            "repo_context_hooks_observed_events_total",
+            report.observed_events,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_active_days Number of UTC days with observed continuity events.",
+        "# TYPE repo_context_hooks_active_days gauge",
+        _prometheus_line(
+            "repo_context_hooks_active_days",
+            report.usability.active_days,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_lifecycle_coverage_percent Percent of lifecycle stages observed across session-start, pre-compact, post-compact, and session-end.",
+        "# TYPE repo_context_hooks_lifecycle_coverage_percent gauge",
+        _prometheus_line(
+            "repo_context_hooks_lifecycle_coverage_percent",
+            report.usability.lifecycle_coverage,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_resume_events_total Total observed session-start or resume events.",
+        "# TYPE repo_context_hooks_resume_events_total counter",
+        _prometheus_line(
+            "repo_context_hooks_resume_events_total",
+            report.usability.resume_events,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_checkpoint_events_total Total observed checkpoint events.",
+        "# TYPE repo_context_hooks_checkpoint_events_total counter",
+        _prometheus_line(
+            "repo_context_hooks_checkpoint_events_total",
+            report.usability.checkpoint_events,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_reload_events_total Total observed post-compact reload events.",
+        "# TYPE repo_context_hooks_reload_events_total counter",
+        _prometheus_line(
+            "repo_context_hooks_reload_events_total",
+            report.usability.reload_events,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_session_end_events_total Total observed session-end events.",
+        "# TYPE repo_context_hooks_session_end_events_total counter",
+        _prometheus_line(
+            "repo_context_hooks_session_end_events_total",
+            report.usability.session_end_events,
+            labels=repo_label,
+        ),
+        "# HELP repo_context_hooks_event_count Local continuity events by event name.",
+        "# TYPE repo_context_hooks_event_count counter",
+    ]
+    for event_name, count in sorted(report.event_counts.items()):
+        metrics.append(
+            _prometheus_line(
+                "repo_context_hooks_event_count",
+                count,
+                labels={"repo": report.repo_name, "event_name": event_name},
+            )
+        )
+    return "\n".join(metrics) + "\n"
+
+
 def _recommendations(signals: dict[str, Any], events: list[dict[str, Any]]) -> tuple[str, ...]:
     items: list[str] = []
     present = signals["present"]

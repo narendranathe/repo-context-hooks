@@ -30,6 +30,7 @@ For scripts, dashboards, and CI experiments:
 
 ```bash
 repo-context-hooks measure --json
+repo-context-hooks measure --prometheus
 ```
 
 To intentionally refresh a checked-in public dashboard from local evidence:
@@ -39,6 +40,8 @@ repo-context-hooks measure --snapshot-dir docs/monitoring
 ```
 
 The public snapshot for this repo lives at [docs/monitoring/index.html](monitoring/index.html). It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory. The public snapshot writer sanitizes local paths and publishes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
+
+For Prometheus/OpenMetrics, Grafana, and Datadog usage paths, see [Observability Integrations](observability.md).
 
 ## Visualization Tools
 

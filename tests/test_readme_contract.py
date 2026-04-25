@@ -15,6 +15,7 @@ def test_readme_has_public_facing_sections_in_order() -> None:
     text = readme_text()
     expected_sections = [
         "# repo-context-hooks",
+        "## Live Evidence Snapshot",
         "## Why Repo-Native Continuity",
         "## How It Works",
         "## Supported Today",
@@ -120,12 +121,18 @@ def test_readme_documents_impact_measurement() -> None:
     assert "## Prove Impact" in text
     assert "repo-context-hooks measure" in text
     assert "repo-context-hooks measure --json" in text
+    assert "repo-context-hooks measure --prometheus" in text
     assert "repo-context-hooks measure --snapshot-dir docs/monitoring" in text
     assert "docs/monitoring.md" in text
+    assert "docs/observability.md" in text
     assert "docs/monitoring/history.json" in text
+    assert "Prometheus" in text
+    assert "Grafana" in text
+    assert "Datadog" in text
     assert "Observable Plot" in text
     assert "Vega-Lite" in text
     assert (ROOT / "docs" / "monitoring.md").exists()
+    assert (ROOT / "docs" / "observability.md").exists()
 
 
 def test_readme_keeps_internal_docs_out_of_primary_links() -> None:
@@ -150,6 +157,7 @@ def test_readme_embeds_required_diagrams() -> None:
     text = readme_text()
     expected_assets = [
         "assets/brand/repo-context-hooks-logo.png",
+        "assets/diagrams/telemetry-proof-strip.svg",
         "assets/diagrams/context-continuity-engine.svg",
         "assets/diagrams/lifecycle-flow.svg",
         "assets/diagrams/repo-contract.svg",
@@ -164,6 +172,7 @@ def test_readme_links_supporting_docs_and_examples() -> None:
     text = readme_text()
     expected_links = [
         ("docs/architecture.md", ROOT / "docs" / "architecture.md"),
+        ("docs/observability.md", ROOT / "docs" / "observability.md"),
         ("docs/competitive-analysis.md", ROOT / "docs" / "competitive-analysis.md"),
         ("examples/minimal-repo/", ROOT / "examples" / "minimal-repo"),
         ("examples/multi-project/", ROOT / "examples" / "multi-project"),

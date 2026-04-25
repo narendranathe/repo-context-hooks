@@ -48,6 +48,7 @@ def test_parser_supports_platforms_and_doctor_commands() -> None:
     assert parser.parse_args(["recommend", "--json"]).json is True
     assert parser.parse_args(["measure"]).command == "measure"
     assert parser.parse_args(["measure", "--json"]).json is True
+    assert parser.parse_args(["measure", "--prometheus"]).prometheus is True
     assert (
         parser.parse_args(
             ["measure", "--snapshot-dir", "docs/monitoring"]
@@ -286,12 +287,42 @@ def test_measure_prints_json(
     args = Namespace(
         repo_root=str(tmp_path),
         json=True,
+        prometheus=False,
     )
 
     assert _measure(args) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["repo_name"] == "demo"
     assert payload["uplift"] == 49
+
+
+def test_measure_prints_prometheus_metrics(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    class FakeReport:
+        pass
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.measure_impact",
+        lambda repo_root: FakeReport(),
+    )
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.render_prometheus_metrics",
+        lambda report: "repo_context_hooks_continuity_score 90\n",
+    )
+
+    args = Namespace(
+        repo_root=str(tmp_path),
+        json=False,
+        prometheus=True,
+        snapshot_dir=None,
+    )
+
+    assert _measure(args) == 0
+    assert capsys.readouterr().out == "repo_context_hooks_continuity_score 90\n"
 
 
 def test_measure_writes_public_snapshot(
@@ -332,6 +363,7 @@ def test_measure_writes_public_snapshot(
     args = Namespace(
         repo_root=str(tmp_path),
         json=False,
+        prometheus=False,
         snapshot_dir="docs/monitoring",
     )
 

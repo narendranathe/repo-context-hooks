@@ -318,3 +318,24 @@ This file is the persistent project context for agents and maintainers.
 
 - Branch: `feat/evidence-monitoring`
 - Working changes: repo_context_hooks/telemetry.py, specs/README.md, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+
+### 2026-04-24 - observability proof strip branch
+
+- Branch: `feat/observability-proof-strip`
+- Goal: make telemetry visible on the GitHub landing page and add a credible monitoring-tool path for developers.
+- Product decision:
+  - implement Prometheus/OpenMetrics text export as the real integration surface
+  - document Grafana as the strongest dashboard showcase path
+  - document Datadog through OpenMetrics-compatible collection, not native API publishing
+  - keep remote telemetry out of the MVP unless explicit opt-in consent and policy-backed collection are implemented later
+- Implementation slice:
+  - `repo-context-hooks measure --prometheus`
+  - aggregate-only Prometheus metrics without local paths, prompts, code, compact summaries, or resume content
+  - README `Live Evidence Snapshot` section with a visible telemetry proof strip
+  - `assets/diagrams/telemetry-proof-strip.svg`
+  - `docs/observability.md`
+  - monitoring guide links from README and `docs/monitoring.md`
+- Claim boundary:
+  - the project now has a real local observability export
+  - Grafana and Datadog are documented integration paths over OpenMetrics
+  - there is still no hosted telemetry service, no cookies, and no remote community analytics in the MVP

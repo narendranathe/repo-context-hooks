@@ -8,6 +8,7 @@ from repo_context_hooks.repo_contract import init_repo_contract
 from repo_context_hooks.telemetry import (
     measure_impact,
     record_event,
+    render_prometheus_metrics,
     telemetry_dir,
     write_public_monitoring_snapshot,
 )
@@ -165,3 +166,33 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
     assert "Public snapshot" in dashboard
     assert str(tmp_path) not in dashboard
     assert str(tmp_path) not in json.dumps(history)
+
+
+def test_render_prometheus_metrics_exports_safe_aggregate_evidence() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+    telemetry_base = tmp_path / "telemetry"
+    record_event(repo, "session-start", telemetry_base=telemetry_base)
+    record_event(repo, "pre-compact", telemetry_base=telemetry_base)
+
+    report = measure_impact(repo, telemetry_base=telemetry_base)
+    metrics = render_prometheus_metrics(report)
+
+    assert "# HELP repo_context_hooks_continuity_score" in metrics
+    assert "# TYPE repo_context_hooks_continuity_score gauge" in metrics
+    assert f'repo_context_hooks_continuity_score{{repo="{report.repo_name}"}}' in metrics
+    assert f'repo_context_hooks_uplift{{repo="{report.repo_name}"}}' in metrics
+    assert f'repo_context_hooks_observed_events_total{{repo="{report.repo_name}"}} 2' in metrics
+    assert f'repo_context_hooks_lifecycle_coverage_percent{{repo="{report.repo_name}"}}' in metrics
+    assert (
+        f'repo_context_hooks_event_count{{repo="{report.repo_name}",event_name="session-start"}} 1'
+        in metrics
+    )
+    assert (
+        f'repo_context_hooks_event_count{{repo="{report.repo_name}",event_name="pre-compact"}} 1'
+        in metrics
+    )
+    assert str(tmp_path) not in metrics
+    assert "telemetry_path" not in metrics
