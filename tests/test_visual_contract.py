@@ -26,6 +26,19 @@ def _numbers(value: str) -> list[float]:
     return [float(item) for item in re.findall(r"-?\d+(?:\.\d+)?", value)]
 
 
+def _svg_text_value(element: ET.Element) -> str:
+    return "".join(element.itertext()).strip()
+
+
+def _svg_font_size(element: ET.Element) -> float:
+    return float(element.attrib.get("font-size", "16"))
+
+
+def _estimated_text_width(text: str, font_size: float) -> float:
+    # Segoe UI/Georgia vary by glyph, so this intentionally leans conservative.
+    return len(text) * font_size * 0.64
+
+
 def _walk_visible(root: ET.Element):
     ignored = {"defs", "title", "desc", "marker", "pattern", "filter", "linearGradient", "radialGradient", "style"}
 
@@ -127,6 +140,26 @@ def test_monitoring_timeseries_svg_keeps_readme_graph_inside_safe_margins() -> N
                 if x > 0 and y > 0:
                     assert x + rect_width <= width - 32, f"{path.name} rect overflows right edge"
                     assert y + rect_height <= height - 32, f"{path.name} rect overflows bottom edge"
+
+
+def test_monitoring_timeseries_svg_text_estimates_stay_inside_viewbox() -> None:
+    path = MONITORING / "timeseries.svg"
+    root = _svg_root(path)
+    _, _, width, _ = _viewbox(root)
+    for element in _walk_visible(root):
+        if element.tag.rsplit("}", 1)[-1] != "text":
+            continue
+        text = _svg_text_value(element)
+        if not text:
+            continue
+        x = float(element.attrib.get("x", "0"))
+        font_size = _svg_font_size(element)
+        estimated_right_edge = x + _estimated_text_width(text, font_size)
+
+        assert estimated_right_edge <= width - 32, (
+            f"{path.name} text may overflow right edge: {text!r} "
+            f"estimated at {estimated_right_edge:.1f}px"
+        )
 
 
 def test_brand_svg_keeps_visible_artwork_inside_logo_tile() -> None:

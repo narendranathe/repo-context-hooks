@@ -345,6 +345,11 @@ This file is the persistent project context for agents and maintainers.
   - added previous-vs-latest telemetry day labels
   - added metric-source copy inside the SVG so readers can see which snapshot fields derive the graph
   - added visual contract coverage for the README telemetry graph
+- 2026-04-25 SVG overflow correction:
+  - root cause was visual tests checking element coordinates, not estimated text width
+  - added a text-width regression guard for `docs/monitoring/timeseries.svg`
+  - shortened crowded card copy, split previous/latest labels onto separate rows, and segmented metric sources
+  - fixed the time-series plot frame so chart primitives align with the visible chart boundary
 - Agent/model comparison follow-up:
   - telemetry events now carry `agent_platform` and optional `model_name`
   - event sources infer platform where possible, with explicit environment overrides available

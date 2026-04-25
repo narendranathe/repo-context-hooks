@@ -379,7 +379,8 @@ def test_render_public_time_series_svg_uses_snapshot_data_not_manual_claims() ->
     assert "Model/session only" in chart
     assert "Repo continuity" in chart
     assert "Metric sources" in chart
-    assert "score, baseline, uplift" in chart
+    assert "score / baseline / uplift" in chart
+    assert "time_series / event_counts" in chart
     assert "Agent/model comparison" in chart
     assert "Agent sessions" in chart
     assert "claude / sonnet-test" in chart

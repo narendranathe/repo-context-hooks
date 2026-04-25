@@ -1407,14 +1407,14 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
             str(item["agent_platform"]),
             str(item["model_name"]),
         ),
-    )[:3]
+    )[:2]
 
     width = 1200
-    height = 760
+    height = 820
     chart_x = 104
-    chart_y = 438
+    chart_y = 468
     chart_width = 604
-    chart_height = 148
+    chart_height = 126
     max_events = max(max(int(item["events"]) for item in points), 1)
     point_start = chart_x + 64
     point_end = chart_x + chart_width - 64
@@ -1452,9 +1452,9 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
         )
 
     event_rows: list[str] = []
-    max_count = max((count for _, count in top_events), default=1)
+    max_count = max(max((count for _, count in top_events), default=1), 1)
     for index, (name, count) in enumerate(top_events):
-        y = 588 + index * 30
+        y = 638 + index * 28
         bar = max(8, round(count / max_count * 76))
         label = _truncate_svg_label(name, 21)
         event_rows.append(
@@ -1468,14 +1468,14 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
         )
     if not event_rows:
         event_rows.append(
-            '<text x="796" y="588" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="14">No events observed yet</text>'
+            '<text x="796" y="638" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="14">No events observed yet</text>'
         )
 
     agent_rows: list[str] = []
-    max_agent_events = max((int(item["events"]) for item in agent_items), default=1)
+    max_agent_events = max(max((int(item["events"]) for item in agent_items), default=1), 1)
     for index, item in enumerate(agent_items):
-        y = 452 + index * 40
-        width_for_events = max(10, round(int(item["events"]) / max_agent_events * 78))
+        y = 456 + index * 62
+        width_for_events = max(10, round(int(item["events"]) / max_agent_events * 126))
         label = _truncate_svg_label(
             f"{item['agent_platform']} / {item['model_name']}",
             25,
@@ -1486,10 +1486,10 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
             "\n".join(
                 [
                     f'<text x="796" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15">{_svg_text(label)}</text>',
-                    f'<rect x="988" y="{y - 14}" width="{width_for_events}" height="16" rx="8" fill="#2f6957"/>',
-                    f'<text x="1076" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">{int(item["events"])} ev</text>',
-                    f'<text x="988" y="{y + 20}" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">Agent sessions: {session_count} {session_word}</text>',
-                    f'<text x="796" y="{y + 20}" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">score {int(item["latest_score"])} / uplift {int(item["uplift"]):+d}</text>',
+                    f'<rect x="796" y="{y + 14}" width="{width_for_events}" height="16" rx="8" fill="#2f6957"/>',
+                    f'<text x="936" y="{y + 28}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">{int(item["events"])} ev</text>',
+                    f'<text x="796" y="{y + 50}" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">score {int(item["latest_score"])} / uplift {int(item["uplift"]):+d}</text>',
+                    f'<text x="990" y="{y + 50}" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="13">{session_count} {session_word}</text>',
                 ]
             )
         )
@@ -1511,33 +1511,33 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
       <stop offset="1" stop-color="#b54720"/>
     </linearGradient>
   </defs>
-  <rect x="32" y="32" width="1136" height="696" rx="36" fill="url(#page)"/>
-  <rect x="58" y="58" width="1084" height="644" rx="28" fill="#fff9ea" opacity="0.78"/>
+  <rect x="32" y="32" width="1136" height="756" rx="36" fill="url(#page)"/>
+  <rect x="58" y="58" width="1084" height="704" rx="28" fill="#fff9ea" opacity="0.78"/>
   <text x="80" y="104" fill="#17120b" font-family="Georgia, serif" font-size="42" font-weight="700">Telemetry time series</text>
-  <text x="80" y="138" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Generated from docs/monitoring/history.json, not a hand-authored proof card</text>
+  <text x="80" y="138" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Generated from docs/monitoring/history.json with local telemetry snapshots</text>
   <text x="80" y="166" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Repo: {repo}</text>
 
   <rect x="80" y="192" width="480" height="154" rx="24" fill="#17120b"/>
   <text x="108" y="228" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">MODEL/SESSION ONLY</text>
-  <text x="108" y="256" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="17">Model/session only baseline: README.md context</text>
+  <text x="108" y="256" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="17">Model/session only</text>
   <rect x="108" y="280" width="328" height="18" rx="9" fill="#354250"/>
   <rect x="108" y="280" width="{baseline_width}" height="18" rx="9" fill="#d2852f"/>
   <text x="454" y="297" fill="#f6efe0" font-family="Georgia, serif" font-size="28" font-weight="700">{baseline}</text>
-  <text x="108" y="324" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="15">Baseline estimates what the current model sees without repo continuity.</text>
+  <text x="108" y="324" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="15">README-only context before handoff.</text>
 
   <rect x="584" y="192" width="536" height="154" rx="24" fill="#f3dfb8" stroke="#d0ad72" stroke-width="2"/>
   <text x="612" y="228" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">REPO CONTINUITY</text>
-  <text x="612" y="256" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17">Repo continuity: contract files plus observed hook events</text>
+  <text x="612" y="256" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="17">Repo continuity: contracts + hooks</text>
   <rect x="612" y="280" width="328" height="18" rx="9" fill="#dac18b"/>
   <rect x="612" y="280" width="{score_width}" height="18" rx="9" fill="url(#line)"/>
   <text x="960" y="297" fill="#17120b" font-family="Georgia, serif" font-size="28" font-weight="700">{score}</text>
-  <text x="612" y="324" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="15">Repo continuity adds +{uplift} over baseline with {observed_events} hook events.</text>
+  <text x="612" y="324" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="15">Adds +{uplift} with {observed_events} hook events.</text>
 
-  <rect x="80" y="368" width="652" height="304" rx="24" fill="#fff3d4" stroke="#d0ad72" stroke-width="2"/>
+  <rect x="80" y="368" width="652" height="340" rx="24" fill="#fff3d4" stroke="#d0ad72" stroke-width="2"/>
   <text x="108" y="406" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="20" font-weight="800">Previous vs latest telemetry</text>
   <text x="108" y="432" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Previous: {previous_label} ({int(previous["events"])} events, score {int(previous["score"])})</text>
-  <text x="386" y="432" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Latest: {latest_label} ({int(latest["events"])} events, score {int(latest["score"])})</text>
-  <rect x="86" y="{chart_y}" width="{chart_width}" height="{chart_height}" rx="20" fill="#f8e9c8" stroke="#d0ad72" stroke-width="2"/>
+  <text x="108" y="456" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Latest: {latest_label} ({int(latest["events"])} events, score {int(latest["score"])})</text>
+  <rect x="{chart_x}" y="{chart_y}" width="{chart_width}" height="{chart_height}" rx="20" fill="#f8e9c8" stroke="#d0ad72" stroke-width="2"/>
   <line x1="{chart_x}" y1="{chart_y + chart_height}" x2="{chart_x + chart_width}" y2="{chart_y + chart_height}" stroke="#9a7a4d" stroke-width="2"/>
   <line x1="{chart_x}" y1="{chart_y + 110}" x2="{chart_x + chart_width}" y2="{chart_y + 110}" stroke="#dec18d" stroke-width="2" stroke-dasharray="10 10"/>
   <text x="112" y="{chart_y + 30}" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="15">Daily hook events as bars</text>
@@ -1546,16 +1546,21 @@ def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
   <polyline points="{" ".join(line_points)}" fill="none" stroke="url(#line)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
   {"".join(markers)}
 
-  <rect x="764" y="368" width="356" height="304" rx="24" fill="#17120b"/>
+  <rect x="764" y="368" width="356" height="364" rx="24" fill="#17120b"/>
   <text x="796" y="406" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="16" font-weight="800">Agent/model comparison</text>
-  <text x="796" y="430" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="14">Grouped from event agent_platform and model_name</text>
+  <text x="796" y="430" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="14">By agent + model</text>
+  <text x="982" y="430" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="12">Agent sessions</text>
   {"".join(agent_rows)}
-  <text x="796" y="558" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">EVENT MIX FROM JSON</text>
+  <text x="796" y="610" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="15" font-weight="800">EVENT MIX FROM JSON</text>
   {"".join(event_rows)}
-  <text x="796" y="672" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="16">Lifecycle coverage: {lifecycle}%</text>
+  <text x="796" y="718" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="16">Lifecycle coverage: {lifecycle}%</text>
 
-  <rect x="80" y="690" width="1040" height="32" rx="16" fill="#f6e3bb"/>
-  <text x="108" y="712" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="15">Metric sources: score, baseline, uplift, observed_events, time_series, event_counts, agent_comparison, usability.lifecycle_coverage</text>
+  <rect x="80" y="746" width="1040" height="42" rx="18" fill="#f6e3bb"/>
+  <text x="108" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">Metric sources</text>
+  <text x="250" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">score / baseline / uplift</text>
+  <text x="486" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">time_series / event_counts</text>
+  <text x="760" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">agent_comparison / agent_sessions</text>
+  <text x="1044" y="772" fill="#5d4327" font-family="Segoe UI, sans-serif" font-size="14">lifecycle</text>
 </svg>
 """
 
