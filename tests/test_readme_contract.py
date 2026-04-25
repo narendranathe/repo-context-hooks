@@ -119,6 +119,7 @@ def test_readme_documents_impact_measurement() -> None:
     assert "## Prove Impact" in text
     assert "repo-context-hooks measure" in text
     assert "repo-context-hooks measure --json" in text
+    assert "repo-context-hooks measure --snapshot-dir docs/monitoring" in text
     assert "docs/monitoring.md" in text
     assert (ROOT / "docs" / "monitoring.md").exists()
 

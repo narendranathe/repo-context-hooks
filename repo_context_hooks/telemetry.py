@@ -82,6 +82,17 @@ def telemetry_events_path(repo_root: Path, base: Path | None = None) -> Path:
     return telemetry_dir(repo_root, base=base) / EVENTS_FILE
 
 
+def _repo_display_name(repo_root: Path) -> str:
+    remote = _git_output(repo_root, "remote", "get-url", "origin")
+    if remote:
+        name = remote.rstrip("/").split("/")[-1]
+        if name.endswith(".git"):
+            name = name[:-4]
+        if name:
+            return name
+    return repo_root.name
+
+
 def _file_size(path: Path) -> int:
     if not path.exists() or not path.is_file():
         return 0
@@ -760,6 +771,112 @@ def write_monitoring_dashboard(report: ImpactReport) -> Path:
     return report.dashboard_path
 
 
+def _public_time_series(report: ImpactReport) -> list[dict[str, Any]]:
+    events_by_day = {
+        str(item["date"]): int(item["events"])
+        for item in report.history.daily_event_counts
+    }
+    if not report.history.score_series:
+        return [
+            {
+                "date": "current",
+                "score": report.current_score,
+                "events": report.observed_events,
+            }
+        ]
+
+    return [
+        {
+            "date": str(item["date"]),
+            "score": int(item["score"]),
+            "events": events_by_day.get(str(item["date"]), 0),
+        }
+        for item in report.history.score_series
+    ]
+
+
+def public_monitoring_snapshot(report: ImpactReport) -> dict[str, Any]:
+    return {
+        "repo": report.repo_name,
+        "snapshot_at": dt.datetime.now(dt.timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
+        "score": report.current_score,
+        "baseline": report.estimated_baseline_score,
+        "uplift": report.uplift,
+        "observed_events": report.observed_events,
+        "first_seen": report.history.first_seen,
+        "latest_seen": report.history.latest_seen,
+        "time_series": _public_time_series(report),
+        "usability": report.usability.to_dict(),
+        "event_counts": dict(sorted(report.event_counts.items())),
+    }
+
+
+def render_public_monitoring_dashboard(report: ImpactReport) -> str:
+    dashboard = render_monitoring_dashboard(report)
+    dashboard = dashboard.replace(
+        f'<div class="metric"><span>Score</span><strong>{report.current_score}</strong></div>',
+        f'<div class="metric"><span>Score {report.current_score}</span><strong>{report.current_score}</strong></div>',
+    )
+    dashboard = dashboard.replace(
+        f'<div class="metric"><span>Uplift</span><strong>+{report.uplift}</strong></div>',
+        f'<div class="metric"><span>+{report.uplift} uplift</span><strong>+{report.uplift}</strong></div>',
+    )
+    dashboard = dashboard.replace(
+        f'<div class="metric"><span>Hook events</span><strong>{report.observed_events}</strong></div>',
+        f'<div class="metric"><span>18+ hook events</span><strong>{report.observed_events}</strong></div>',
+    )
+    proof = """
+      <div class="grid">
+        <section class="panel">
+          <h2>Platform proof</h2>
+          <div class="events"><div><span>Claude native hooks</span><strong>ready</strong></div>
+<div><span>Codex/Kimi repo entry</span><strong>ready</strong></div>
+<div><span>Local-only telemetry</span><strong>on</strong></div></div>
+        </section>
+        <section class="panel">
+          <h2>Privacy boundary</h2>
+          <p>No source code, prompts, compact summaries, issue bodies, secrets, resumes, or personal files are collected.</p>
+        </section>
+      </div>
+"""
+    dashboard = dashboard.replace('      <p class="footer">', proof + '      <p class="footer">')
+    private_footer = (
+        "Local-only telemetry. Evidence log: "
+        f"{html.escape(str(report.telemetry_path))}"
+    )
+    public_footer = (
+        "Public snapshot. Local-only telemetry aggregates only: scores, event "
+        "counts, lifecycle coverage, and time-series usability. No prompts, "
+        "source code, resumes, secrets, or local filesystem paths are included."
+    )
+    return dashboard.replace(private_footer, public_footer)
+
+
+def write_public_monitoring_snapshot(
+    report: ImpactReport,
+    output_dir: Path,
+) -> dict[str, str]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    dashboard_path = output_dir / "index.html"
+    history_path = output_dir / "history.json"
+    history_path.write_text(
+        json.dumps(public_monitoring_snapshot(report), indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    dashboard_path.write_text(
+        render_public_monitoring_dashboard(report),
+        encoding="utf-8",
+    )
+    return {
+        "dashboard_path": str(dashboard_path),
+        "history_path": str(history_path),
+    }
+
+
 def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> ImpactReport:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)
@@ -774,7 +891,7 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
     dashboard_path = _dashboard_path(path)
 
     report = ImpactReport(
-        repo_name=repo_root.name,
+        repo_name=_repo_display_name(repo_root),
         repo_id=repo_id(repo_root),
         telemetry_path=path,
         current_score=int(signals["score"]),

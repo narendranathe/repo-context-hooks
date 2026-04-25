@@ -10,7 +10,7 @@ from .platforms import get_registry
 from .recommend import recommend_setup
 from .repo_contract import init_repo_contract
 from .doctor import diagnose_repo_contract
-from .telemetry import measure_impact
+from .telemetry import measure_impact, write_public_monitoring_snapshot
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -121,6 +121,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--json",
         action="store_true",
         help="Print machine-readable JSON output.",
+    )
+    measure.add_argument(
+        "--snapshot-dir",
+        help=(
+            "Write a sanitized public monitoring snapshot to this directory "
+            "(for example: docs/monitoring)."
+        ),
     )
 
     platforms = subparsers.add_parser(
@@ -239,11 +246,28 @@ def _recommend(args: argparse.Namespace) -> int:
 
 
 def _measure(args: argparse.Namespace) -> int:
-    report = measure_impact(repo_root=Path(args.repo_root).resolve())
+    repo_root = Path(args.repo_root).resolve()
+    report = measure_impact(repo_root=repo_root)
+    snapshot = None
+    snapshot_dir = getattr(args, "snapshot_dir", None)
+    if snapshot_dir:
+        output_dir = Path(snapshot_dir)
+        if not output_dir.is_absolute():
+            output_dir = repo_root / output_dir
+        snapshot = write_public_monitoring_snapshot(
+            report,
+            output_dir.resolve(),
+        )
     if getattr(args, "json", False):
-        _print_json(report.to_dict())
+        payload = report.to_dict()
+        if snapshot is not None:
+            payload["public_snapshot"] = snapshot
+        _print_json(payload)
     else:
         print(report.render())
+        if snapshot is not None:
+            print(f"Wrote public monitoring snapshot: {snapshot['dashboard_path']}")
+            print(f"Wrote public monitoring history: {snapshot['history_path']}")
     return 0
 
 

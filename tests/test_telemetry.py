@@ -5,7 +5,12 @@ from pathlib import Path
 from uuid import uuid4
 
 from repo_context_hooks.repo_contract import init_repo_contract
-from repo_context_hooks.telemetry import measure_impact, record_event, telemetry_dir
+from repo_context_hooks.telemetry import (
+    measure_impact,
+    record_event,
+    telemetry_dir,
+    write_public_monitoring_snapshot,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -95,6 +100,26 @@ def test_measure_impact_recommends_install_when_no_hooks_are_observed() -> None:
     assert telemetry_dir(repo, base=tmp_path / "telemetry").exists()
 
 
+def test_measure_impact_uses_remote_name_for_worktree_display(monkeypatch) -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "feat-evidence-monitoring"
+    repo.mkdir()
+    init_repo_contract(repo)
+
+    monkeypatch.setattr(
+        "repo_context_hooks.telemetry._git_output",
+        lambda repo_root, *args: (
+            "https://github.com/narendranathe/repo-context-hooks.git"
+            if args == ("remote", "get-url", "origin")
+            else ""
+        ),
+    )
+
+    report = measure_impact(repo, telemetry_base=tmp_path / "telemetry")
+
+    assert report.repo_name == "repo-context-hooks"
+
+
 def test_telemetry_falls_back_to_repo_local_directory_when_cache_is_unavailable(monkeypatch) -> None:
     tmp_path = _tmp_dir()
     repo = tmp_path / "repo"
@@ -111,3 +136,32 @@ def test_telemetry_falls_back_to_repo_local_directory_when_cache_is_unavailable(
 
     assert repo in path.parents
     assert ".repo-context-hooks" in path.as_posix()
+
+
+def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init_repo_contract(repo)
+    telemetry_base = tmp_path / "telemetry"
+    record_event(repo, "session-start", telemetry_base=telemetry_base)
+    record_event(repo, "pre-compact", telemetry_base=telemetry_base)
+
+    report = measure_impact(repo, telemetry_base=telemetry_base)
+    snapshot_dir = tmp_path / "public" / "monitoring"
+
+    result = write_public_monitoring_snapshot(report, snapshot_dir)
+
+    assert result["dashboard_path"] == str(snapshot_dir / "index.html")
+    assert result["history_path"] == str(snapshot_dir / "history.json")
+
+    history = json.loads((snapshot_dir / "history.json").read_text(encoding="utf-8"))
+    dashboard = (snapshot_dir / "index.html").read_text(encoding="utf-8")
+
+    assert history["score"] == report.current_score
+    assert history["observed_events"] == report.observed_events
+    assert history["usability"]["active_days"] == 1
+    assert "Continuity Impact Monitor" in dashboard
+    assert "Public snapshot" in dashboard
+    assert str(tmp_path) not in dashboard
+    assert str(tmp_path) not in json.dumps(history)

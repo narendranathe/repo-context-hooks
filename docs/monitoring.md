@@ -32,7 +32,13 @@ For scripts, dashboards, and CI experiments:
 repo-context-hooks measure --json
 ```
 
-The public snapshot for this repo lives at [docs/monitoring/index.html](monitoring/index.html). It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory.
+To intentionally refresh a checked-in public dashboard from local evidence:
+
+```bash
+repo-context-hooks measure --snapshot-dir docs/monitoring
+```
+
+The public snapshot for this repo lives at [docs/monitoring/index.html](monitoring/index.html). It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory. The public snapshot writer sanitizes local paths and publishes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
 
 ## What Gets Measured
 
@@ -123,6 +129,7 @@ Use this sequence when you want evidence for a README, blog post, internal adopt
 6. Trigger a compact or session-end flow when available.
 7. Run `repo-context-hooks measure` again.
 8. Compare the uplift, observed events, and recommendations.
+9. If the evidence is shareable, run `repo-context-hooks measure --snapshot-dir docs/monitoring` and review the generated files before committing them.
 
 For reproducible comparisons:
 
@@ -131,6 +138,7 @@ repo-context-hooks measure --json > before.json
 repo-context-hooks init
 repo-context-hooks install --platform claude
 repo-context-hooks measure --json > after.json
+repo-context-hooks measure --snapshot-dir docs/monitoring
 ```
 
 ## How To Interpret It

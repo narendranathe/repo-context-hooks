@@ -1,43 +1,38 @@
 {
-  "repo": "repo-context-hooks",
-  "snapshot_at": "2026-04-24T16:19:00Z",
-  "score": 90,
   "baseline": 20,
-  "uplift": 70,
-  "observed_events": 26,
+  "event_counts": {
+    "post-compact": 1,
+    "pre-compact": 1,
+    "session-context-post-compact": 1,
+    "session-end": 1,
+    "session-start": 28
+  },
+  "first_seen": "2026-04-24T15:26:58.522809+00:00",
+  "latest_seen": "2026-04-25T00:30:10.604902+00:00",
+  "observed_events": 32,
+  "repo": "repo-context-hooks",
+  "score": 90,
+  "snapshot_at": "2026-04-25T00:41:08Z",
   "time_series": [
     {
       "date": "2026-04-24",
-      "score": 70,
-      "events": 8,
-      "note": "local monitoring first observed the repo contract before committed hooks"
+      "events": 30,
+      "score": 90
     },
     {
-      "date": "2026-04-24",
-      "score": 80,
-      "events": 9,
-      "note": "Claude repo hooks installed and detected"
-    },
-    {
-      "date": "2026-04-24",
-      "score": 90,
-      "events": 26,
-      "note": "AGENTS.md added and full lifecycle hooks exercised"
+      "date": "2026-04-25",
+      "events": 2,
+      "score": 90
     }
   ],
+  "uplift": 70,
   "usability": {
-    "active_days": 1,
-    "resume_events": 22,
+    "active_days": 2,
     "checkpoint_events": 2,
+    "lifecycle_coverage": 100,
+    "readiness_minutes_since_last_event": 11,
     "reload_events": 2,
-    "session_end_events": 1,
-    "lifecycle_coverage": 100
-  },
-  "event_counts": {
-    "session-start": 22,
-    "pre-compact": 1,
-    "post-compact": 1,
-    "session-context-post-compact": 1,
-    "session-end": 1
+    "resume_events": 28,
+    "session_end_events": 1
   }
 }

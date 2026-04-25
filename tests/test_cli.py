@@ -48,6 +48,12 @@ def test_parser_supports_platforms_and_doctor_commands() -> None:
     assert parser.parse_args(["recommend", "--json"]).json is True
     assert parser.parse_args(["measure"]).command == "measure"
     assert parser.parse_args(["measure", "--json"]).json is True
+    assert (
+        parser.parse_args(
+            ["measure", "--snapshot-dir", "docs/monitoring"]
+        ).snapshot_dir
+        == "docs/monitoring"
+    )
 
 
 def test_platforms_print_support_tiers(capsys) -> None:
@@ -286,6 +292,53 @@ def test_measure_prints_json(
     payload = json.loads(capsys.readouterr().out)
     assert payload["repo_name"] == "demo"
     assert payload["uplift"] == 49
+
+
+def test_measure_writes_public_snapshot(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+    calls: list[tuple[str, Path]] = []
+
+    class FakeReport:
+        def render(self) -> str:
+            return "[OK] context-impact"
+
+        def to_dict(self):
+            return {
+                "repo_name": "demo",
+                "current_score": 84,
+                "estimated_baseline_score": 35,
+                "uplift": 49,
+            }
+
+    def fake_snapshot(report, output_dir):
+        calls.append((report.to_dict()["repo_name"], output_dir))
+        return {
+            "dashboard_path": str(output_dir / "index.html"),
+            "history_path": str(output_dir / "history.json"),
+        }
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.measure_impact",
+        lambda repo_root: FakeReport(),
+    )
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.write_public_monitoring_snapshot",
+        fake_snapshot,
+    )
+
+    args = Namespace(
+        repo_root=str(tmp_path),
+        json=False,
+        snapshot_dir="docs/monitoring",
+    )
+
+    assert _measure(args) == 0
+    out = capsys.readouterr().out
+    assert "Wrote public monitoring snapshot" in out
+    assert calls == [("demo", tmp_path / "docs" / "monitoring")]
 
 
 def test_init_prints_repo_contract_statuses(

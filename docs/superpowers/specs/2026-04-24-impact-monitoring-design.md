@@ -38,7 +38,9 @@ Hook scripts call `record_event()` after useful lifecycle work:
 
 `measure_impact()` reads local JSONL events and current repo-contract signals, then renders a human or JSON report. It also writes a local `monitoring.html` dashboard beside the JSONL event log so hook activity creates a living time-series view without dirtying the git repo.
 
-The public repo can include a checked-in dashboard snapshot under `docs/monitoring/index.html`. That snapshot is marketing and documentation; the automatically updated monitor remains local unless the maintainer intentionally publishes a new snapshot.
+The public repo can include a checked-in dashboard snapshot under `docs/monitoring/index.html`. That snapshot is marketing and documentation; the automatically updated monitor remains local unless the maintainer intentionally publishes a new snapshot with `repo-context-hooks measure --snapshot-dir docs/monitoring`.
+
+The snapshot writer must sanitize local-only fields. It can publish aggregate score, baseline, uplift, event counts, lifecycle coverage, and usability time series, but it must not publish local filesystem paths, prompts, source snippets, resumes, secrets, or compact summaries.
 
 ## Storage
 

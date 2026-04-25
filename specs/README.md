@@ -59,6 +59,7 @@ This file is the persistent project context for agents and maintainers.
   - `recommend`
 - Current monitoring branch adds local impact evidence:
   - `measure`
+  - `measure --snapshot-dir docs/monitoring`
   - local JSONL hook/skill events
   - estimated current-vs-baseline continuity uplift
   - committed Claude repo hooks so the evidence loop is automatic for this repo
@@ -213,18 +214,21 @@ This file is the persistent project context for agents and maintainers.
   - measure score: `90`
   - estimated baseline: `20`
   - estimated uplift: `+70`
-  - observed hook events: `26`
+  - observed hook events: `32`
+  - active days: `2`
   - lifecycle coverage: `100%`
-  - resume events: `22`
+  - resume events: `28`
   - checkpoint events: `2`
   - reload events: `2`
   - session-end events: `1`
 - Current implementation slice:
   - `repo_context_hooks/telemetry.py`
   - `repo-context-hooks measure`
+  - `repo-context-hooks measure --snapshot-dir docs/monitoring`
   - time-series usability metrics in `ImpactHistory` and `UsabilityMetrics`
   - local `monitoring.html` dashboard generated from the telemetry log
-  - checked-in public snapshot at `docs/monitoring/index.html`
+  - sanitized checked-in public snapshot at `docs/monitoring/index.html`
+  - generated public history at `docs/monitoring/history.json`
   - checked-in visual brand asset at `assets/diagrams/context-continuity-engine.svg`
   - hook-script telemetry emission from `repo_specs_memory.py` and `session_context.py`
   - README and monitoring guide updates

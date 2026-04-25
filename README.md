@@ -168,9 +168,12 @@ repo-context-hooks measure --json
 ```bash
 repo-context-hooks measure
 repo-context-hooks measure --json
+repo-context-hooks measure --snapshot-dir docs/monitoring
 ```
 
 `measure` compares the current repo continuity score against an estimated no-continuity baseline, then reports observed hook and skill events from local JSONL telemetry. Hook scripts write small events to your OS cache by default, outside the git repo. If that cache is unavailable in a sandbox, telemetry falls back to `.repo-context-hooks/`, which `init` adds to `.gitignore`.
+
+Use `--snapshot-dir` when you intentionally want to publish a sanitized dashboard and `history.json` from your local evidence. The snapshot includes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
 
 Use it before and after installing a platform adapter:
 
@@ -188,7 +191,8 @@ Current repo snapshot:
 - Score `90`
 - Baseline `20`
 - Uplift `+70`
-- Observed hook events `26`
+- Observed hook events `32`
+- Active days `2`
 - Lifecycle coverage `100%`
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 

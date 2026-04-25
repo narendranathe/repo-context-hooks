@@ -80,6 +80,7 @@ Expected behavior:
 ```bash
 repo-context-hooks measure
 repo-context-hooks measure --json
+repo-context-hooks measure --snapshot-dir docs/monitoring
 ```
 
 - [x] **Step 2: Add `_measure()` and parser wiring**
@@ -155,6 +156,10 @@ Create:
 - `docs/monitoring/history.json`
 
 Update README with the hero visual, current score, uplift, lifecycle coverage, and dashboard link.
+
+- [x] **Step 5: Add sanitized public snapshot export**
+
+Expose `repo-context-hooks measure --snapshot-dir docs/monitoring` so maintainers can intentionally refresh the checked-in dashboard from local telemetry without leaking local paths or sensitive content.
 
 ### Task 5: Verification
 
