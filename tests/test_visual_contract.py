@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 DIAGRAMS = ROOT / "assets" / "diagrams"
 BRAND = ROOT / "assets" / "brand"
+MONITORING = ROOT / "docs" / "monitoring"
 
 
 def _svg_root(path: Path) -> ET.Element:
@@ -98,9 +99,34 @@ def test_diagram_lines_and_polylines_stay_inside_safe_margins() -> None:
 
 
 def test_visual_assets_avoid_transform_based_edge_positioning() -> None:
-    for path in [*sorted(DIAGRAMS.glob("*.svg")), BRAND / "repo-context-hooks-logo.svg"]:
+    for path in [
+        *sorted(DIAGRAMS.glob("*.svg")),
+        MONITORING / "timeseries.svg",
+        BRAND / "repo-context-hooks-logo.svg",
+    ]:
         text = path.read_text(encoding="utf-8")
         assert "transform=" not in text, f"{path.name} should use direct coordinates for easier edge safety"
+
+
+def test_monitoring_timeseries_svg_keeps_readme_graph_inside_safe_margins() -> None:
+    path = MONITORING / "timeseries.svg"
+    root = _svg_root(path)
+    _, _, width, height = _viewbox(root)
+    for element in _walk_visible(root):
+        tag = element.tag.rsplit("}", 1)[-1]
+        if tag in {"rect", "text", "circle"}:
+            for attr in ("x", "y", "cx", "cy"):
+                if attr in element.attrib:
+                    value = float(element.attrib[attr])
+                    assert 32 <= value <= width - 32, f"{path.name} {tag}.{attr}={value} is too close to edge"
+            if tag == "rect":
+                x = float(element.attrib.get("x", "0"))
+                y = float(element.attrib.get("y", "0"))
+                rect_width = float(element.attrib.get("width", "0"))
+                rect_height = float(element.attrib.get("height", "0"))
+                if x > 0 and y > 0:
+                    assert x + rect_width <= width - 32, f"{path.name} rect overflows right edge"
+                    assert y + rect_height <= height - 32, f"{path.name} rect overflows bottom edge"
 
 
 def test_brand_svg_keeps_visible_artwork_inside_logo_tile() -> None:

@@ -339,6 +339,12 @@ This file is the persistent project context for agents and maintainers.
   - removed the hand-authored telemetry proof strip because it was a claim card, not proof
   - wired the public snapshot writer to generate the README graph from telemetry data
   - the HTML dashboard remains useful, but the README now embeds actual generated time-series evidence directly
+- Follow-up correction after SVG readability critique:
+  - redesigned `docs/monitoring/timeseries.svg` to avoid spilling content
+  - added a model/session-only baseline versus repo-continuity comparison
+  - added previous-vs-latest telemetry day labels
+  - added metric-source copy inside the SVG so readers can see which snapshot fields derive the graph
+  - added visual contract coverage for the README telemetry graph
 - Claim boundary:
   - the project now has a real local observability export
   - Grafana and Datadog are documented integration paths over OpenMetrics

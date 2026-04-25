@@ -14,6 +14,8 @@ Repo-native continuity for coding agents.
 
 This repo now shows continuity evidence on the landing page instead of hiding it in a secondary report. The chart below is generated from the same `docs/monitoring/history.json` that users can inspect, so the visual and the data source travel together.
 
+The graph compares a model/session-only baseline against repo continuity, then shows previous-vs-latest telemetry days, score trend, hook-event volume, event mix, lifecycle coverage, and the exact snapshot fields used to derive the metrics.
+
 ![Generated telemetry time-series chart from docs/monitoring/history.json showing daily hook events, score trend, event mix, and lifecycle coverage](docs/monitoring/timeseries.svg)
 
 Public evidence files:

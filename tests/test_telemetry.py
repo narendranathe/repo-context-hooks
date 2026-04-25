@@ -171,6 +171,9 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
     assert "Generated from docs/monitoring/history.json" in chart
     assert "session-start" in chart
     assert "pre-compact" in chart
+    assert "MODEL/SESSION ONLY" in chart
+    assert "REPO CONTINUITY" in chart
+    assert "Metric sources" in chart
     assert str(tmp_path) not in dashboard
     assert str(tmp_path) not in json.dumps(history)
     assert str(tmp_path) not in chart
@@ -211,6 +214,12 @@ def test_render_public_time_series_svg_uses_snapshot_data_not_manual_claims() ->
     assert "30 events" in chart
     assert "2026-04-25" in chart
     assert "2 events" in chart
+    assert "Previous: 2026-04-24" in chart
+    assert "Latest: 2026-04-25" in chart
+    assert "Model/session only" in chart
+    assert "Repo continuity" in chart
+    assert "Metric sources" in chart
+    assert "score, baseline, uplift" in chart
     assert "session-start" in chart
     assert "28" in chart
     assert "manual proof card" not in chart.lower()

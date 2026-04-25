@@ -43,6 +43,8 @@ The public snapshot for this repo lives at [docs/monitoring/index.html](monitori
 
 The README-facing graph lives at [docs/monitoring/timeseries.svg](monitoring/timeseries.svg). It is generated from the same `history.json` snapshot, so the public graphic is evidence-backed instead of a hand-authored metric claim.
 
+The graph intentionally compares the model/session-only baseline against repo continuity. It also shows previous-vs-latest telemetry days, score trend, hook-event volume, event mix, lifecycle coverage, and the source fields used by the renderer.
+
 For Prometheus/OpenMetrics, Grafana, and Datadog usage paths, see [Observability Integrations](observability.md).
 
 ## Visualization Tools

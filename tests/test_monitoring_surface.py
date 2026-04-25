@@ -53,6 +53,11 @@ def test_readme_timeseries_visual_exists_and_uses_snapshot_data() -> None:
         "score 90",
         "32 hook events",
         "session-start",
+        "model/session only",
+        "repo continuity",
+        "metric sources",
+        "previous:",
+        "latest:",
     ]
     for snippet in required:
         assert snippet in text
