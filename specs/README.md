@@ -54,6 +54,7 @@ This file is the persistent project context for agents and maintainers.
   - `v0.1.0`: initial public platform foundation
   - `v0.2.0`: platform polish and consolidation
   - `v0.2.1`: canonical repo memory contract plus repo-first onboarding
+  - `v0.2.4`: continuity impact monitoring, public telemetry snapshots, and README brand/visibility polish
 - Current active branch adds the next layer:
   - `doctor --all-platforms`
   - `recommend`
@@ -243,20 +244,40 @@ This file is the persistent project context for agents and maintainers.
   - this is an estimated before/after continuity audit, not a controlled productivity benchmark
   - remote telemetry requires explicit consent and is not implemented in the MVP
 
+### 2026-04-24 - release v0.2.4
+
+- Active branch:
+  - `release/v0.2.4`
+- Release goal:
+  - ship merged evidence-monitoring work from PR #22 as `v0.2.4`
+- What shipped:
+  - local `repo-context-hooks measure`
+  - local hook/skill JSONL events
+  - automatic private `monitoring.html`
+  - sanitized public dashboard export with `repo-context-hooks measure --snapshot-dir docs/monitoring`
+  - checked-in public monitoring dashboard and `history.json`
+  - consent-first remote telemetry policy
+  - README telemetry visibility section
+  - PNG/SVG brand assets
+- Branch policy:
+  - preserve `feat/evidence-monitoring`
+  - preserve `release/v0.2.4`
+
 ### Current Checkpoint
 
 - This file captures the project history through the platform-readiness phase and the public README/JSON-output release.
 - Active branch:
-  - `release/v0.2.3`
+  - `release/v0.2.4`
 - Release completed:
-  - `v0.2.3`
+  - `v0.2.4`
 - What shipped:
-  - README setup separated from per-platform install commands
-  - platform playbooks removed from the primary public README path
-  - JSON output added for `platforms`, `doctor`, `doctor --all-platforms`, and `recommend`
+  - continuity impact monitoring and local evidence loop
+  - public monitoring snapshot export
+  - telemetry policy and README visualization guidance
+  - README brand mark and telemetry visibility facelift
 - Verification completed:
   - full suite passing locally
-  - JSON command smoke checks passing
+  - release package version bumped to `0.2.4`
 - Branch policy:
   - merged branches are preserved for future review and revert workflows
 
