@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 660" role="img" aria-labelledby="title desc">
+  <title id="title">Telemetry time series</title>
+  <desc id="desc">Generated from docs/monitoring/history.json for repo-context-hooks. Shows score 90, baseline 20, uplift 70, 32 hook events, lifecycle coverage 100 percent, daily event bars, score trend, and event counts.</desc>
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff8e8"/>
+      <stop offset="0.62" stop-color="#efd5a4"/>
+      <stop offset="1" stop-color="#d7b77e"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2f6957"/>
+      <stop offset="1" stop-color="#b54720"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="1136" height="596" rx="36" fill="url(#page)"/>
+  <rect x="58" y="58" width="1084" height="544" rx="28" fill="#fff9ea" opacity="0.78"/>
+  <text x="86" y="104" fill="#17120b" font-family="Georgia, serif" font-size="42" font-weight="700">Telemetry time series</text>
+  <text x="86" y="138" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Generated from docs/monitoring/history.json, not a hand-authored proof card</text>
+  <text x="86" y="166" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Repo: repo-context-hooks</text>
+  <rect x="86" y="184" width="160" height="74" rx="18" fill="#17120b"/>
+  <text x="110" y="214" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">SCORE</text>
+  <text x="110" y="246" fill="#fff6dc" font-family="Georgia, serif" font-size="32" font-weight="700">Score 90</text>
+  <rect x="266" y="184" width="166" height="74" rx="18" fill="#f3dfb8" stroke="#d4b071" stroke-width="2"/>
+  <text x="290" y="214" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">BASELINE</text>
+  <text x="290" y="246" fill="#17120b" font-family="Georgia, serif" font-size="32" font-weight="700">20</text>
+  <rect x="452" y="184" width="166" height="74" rx="18" fill="#f3dfb8" stroke="#d4b071" stroke-width="2"/>
+  <text x="476" y="214" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">UPLIFT</text>
+  <text x="476" y="246" fill="#17120b" font-family="Georgia, serif" font-size="32" font-weight="700">+70</text>
+  <rect x="638" y="184" width="168" height="74" rx="18" fill="#f3dfb8" stroke="#d4b071" stroke-width="2"/>
+  <text x="662" y="214" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">HOOK EVENTS</text>
+  <text x="662" y="246" fill="#17120b" font-family="Georgia, serif" font-size="32" font-weight="700">32</text>
+  <rect x="86" y="294" width="690" height="220" rx="20" fill="#f8e9c8" stroke="#d0ad72" stroke-width="2"/>
+  <line x1="96" y1="514" x2="786" y2="514" stroke="#9a7a4d" stroke-width="2"/>
+  <line x1="96" y1="404" x2="786" y2="404" stroke="#dec18d" stroke-width="2" stroke-dasharray="10 10"/>
+  <text x="112" y="324" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Daily hook events as bars</text>
+  <text x="112" y="350" fill="#2f6957" font-family="Segoe UI, sans-serif" font-size="16" font-weight="800">Score trend as line</text>
+  <rect x="131.0" y="346" width="82" height="168" rx="10" fill="#d2852f"/><rect x="669.0" y="503" width="82" height="11" rx="10" fill="#d2852f"/>
+  <polyline points="172.0,316 710.0,316" fill="none" stroke="url(#line)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="172.0" cy="316" r="8" fill="#f6efe0" stroke="#2f6957" stroke-width="5"/>
+<text x="118.0" y="554" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="17">2026-04-24</text>
+<text x="128.0" y="580" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">30 events</text><circle cx="710.0" cy="316" r="8" fill="#f6efe0" stroke="#2f6957" stroke-width="5"/>
+<text x="656.0" y="554" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="17">2026-04-25</text>
+<text x="666.0" y="580" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">2 events</text>
+  <rect x="842" y="184" width="300" height="250" rx="24" fill="#17120b"/>
+  <text x="872" y="226" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="16" font-weight="800">EVENT MIX FROM JSON</text>
+  <text x="872" y="258" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18">session-start</text>
+<rect x="1032" y="240" width="72" height="20" rx="10" fill="#e5a92f"/>
+<text x="1118" y="258" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">28</text><text x="872" y="302" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18">post-compact</text>
+<rect x="1032" y="284" width="8" height="20" rx="10" fill="#e5a92f"/>
+<text x="1118" y="302" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">1</text><text x="872" y="346" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18">pre-compact</text>
+<rect x="1032" y="328" width="8" height="20" rx="10" fill="#e5a92f"/>
+<text x="1118" y="346" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">1</text><text x="872" y="390" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18">session-context-p...</text>
+<rect x="1032" y="372" width="8" height="20" rx="10" fill="#e5a92f"/>
+<text x="1118" y="390" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">1</text><text x="872" y="434" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18">session-end</text>
+<rect x="1032" y="416" width="8" height="20" rx="10" fill="#e5a92f"/>
+<text x="1118" y="434" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">1</text>
+  <text x="872" y="462" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="16">Lifecycle coverage: 100%</text>
+</svg>

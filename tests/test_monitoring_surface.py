@@ -41,20 +41,18 @@ def test_readme_hero_visual_exists_and_carries_core_story() -> None:
         assert snippet in text
 
 
-def test_readme_telemetry_proof_strip_exists_and_names_monitoring_path() -> None:
-    asset = ROOT / "assets" / "diagrams" / "telemetry-proof-strip.svg"
+def test_readme_timeseries_visual_exists_and_uses_snapshot_data() -> None:
+    asset = ROOT / "docs" / "monitoring" / "timeseries.svg"
     text = asset.read_text(encoding="utf-8").lower()
 
     required = [
-        "telemetry proof",
+        "telemetry time series",
+        "generated from docs/monitoring/history.json",
+        "2026-04-24",
+        "2026-04-25",
         "score 90",
-        "+70 uplift",
         "32 hook events",
-        "100% lifecycle",
-        "prometheus-ready",
-        "grafana dashboard",
-        "datadog via openmetrics",
-        "local-only telemetry",
+        "session-start",
     ]
     for snippet in required:
         assert snippet in text
@@ -64,10 +62,12 @@ def test_readme_embeds_monitoring_brand_assets() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     assert "assets/brand/repo-context-hooks-logo.png" in readme
-    assert "assets/diagrams/telemetry-proof-strip.svg" in readme
+    assert "assets/diagrams/telemetry-proof-strip.svg" not in readme
+    assert "docs/monitoring/timeseries.svg" in readme
     assert "assets/diagrams/context-continuity-engine.svg" in readme
     assert "docs/monitoring/index.html" in readme
     assert "docs/monitoring/history.json" in readme
+    assert "generated from the same `docs/monitoring/history.json`" in readme
     assert "repo-context-hooks measure --prometheus" in readme
     assert "Grafana" in readme
     assert "Datadog" in readme

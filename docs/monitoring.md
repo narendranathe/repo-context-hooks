@@ -41,15 +41,17 @@ repo-context-hooks measure --snapshot-dir docs/monitoring
 
 The public snapshot for this repo lives at [docs/monitoring/index.html](monitoring/index.html). It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory. The public snapshot writer sanitizes local paths and publishes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
 
+The README-facing graph lives at [docs/monitoring/timeseries.svg](monitoring/timeseries.svg). It is generated from the same `history.json` snapshot, so the public graphic is evidence-backed instead of a hand-authored metric claim.
+
 For Prometheus/OpenMetrics, Grafana, and Datadog usage paths, see [Observability Integrations](observability.md).
 
 ## Visualization Tools
 
-The MVP intentionally keeps visualization boring in the best way: one static HTML dashboard plus one portable JSON file. That makes the data easy to inspect without introducing a hosted telemetry service.
+The MVP intentionally keeps visualization boring in the best way: one generated README SVG, one static HTML dashboard, and one portable JSON file. That makes the data easy to inspect without introducing a hosted telemetry service.
 
 Good next visualization surfaces:
 
-- GitHub README: link to `docs/monitoring/index.html` and `docs/monitoring/history.json`.
+- GitHub README: embed `docs/monitoring/timeseries.svg` so the repo landing page shows an actual time-series graph.
 - GitHub Pages: publish the static monitor as a shareable dashboard.
 - Observable Plot: import `docs/monitoring/history.json` and chart score, event volume, and lifecycle coverage.
 - Vega-Lite: embed a declarative time-series chart in docs or a portfolio case study.
@@ -154,6 +156,12 @@ Use this sequence when you want evidence for a README, blog post, internal adopt
 7. Run `repo-context-hooks measure` again.
 8. Compare the uplift, observed events, and recommendations.
 9. If the evidence is shareable, run `repo-context-hooks measure --snapshot-dir docs/monitoring` and review the generated files before committing them.
+
+The snapshot command writes:
+
+- `docs/monitoring/index.html`
+- `docs/monitoring/history.json`
+- `docs/monitoring/timeseries.svg`
 
 For reproducible comparisons:
 

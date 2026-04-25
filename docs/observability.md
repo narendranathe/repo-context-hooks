@@ -75,6 +75,9 @@ That writes:
 
 - `docs/monitoring/index.html`
 - `docs/monitoring/history.json`
+- `docs/monitoring/timeseries.svg`
+
+The README should embed `docs/monitoring/timeseries.svg` when you want the repo landing page to show a real graph. The SVG is generated from `history.json`, so it changes as local telemetry history grows and you refresh the public snapshot.
 
 The checked-in snapshot is intentionally aggregate-only. It is safe to review before commit and does not require any remote telemetry account.
 

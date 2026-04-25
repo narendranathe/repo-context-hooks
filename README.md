@@ -12,20 +12,15 @@ Repo-native continuity for coding agents.
 
 ## Live Evidence Snapshot
 
-This repo now shows its own continuity evidence on the landing page instead of hiding it in a secondary report. The snapshot below is generated from local hook events, sanitized before commit, and designed to plug into standard monitoring tools.
+This repo now shows continuity evidence on the landing page instead of hiding it in a secondary report. The chart below is generated from the same `docs/monitoring/history.json` that users can inspect, so the visual and the data source travel together.
 
-![Telemetry proof strip showing continuity score 90, +70 uplift, 32 hook events, 100% lifecycle coverage, Prometheus-ready metrics, Grafana dashboard path, Datadog via OpenMetrics, and local-only telemetry](assets/diagrams/telemetry-proof-strip.svg)
+![Generated telemetry time-series chart from docs/monitoring/history.json showing daily hook events, score trend, event mix, and lifecycle coverage](docs/monitoring/timeseries.svg)
 
-Current public snapshot:
+Public evidence files:
 
-- Score `90`
-- Baseline `20`
-- Uplift `+70`
-- Observed hook events `32`
-- Active days `2`
-- Lifecycle coverage `100%`
+- Time-series chart: [docs/monitoring/timeseries.svg](docs/monitoring/timeseries.svg)
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
-- Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
+- Source data: [docs/monitoring/history.json](docs/monitoring/history.json)
 
 Use the same evidence locally:
 
@@ -36,6 +31,8 @@ repo-context-hooks measure --snapshot-dir docs/monitoring
 ```
 
 Prometheus/OpenMetrics output gives teams a clean path to Grafana dashboards and Datadog OpenMetrics collectors while keeping the default telemetry local-only. See [docs/observability.md](docs/observability.md) for the monitoring setup notes.
+
+As more hook events accumulate, rerun `repo-context-hooks measure --snapshot-dir docs/monitoring`. That refreshes the source JSON, generated README graph, and HTML monitor together.
 
 ```bash
 python -m pip install -e .
@@ -226,6 +223,7 @@ Current repo snapshot:
 - Observed hook events `32`
 - Active days `2`
 - Lifecycle coverage `100%`
+- Generated chart: [docs/monitoring/timeseries.svg](docs/monitoring/timeseries.svg)
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 - Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
 

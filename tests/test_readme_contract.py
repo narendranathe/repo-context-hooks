@@ -126,6 +126,7 @@ def test_readme_documents_impact_measurement() -> None:
     assert "docs/monitoring.md" in text
     assert "docs/observability.md" in text
     assert "docs/monitoring/history.json" in text
+    assert "docs/monitoring/timeseries.svg" in text
     assert "Prometheus" in text
     assert "Grafana" in text
     assert "Datadog" in text
@@ -157,7 +158,7 @@ def test_readme_embeds_required_diagrams() -> None:
     text = readme_text()
     expected_assets = [
         "assets/brand/repo-context-hooks-logo.png",
-        "assets/diagrams/telemetry-proof-strip.svg",
+        "docs/monitoring/timeseries.svg",
         "assets/diagrams/context-continuity-engine.svg",
         "assets/diagrams/lifecycle-flow.svg",
         "assets/diagrams/repo-contract.svg",

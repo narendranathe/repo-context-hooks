@@ -926,6 +926,185 @@ def public_monitoring_snapshot(report: ImpactReport) -> dict[str, Any]:
     }
 
 
+def _snapshot_int(snapshot: dict[str, Any], key: str, default: int = 0) -> int:
+    try:
+        return int(snapshot.get(key, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _nested_snapshot_int(
+    snapshot: dict[str, Any],
+    section: str,
+    key: str,
+    default: int = 0,
+) -> int:
+    nested = snapshot.get(section, {})
+    if not isinstance(nested, dict):
+        return default
+    try:
+        return int(nested.get(key, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _svg_text(value: object) -> str:
+    return html.escape(str(value), quote=True)
+
+
+def render_public_time_series_svg(snapshot: dict[str, Any]) -> str:
+    """Render the public README chart from the same snapshot JSON users can inspect."""
+    repo = _svg_text(snapshot.get("repo", "repo"))
+    score = _snapshot_int(snapshot, "score")
+    baseline = _snapshot_int(snapshot, "baseline")
+    uplift = _snapshot_int(snapshot, "uplift")
+    observed_events = _snapshot_int(snapshot, "observed_events")
+    lifecycle = _nested_snapshot_int(snapshot, "usability", "lifecycle_coverage")
+
+    raw_series = snapshot.get("time_series", [])
+    series = raw_series if isinstance(raw_series, list) else []
+    points: list[dict[str, int | str]] = []
+    for item in series:
+        if not isinstance(item, dict):
+            continue
+        try:
+            events = int(item.get("events", 0))
+        except (TypeError, ValueError):
+            events = 0
+        try:
+            item_score = int(item.get("score", score))
+        except (TypeError, ValueError):
+            item_score = score
+        points.append(
+            {
+                "date": str(item.get("date", "unknown")),
+                "events": max(0, events),
+                "score": max(0, min(100, item_score)),
+            }
+        )
+    if not points:
+        points = [{"date": "no-events", "events": 0, "score": score}]
+
+    event_counts_raw = snapshot.get("event_counts", {})
+    event_counts = (
+        event_counts_raw if isinstance(event_counts_raw, dict) else {}
+    )
+    event_count_items: list[tuple[str, int]] = []
+    for name, count in event_counts.items():
+        try:
+            safe_count = int(count)
+        except (TypeError, ValueError):
+            safe_count = 0
+        event_count_items.append((str(name), max(0, safe_count)))
+    top_events = sorted(
+        event_count_items,
+        key=lambda item: (-item[1], item[0]),
+    )[:5]
+
+    width = 1200
+    height = 660
+    chart_x = 96
+    chart_y = 294
+    chart_width = 690
+    chart_height = 220
+    max_events = max(max(int(item["events"]) for item in points), 1)
+    point_start = chart_x + 76
+    point_end = chart_x + chart_width - 76
+    step = (point_end - point_start) / max(len(points) - 1, 1)
+    bar_width = min(82, max(34, chart_width / max(len(points), 1) * 0.42))
+
+    bars: list[str] = []
+    line_points: list[str] = []
+    markers: list[str] = []
+    for index, item in enumerate(points):
+        x = point_start + step * index
+        events = int(item["events"])
+        item_score = int(item["score"])
+        bar_height = round(events / max_events * 168) if max_events else 0
+        bar_x = round(x - bar_width / 2, 2)
+        bar_y = chart_y + chart_height - bar_height
+        score_y = chart_y + chart_height - round(item_score / 100 * chart_height)
+        line_points.append(f"{round(x, 2)},{score_y}")
+        bars.append(
+            f'<rect x="{bar_x}" y="{bar_y}" width="{round(bar_width, 2)}" height="{bar_height}" rx="10" fill="#d2852f"/>'
+        )
+        markers.append(
+            "\n".join(
+                [
+                    f'<circle cx="{round(x, 2)}" cy="{score_y}" r="8" fill="#f6efe0" stroke="#2f6957" stroke-width="5"/>',
+                    f'<text x="{round(max(42, x - 54), 2)}" y="{chart_y + chart_height + 40}" fill="#4e3a23" font-family="Segoe UI, sans-serif" font-size="17">{_svg_text(item["date"])}</text>',
+                    f'<text x="{round(max(42, x - 44), 2)}" y="{chart_y + chart_height + 66}" fill="#17120b" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">{events} events</text>',
+                ]
+            )
+        )
+
+    event_rows: list[str] = []
+    max_count = max((count for _, count in top_events), default=1)
+    for index, (name, count) in enumerate(top_events):
+        y = 258 + index * 44
+        bar = max(8, round(count / max_count * 72))
+        label = name if len(name) <= 20 else name[:17] + "..."
+        event_rows.append(
+            "\n".join(
+                [
+                    f'<text x="872" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18">{_svg_text(label)}</text>',
+                    f'<rect x="1032" y="{y - 18}" width="{bar}" height="20" rx="10" fill="#e5a92f"/>',
+                    f'<text x="1118" y="{y}" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18" font-weight="800">{count}</text>',
+                ]
+            )
+        )
+    if not event_rows:
+        event_rows.append(
+            '<text x="872" y="258" fill="#f6efe0" font-family="Segoe UI, sans-serif" font-size="18">No events observed yet</text>'
+        )
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">
+  <title id="title">Telemetry time series</title>
+  <desc id="desc">Generated from docs/monitoring/history.json for {repo}. Shows score {score}, baseline {baseline}, uplift {uplift}, {observed_events} hook events, lifecycle coverage {lifecycle} percent, daily event bars, score trend, and event counts.</desc>
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff8e8"/>
+      <stop offset="0.62" stop-color="#efd5a4"/>
+      <stop offset="1" stop-color="#d7b77e"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2f6957"/>
+      <stop offset="1" stop-color="#b54720"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="1136" height="596" rx="36" fill="url(#page)"/>
+  <rect x="58" y="58" width="1084" height="544" rx="28" fill="#fff9ea" opacity="0.78"/>
+  <text x="86" y="104" fill="#17120b" font-family="Georgia, serif" font-size="42" font-weight="700">Telemetry time series</text>
+  <text x="86" y="138" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Generated from docs/monitoring/history.json, not a hand-authored proof card</text>
+  <text x="86" y="166" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="18">Repo: {repo}</text>
+  <rect x="86" y="184" width="160" height="74" rx="18" fill="#17120b"/>
+  <text x="110" y="214" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">SCORE</text>
+  <text x="110" y="246" fill="#fff6dc" font-family="Georgia, serif" font-size="32" font-weight="700">Score {score}</text>
+  <rect x="266" y="184" width="166" height="74" rx="18" fill="#f3dfb8" stroke="#d4b071" stroke-width="2"/>
+  <text x="290" y="214" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">BASELINE</text>
+  <text x="290" y="246" fill="#17120b" font-family="Georgia, serif" font-size="32" font-weight="700">{baseline}</text>
+  <rect x="452" y="184" width="166" height="74" rx="18" fill="#f3dfb8" stroke="#d4b071" stroke-width="2"/>
+  <text x="476" y="214" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">UPLIFT</text>
+  <text x="476" y="246" fill="#17120b" font-family="Georgia, serif" font-size="32" font-weight="700">+{uplift}</text>
+  <rect x="638" y="184" width="168" height="74" rx="18" fill="#f3dfb8" stroke="#d4b071" stroke-width="2"/>
+  <text x="662" y="214" fill="#7b3a21" font-family="Segoe UI, sans-serif" font-size="14" font-weight="800">HOOK EVENTS</text>
+  <text x="662" y="246" fill="#17120b" font-family="Georgia, serif" font-size="32" font-weight="700">{observed_events}</text>
+  <rect x="86" y="{chart_y}" width="{chart_width}" height="{chart_height}" rx="20" fill="#f8e9c8" stroke="#d0ad72" stroke-width="2"/>
+  <line x1="{chart_x}" y1="{chart_y + chart_height}" x2="{chart_x + chart_width}" y2="{chart_y + chart_height}" stroke="#9a7a4d" stroke-width="2"/>
+  <line x1="{chart_x}" y1="{chart_y + 110}" x2="{chart_x + chart_width}" y2="{chart_y + 110}" stroke="#dec18d" stroke-width="2" stroke-dasharray="10 10"/>
+  <text x="112" y="{chart_y + 30}" fill="#6f5632" font-family="Segoe UI, sans-serif" font-size="16">Daily hook events as bars</text>
+  <text x="112" y="{chart_y + 56}" fill="#2f6957" font-family="Segoe UI, sans-serif" font-size="16" font-weight="800">Score trend as line</text>
+  {"".join(bars)}
+  <polyline points="{" ".join(line_points)}" fill="none" stroke="url(#line)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  {"".join(markers)}
+  <rect x="842" y="184" width="300" height="250" rx="24" fill="#17120b"/>
+  <text x="872" y="226" fill="#e5a92f" font-family="Segoe UI, sans-serif" font-size="16" font-weight="800">EVENT MIX FROM JSON</text>
+  {"".join(event_rows)}
+  <text x="872" y="462" fill="#d6c29a" font-family="Segoe UI, sans-serif" font-size="16">Lifecycle coverage: {lifecycle}%</text>
+</svg>
+"""
+
+
 def render_public_monitoring_dashboard(report: ImpactReport) -> str:
     dashboard = render_monitoring_dashboard(report)
     dashboard = dashboard.replace(
@@ -974,8 +1153,10 @@ def write_public_monitoring_snapshot(
     output_dir.mkdir(parents=True, exist_ok=True)
     dashboard_path = output_dir / "index.html"
     history_path = output_dir / "history.json"
+    time_series_svg_path = output_dir / "timeseries.svg"
+    snapshot = public_monitoring_snapshot(report)
     history_path.write_text(
-        json.dumps(public_monitoring_snapshot(report), indent=2, sort_keys=True)
+        json.dumps(snapshot, indent=2, sort_keys=True)
         + "\n",
         encoding="utf-8",
     )
@@ -983,9 +1164,14 @@ def write_public_monitoring_snapshot(
         render_public_monitoring_dashboard(report),
         encoding="utf-8",
     )
+    time_series_svg_path.write_text(
+        render_public_time_series_svg(snapshot),
+        encoding="utf-8",
+    )
     return {
         "dashboard_path": str(dashboard_path),
         "history_path": str(history_path),
+        "time_series_svg_path": str(time_series_svg_path),
     }
 
 

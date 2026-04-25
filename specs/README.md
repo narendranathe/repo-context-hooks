@@ -331,10 +331,14 @@ This file is the persistent project context for agents and maintainers.
 - Implementation slice:
   - `repo-context-hooks measure --prometheus`
   - aggregate-only Prometheus metrics without local paths, prompts, code, compact summaries, or resume content
-  - README `Live Evidence Snapshot` section with a visible telemetry proof strip
-  - `assets/diagrams/telemetry-proof-strip.svg`
+  - README `Live Evidence Snapshot` section with a generated graph from public telemetry history
+  - `docs/monitoring/timeseries.svg` generated from `docs/monitoring/history.json`
   - `docs/observability.md`
   - monitoring guide links from README and `docs/monitoring.md`
+- Correction after critique:
+  - removed the hand-authored telemetry proof strip because it was a claim card, not proof
+  - wired the public snapshot writer to generate the README graph from telemetry data
+  - the HTML dashboard remains useful, but the README now embeds actual generated time-series evidence directly
 - Claim boundary:
   - the project now has a real local observability export
   - Grafana and Datadog are documented integration paths over OpenMetrics

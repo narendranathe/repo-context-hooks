@@ -9,6 +9,7 @@ from repo_context_hooks.telemetry import (
     measure_impact,
     record_event,
     render_prometheus_metrics,
+    render_public_time_series_svg,
     telemetry_dir,
     write_public_monitoring_snapshot,
 )
@@ -155,17 +156,64 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
 
     assert result["dashboard_path"] == str(snapshot_dir / "index.html")
     assert result["history_path"] == str(snapshot_dir / "history.json")
+    assert result["time_series_svg_path"] == str(snapshot_dir / "timeseries.svg")
 
     history = json.loads((snapshot_dir / "history.json").read_text(encoding="utf-8"))
     dashboard = (snapshot_dir / "index.html").read_text(encoding="utf-8")
+    chart = (snapshot_dir / "timeseries.svg").read_text(encoding="utf-8")
 
     assert history["score"] == report.current_score
     assert history["observed_events"] == report.observed_events
     assert history["usability"]["active_days"] == 1
     assert "Continuity Impact Monitor" in dashboard
     assert "Public snapshot" in dashboard
+    assert "Telemetry time series" in chart
+    assert "Generated from docs/monitoring/history.json" in chart
+    assert "session-start" in chart
+    assert "pre-compact" in chart
     assert str(tmp_path) not in dashboard
     assert str(tmp_path) not in json.dumps(history)
+    assert str(tmp_path) not in chart
+
+
+def test_render_public_time_series_svg_uses_snapshot_data_not_manual_claims() -> None:
+    snapshot = {
+        "repo": "demo",
+        "score": 90,
+        "baseline": 20,
+        "uplift": 70,
+        "observed_events": 32,
+        "time_series": [
+            {"date": "2026-04-24", "events": 30, "score": 90},
+            {"date": "2026-04-25", "events": 2, "score": 90},
+        ],
+        "event_counts": {
+            "session-start": 28,
+            "pre-compact": 1,
+            "post-compact": 1,
+            "session-end": 1,
+        },
+        "usability": {
+            "active_days": 2,
+            "lifecycle_coverage": 100,
+            "resume_events": 28,
+            "checkpoint_events": 2,
+            "reload_events": 1,
+            "session_end_events": 1,
+        },
+    }
+
+    chart = render_public_time_series_svg(snapshot)
+
+    assert "Telemetry time series" in chart
+    assert "Generated from docs/monitoring/history.json" in chart
+    assert "2026-04-24" in chart
+    assert "30 events" in chart
+    assert "2026-04-25" in chart
+    assert "2 events" in chart
+    assert "session-start" in chart
+    assert "28" in chart
+    assert "manual proof card" not in chart.lower()
 
 
 def test_render_prometheus_metrics_exports_safe_aggregate_evidence() -> None:

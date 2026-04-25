@@ -280,6 +280,8 @@ def _measure(args: argparse.Namespace) -> int:
         if snapshot is not None:
             print(f"Wrote public monitoring snapshot: {snapshot['dashboard_path']}")
             print(f"Wrote public monitoring history: {snapshot['history_path']}")
+            if "time_series_svg_path" in snapshot:
+                print(f"Wrote public monitoring chart: {snapshot['time_series_svg_path']}")
     return 0
 
 
