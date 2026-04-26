@@ -5,6 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from repo_context_hooks.installer import (
+    install_global_hooks,
     install_repo_hooks,
     install_platform,
     install_skills,
@@ -112,7 +113,89 @@ def test_install_repo_hooks_does_not_clobber_scripts_without_force() -> None:
     assert session_ctx.read_text(encoding="utf-8") == "custom session ctx\n"
 
 
-def test_install_platform_routes_claude_hooks() -> None:
+def test_install_global_hooks_writes_to_agent_home_settings() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    result = install_global_hooks(agent_home)
+
+    settings_path = agent_home / ".claude" / "settings.json"
+    assert settings_path.exists(), "settings.json must be written to agent home"
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    hooks = settings.get("hooks", {})
+    assert "SessionStart" in hooks
+    assert "PreCompact" in hooks
+    assert "PostCompact" in hooks
+    assert "SessionEnd" in hooks
+    assert result["settings.json"] == "installed"
+
+
+def test_install_global_hooks_uses_absolute_script_paths() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    install_global_hooks(agent_home)
+
+    settings = json.loads(
+        (agent_home / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+    all_commands = [
+        hook["command"]
+        for event_hooks in settings["hooks"].values()
+        for group in event_hooks
+        for hook in group["hooks"]
+    ]
+    expected_scripts_dir = str(
+        agent_home / ".claude" / "skills" / "context-handoff-hooks" / "scripts"
+    )
+    for command in all_commands:
+        assert "$CLAUDE_PROJECT_DIR" not in command, (
+            f"Global hooks must not use $CLAUDE_PROJECT_DIR: {command}"
+        )
+        assert expected_scripts_dir in command, (
+            f"Global hook must reference agent-home script path: {command}"
+        )
+
+
+def test_install_global_hooks_preserves_existing_settings() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+    settings_path = agent_home / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+    settings_path.write_text(
+        json.dumps({
+            "permissions": {"allow": ["Bash(git:*)"]},
+            "hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": []}]},
+        }),
+        encoding="utf-8",
+    )
+
+    install_global_hooks(agent_home)
+
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert settings["permissions"]["allow"] == ["Bash(git:*)"], "permissions must be preserved"
+    assert "PreToolUse" in settings["hooks"], "existing hooks must be preserved"
+    assert "SessionStart" in settings["hooks"], "new lifecycle hooks must be added"
+
+
+def test_install_global_hooks_is_idempotent() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    install_global_hooks(agent_home)
+    install_global_hooks(agent_home)
+
+    settings = json.loads(
+        (agent_home / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+    for event, groups in settings["hooks"].items():
+        if event in ("SessionStart", "PreCompact", "PostCompact", "SessionEnd"):
+            assert len(groups) == 1, (
+                f"Idempotent install must not duplicate hook groups for {event}"
+            )
+
+
+def test_install_platform_claude_writes_to_agent_home_not_repo() -> None:
     tmp_path = _tmp_dir()
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -120,8 +203,11 @@ def test_install_platform_routes_claude_hooks() -> None:
 
     result = install_platform("claude", repo_root=repo, home=tmp_path / "home")
 
-    assert (repo / ".claude" / "settings.json").exists()
-    assert result.repo_statuses["settings.json"] == "installed"
+    agent_settings = tmp_path / "home" / ".claude" / "settings.json"
+    repo_settings = repo / ".claude" / "settings.json"
+    assert agent_settings.exists(), "global hooks must be written to agent home settings"
+    assert not repo_settings.exists(), "default install must NOT write to per-repo settings"
+    assert result.home_statuses.get("settings.json") == "installed"
 
 
 def test_install_platform_codex_summary_mentions_skills_only_when_repo_context_skipped() -> None:
@@ -176,7 +262,7 @@ def test_install_platform_windsurf_reports_repo_rule_install() -> None:
     specs_dir.mkdir()
     (specs_dir / "README.md").write_text("# Specs\n", encoding="utf-8")
 
-    result = install_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+    result = install_platform("windsurf", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     assert result.home_target is None
     assert "repo context installed" in result.summary.lower()

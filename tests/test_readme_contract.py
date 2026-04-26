@@ -15,7 +15,7 @@ def test_readme_has_public_facing_sections_in_order() -> None:
     text = readme_text()
     expected_sections = [
         "# repo-context-hooks",
-        "## Why Repo-Native Continuity",
+        "## Why Agent-Level, Not Repo-Level",
         "## How It Works",
         "## Supported Today",
         "## Platform Support",
@@ -80,21 +80,18 @@ def test_readme_points_to_repo_contract_files() -> None:
         assert link_path.exists(), f"missing repo contract file: {link_path}"
 
 
-def test_readme_promotes_repo_first_onboarding_sequence() -> None:
+def test_readme_promotes_agent_first_onboarding_sequence() -> None:
     text = readme_text()
-    expected_commands = [
-        "repo-context-hooks init",
-        "repo-context-hooks doctor",
-        "repo-context-hooks recommend",
-        "repo-context-hooks install --platform <platform>",
-    ]
-    positions = []
-    for command in expected_commands:
-        position = text.find(command)
-        assert position != -1, f"missing onboarding command: {command}"
-        positions.append(position)
+    # agent skill install comes first; workspace contract setup (init/doctor) is second
+    install_pos = text.find("repo-context-hooks install --platform claude")
+    init_pos = text.find("repo-context-hooks init")
+    doctor_pos = text.find("repo-context-hooks doctor")
 
-    assert positions == sorted(positions), "README onboarding commands are out of order"
+    assert install_pos != -1, "missing agent-level install command"
+    assert init_pos != -1, "missing repo-context-hooks init command"
+    assert doctor_pos != -1, "missing repo-context-hooks doctor command"
+    assert install_pos < init_pos, "agent skill install must appear before workspace init"
+    assert init_pos < doctor_pos, "workspace init must appear before doctor"
 
 
 def test_readme_separates_platform_install_commands() -> None:

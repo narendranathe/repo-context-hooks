@@ -51,7 +51,7 @@ def test_architecture_and_competitive_docs_match_repo_native_positioning() -> No
     competitive = (ROOT / "docs" / "competitive-analysis.md").read_text(encoding="utf-8")
     positioning = (ROOT / "docs" / "positioning.md").read_text(encoding="utf-8")
 
-    assert "repo-native continuity layer" in architecture
+    assert "agent-level continuity skill" in architecture
     assert "platform adapters expose different continuity surfaces" in architecture
     assert "repo-native continuity" in competitive
     assert "not a universal memory layer" in competitive

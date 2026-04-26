@@ -16,18 +16,17 @@ def _tmp_dir() -> Path:
     return path
 
 
-def test_claude_plan_includes_repo_hooks() -> None:
+def test_claude_plan_installs_global_hooks_to_agent_home() -> None:
     tmp_path = _tmp_dir()
     adapter = get_registry().get("claude")
     plan = adapter.build_install_plan(repo_root=tmp_path, home=tmp_path / "home")
 
-    assert plan.installs_repo_context is True
-    assert any(path.endswith(".claude/settings.json") for path in plan.repo_paths)
-    assert any(
-        path.endswith(".claude/scripts/repo_specs_memory.py")
-        for path in plan.repo_paths
-    )
+    assert plan.installs_repo_context is False, "default plan must not install per-repo hooks"
+    assert plan.repo_paths == (), "default plan must have no repo paths"
     assert any(".claude/skills" in path for path in plan.home_paths)
+    assert any(
+        path.endswith(".claude/settings.json") for path in plan.home_paths
+    ), "global settings.json must appear in home_paths"
 
 
 def test_cursor_plan_targets_cursor_rules_and_agents() -> None:

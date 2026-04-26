@@ -108,6 +108,63 @@ def _save_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
+def global_hook_payload(scripts_dir: Path) -> dict:
+    repo_specs = str(scripts_dir / "repo_specs_memory.py")
+    session_ctx = str(scripts_dir / "session_context.py")
+    return {
+        "SessionStart": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {"type": "command", "command": f"python {repo_specs} session-start", "timeout": 20},
+                    {"type": "command", "command": f"python {session_ctx} session-start", "timeout": 20},
+                ],
+            }
+        ],
+        "PreCompact": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {"type": "command", "command": f"python {repo_specs} pre-compact", "timeout": 15},
+                ],
+            }
+        ],
+        "PostCompact": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {"type": "command", "command": f"python {repo_specs} post-compact", "timeout": 20},
+                    {"type": "command", "command": f"python {session_ctx} post-compact", "timeout": 20},
+                ],
+            }
+        ],
+        "SessionEnd": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {"type": "command", "command": f"python {repo_specs} session-end", "timeout": 10},
+                ],
+            }
+        ],
+    }
+
+
+def install_global_hooks(
+    agent_home: Path,
+    skill_name: str = "context-handoff-hooks",
+) -> Dict[str, str]:
+    scripts_dir = agent_home / ".claude" / "skills" / skill_name / "scripts"
+    settings_path = agent_home / ".claude" / "settings.json"
+    settings = _load_json(settings_path)
+    existing_hooks = settings.get("hooks", {})
+    if not isinstance(existing_hooks, dict):
+        existing_hooks = {}
+    existing_hooks.update(global_hook_payload(scripts_dir))
+    settings["hooks"] = existing_hooks
+    _save_json(settings_path, settings)
+    return {"settings.json": "installed"}
+
+
 def hook_payload(repo_root: Path) -> dict:
     del repo_root
     repo_specs = '"$CLAUDE_PROJECT_DIR"/.claude/scripts/repo_specs_memory.py'

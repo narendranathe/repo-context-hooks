@@ -6,6 +6,7 @@ from typing import Dict, Tuple
 from .platforms import InstallResult, get_registry
 from .platforms.runtime import (
     bundle_root,
+    install_global_hooks,
     install_repo_hooks,
     install_skills_bundle,
     platform_skill_dir,
@@ -29,7 +30,7 @@ def install_platform(
     repo_root: Path,
     force: bool = False,
     home: Path | None = None,
-    install_repo_context: bool = True,
+    install_repo_context: bool = False,
 ) -> InstallResult:
     adapter = get_registry().get(platform)
     return adapter.install(
