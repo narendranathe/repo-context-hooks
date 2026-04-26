@@ -1,6 +1,6 @@
 # repo-context-hooks
 
-Repo-native continuity for coding agents.
+Agent-level continuity skill for coding agents.
 
 <p align="center">
   <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">
@@ -8,32 +8,33 @@ Repo-native continuity for coding agents.
 
 ![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
 
-`repo-context-hooks` keeps interrupted work, next-step context, and handoff notes in the repository instead of leaving them trapped in chat history. The goal is simple: a new session should be able to reopen the repo, understand the work in progress, and continue without rediscovering everything from scratch.
+`repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. It runs at the agent runtime level - installed once to `~/.claude/skills/`, `~/.codex/skills/`, or equivalent agent home - and uses repository workspace contracts as its durable persistence layer.
+
+The goal: a new agent session should start with full project context without rediscovering everything from scratch.
+
+## Install as Agent Skill (primary path)
+
+```bash
+# Claude Code
+python -m pip install repo-context-hooks
+repo-context-hooks install --platform claude
+
+# Codex
+repo-context-hooks install --platform codex
+```
+
+This installs the skill to agent home (`~/.claude/skills/context-handoff-hooks/`). Once installed, every Claude Code session in any workspace picks up the continuity skill automatically.
+
+## Set Up Workspace Contract (per-repo, optional)
 
 ```bash
 python -m pip install -e .
+repo-context-hooks init          # scaffold specs/README.md, UBIQUITOUS_LANGUAGE.md
+repo-context-hooks doctor        # verify workspace contract health
+repo-context-hooks recommend     # suggest next steps
 ```
 
-Start in any repository:
-
-```bash
-repo-context-hooks init
-repo-context-hooks doctor
-repo-context-hooks doctor --all-platforms
-repo-context-hooks recommend
-```
-
-Current support is intentionally narrow: Claude is the native path, while Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi are useful but partial integrations.
-
-The first-run path is now repo-first:
-
-1. `repo-context-hooks init`
-2. `repo-context-hooks doctor`
-3. `repo-context-hooks doctor --all-platforms`
-4. `repo-context-hooks recommend`
-5. `repo-context-hooks install --platform <platform>`
-
-`doctor` answers "is the repo contract healthy?" `doctor --all-platforms` answers "which supported platforms are actually ready?" `recommend` answers "what should I do next in this repo?"
+`doctor` answers "is this workspace contract healthy?" `recommend` answers "what should the agent do next in this workspace?"
 
 ## Pick Your Platform
 
@@ -93,31 +94,28 @@ Kimi:
 repo-context-hooks install --platform kimi
 ```
 
-## Why Repo-Native Continuity
+## Why Agent-Level, Not Repo-Level
 
-Coding sessions rarely fail because the model forgot a fact. They fail because the useful state of the work never made it back into the repo.
+Coding sessions rarely fail because the model forgot a fact. They fail because useful state of the work never survived the session boundary.
 
-When that happens, the next session has to reconstruct:
+The old approach (install a hook per repo) means every new workspace starts from zero. The right approach is a skill installed once at agent home that activates in every workspace and uses checked-in repo files as its persistence layer.
 
-- what changed
-- what was interrupted
-- what tradeoffs were already decided
-- what should happen next
+`repo-context-hooks` brings the same model as `superpowers` and `caveman`: install once to the agent runtime, works everywhere.
 
-`repo-context-hooks` narrows that problem to a repo contract teams can inspect in git. Product intent stays public in `README.md`. Engineering continuity stays in `specs/README.md`. Shared terminology stays in `UBIQUITOUS_LANGUAGE.md`. The agent workflow becomes easier to review, critique, and resume.
+- Agent skill: fires on `SessionStart`, `PreCompact`, `PostCompact`, `SessionEnd`
+- Workspace contract: `specs/README.md` (engineering memory), `README.md` (product intent), `UBIQUITOUS_LANGUAGE.md` (shared terms)
+- Telemetry: local JSONL events so `repo-context-hooks measure` can verify hooks actually fired
 
 ## How It Works
 
-The continuity loop is repo-first:
+The continuity loop is agent-first:
 
-1. start from checked-in project context
-2. capture useful tactical state before an interruption or compact event
-3. reload from repo state instead of relying on fragile session memory
-4. leave the next session a cleaner handoff than the one you inherited
+1. agent skill loads at session start and reads workspace contract from repo
+2. captures tactical state into `specs/README.md` before compact or handoff
+3. reloads from repo state at next session start - not from fragile session memory
+4. leaves the next session a cleaner handoff than the one inherited
 
-That is why onboarding now starts with `repo-context-hooks init` and `repo-context-hooks doctor`. The repo contract should exist before any platform-specific install step.
-
-The mechanism depends on platform surfaces that vary by agent. Claude can automate more of the loop. Cursor and Codex still benefit from the same repo contract, but through narrower continuity surfaces.
+Claude exposes the full lifecycle surface. Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi benefit from the same workspace contract through narrower platform-specific surfaces.
 
 ![Lifecycle flow diagram showing an interrupted bugfix, a checkpoint written to specs/README.md, and the next session resuming from repo state](assets/diagrams/lifecycle-flow.svg)
 
