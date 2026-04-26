@@ -116,7 +116,10 @@ def record_telemetry(
                 sys.path.insert(0, str(parent))
                 break
 
-        from repo_context_hooks.telemetry import record_event
+        from repo_context_hooks.telemetry import is_sampled, record_event
+
+        if not is_sampled(repo_root):
+            return
 
         record_event(
             repo_root,

@@ -5,13 +5,18 @@ import hashlib
 import html
 import json
 import os
+import random
 import subprocess
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 
 EVENTS_FILE = "events.jsonl"
+_SESSION_ID_FILE = "current-session-id"
+_SESSION_SAMPLED_FILE = "current-session-sampled"
+_SESSION_STATE_DIR = ".repo-context-hooks"
 
 
 def _git_output(repo_root: Path, *args: str) -> str:
@@ -80,6 +85,60 @@ def telemetry_dir(repo_root: Path, base: Path | None = None) -> Path:
 
 def telemetry_events_path(repo_root: Path, base: Path | None = None) -> Path:
     return telemetry_dir(repo_root, base=base) / EVENTS_FILE
+
+
+def _session_state_dir(repo_root: Path) -> Path:
+    path = repo_root / _SESSION_STATE_DIR
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def session_id(repo_root: Path) -> str:
+    override = os.environ.get("REPO_CONTEXT_HOOKS_SESSION_ID")
+    if override:
+        return override
+
+    state_dir = _session_state_dir(repo_root)
+    id_file = state_dir / _SESSION_ID_FILE
+
+    if id_file.exists():
+        stored = id_file.read_text(encoding="utf-8").strip()
+        if stored:
+            return stored
+
+    new_id = str(uuid.uuid4())
+    id_file.write_text(new_id, encoding="utf-8")
+    return new_id
+
+
+def is_sampled(repo_root: Path, rate: float = 0.3) -> bool:
+    state_dir = _session_state_dir(repo_root)
+    sampled_file = state_dir / _SESSION_SAMPLED_FILE
+
+    if sampled_file.exists():
+        return sampled_file.read_text(encoding="utf-8").strip() == "true"
+
+    rate_str = os.environ.get("REPO_CONTEXT_HOOKS_SAMPLE_RATE")
+    if rate_str is not None:
+        try:
+            rate = float(rate_str)
+        except ValueError:
+            pass
+
+    decision = random.random() < rate
+    sampled_file.write_text("true" if decision else "false", encoding="utf-8")
+    return decision
+
+
+def clear_session_state(repo_root: Path) -> None:
+    state_dir = repo_root / _SESSION_STATE_DIR
+    for name in (_SESSION_ID_FILE, _SESSION_SAMPLED_FILE):
+        f = state_dir / name
+        if f.exists():
+            try:
+                f.unlink()
+            except OSError:
+                pass
 
 
 def _repo_display_name(repo_root: Path) -> str:
@@ -170,9 +229,11 @@ def record_event(
 ) -> Path:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)
+    sid = session_id(repo_root)
     event = {
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
         "event_name": event_name,
+        "session_id": sid,
         "source": source,
         "repo_id": repo_id(repo_root),
         "repo_name": repo_root.name,
@@ -905,3 +966,47 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
     )
     write_monitoring_dashboard(report)
     return report
+
+
+def auto_commit_snapshot(
+    repo_root: Path,
+    telemetry_base: Path | None = None,
+) -> bool:
+    repo_root = repo_root.resolve()
+    if not (repo_root / ".git").exists():
+        return False
+
+    monitoring_dir = repo_root / "docs" / "monitoring"
+    if not monitoring_dir.exists():
+        return False
+
+    try:
+        report = measure_impact(repo_root, telemetry_base=telemetry_base)
+        write_public_monitoring_snapshot(report, monitoring_dir)
+
+        subprocess.run(
+            ["git", "add", str(monitoring_dir)],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            timeout=10,
+        )
+        diff = subprocess.run(
+            ["git", "diff", "--cached", "--quiet"],
+            cwd=repo_root,
+            capture_output=True,
+            timeout=5,
+        )
+        if diff.returncode == 0:
+            return False
+
+        subprocess.run(
+            ["git", "commit", "-m", "chore: update monitoring snapshot [skip ci]"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            timeout=15,
+        )
+        return True
+    except Exception:
+        return False
