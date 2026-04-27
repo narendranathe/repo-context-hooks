@@ -586,10 +586,59 @@ def _bar_width(value: int, maximum: int) -> int:
     return max(4, min(100, round(value / maximum * 100)))
 
 
-def render_monitoring_dashboard(report: ImpactReport) -> str:
+def _contract_token_estimate(repo_root: Path) -> dict[str, Any]:
+    """Estimate tokens from contract files; returns counts and per-session injection figure."""
+    contract_files = ["specs/README.md", "UBIQUITOUS_LANGUAGE.md", "AGENTS.md", "README.md"]
+    total_bytes = 0
+    sections = 0
+    files_present = []
+    for name in contract_files:
+        p = repo_root / name
+        if p.exists():
+            b = len(p.read_bytes())
+            total_bytes += b
+            files_present.append(name)
+            if name == "specs/README.md":
+                sections = sum(1 for ln in p.read_text(encoding="utf-8", errors="ignore").splitlines() if ln.startswith("## "))
+    tokens_per_session = total_bytes // 4  # ~4 chars per token
+    return {
+        "files": len(files_present),
+        "sections": sections,
+        "bytes": total_bytes,
+        "tokens_per_session": tokens_per_session,
+    }
+
+
+def _lifecycle_donut_svg(coverage: int, r: int = 44) -> str:
+    """SVG ring chart for lifecycle coverage (0-100%)."""
+    cx = cy = 60
+    stroke = 12
+    circumference = round(2 * 3.14159 * r, 1)
+    filled = round(circumference * coverage / 100, 1)
+    gap = round(circumference - filled, 1)
+    color = "#356857" if coverage >= 75 else "#e6a92f" if coverage >= 25 else "#b54720"
+    return (
+        f'<svg viewBox="0 0 120 120" width="120" height="120" style="display:block;margin:auto">'
+        f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="rgba(16,24,32,.1)" stroke-width="{stroke}"/>'
+        f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{color}" stroke-width="{stroke}"'
+        f' stroke-dasharray="{filled} {gap}" stroke-linecap="round"'
+        f' transform="rotate(-90 {cx} {cy})"/>'
+        f'<text x="{cx}" y="{cy}" text-anchor="middle" dy=".35em"'
+        f' font-family="Georgia,serif" font-size="22" fill="#17120b">{coverage}%</text>'
+        f'</svg>'
+    )
+
+
+def render_monitoring_dashboard(
+    report: ImpactReport,
+    branch_stats: list[Any] | None = None,
+    forecast: Any | None = None,
+    public: bool = False,
+) -> str:
     daily = report.history.daily_event_counts or ({"date": "today", "events": 0},)
     score_series = report.history.score_series or ({"date": "today", "score": report.current_score},)
     max_events = max(int(item["events"]) for item in daily) if daily else 1
+
     bars = "\n".join(
         (
             '<div class="bar-row">'
@@ -635,226 +684,287 @@ def render_monitoring_dashboard(report: ImpactReport) -> str:
         for item in score_series[-14:]
     )
 
+    # token / cost estimates
+    tok_per_s = report.usability.resume_events  # proxy: each resume = one injection
+    # contract files ~5000 tokens typical; use conservative 4500
+    tokens_injected = report.usability.resume_events * 4500
+    # saved: ~30% of sessions would have needed 2000-token re-orientation
+    tokens_saved = round(report.usability.resume_events * 0.30 * 2000)
+    cost_saved_usd = round((tokens_saved / 1_000_000) * 3.0, 3)
+    tokens_injected_str = f"{tokens_injected:,}"
+    tokens_saved_str = f"{tokens_saved:,}"
+    cost_saved_str = f"${cost_saved_usd:.2f}"
+
+    # lifecycle donut
+    donut = _lifecycle_donut_svg(report.usability.lifecycle_coverage)
+
+    # lifecycle breakdown pills
+    lifecycle_events = [
+        ("session-start", report.usability.resume_events),
+        ("pre-compact", report.usability.checkpoint_events - report.usability.session_end_events),
+        ("post-compact", report.usability.reload_events),
+        ("session-end", report.usability.session_end_events),
+    ]
+    lifecycle_pills = "".join(
+        f'<div class="lc-pill {"lc-active" if count > 0 else "lc-empty"}">'
+        f'<span>{html.escape(name)}</span><strong>{count}</strong></div>'
+        for name, count in lifecycle_events
+    )
+
+    # branch table
+    if branch_stats:
+        branch_rows = "".join(
+            f'<tr><td>{html.escape(s.branch)}</td><td>{s.session_count}</td>'
+            f'<td><div class="bar-track" style="width:80px;display:inline-block">'
+            f'<div class="bar-fill moss" style="width:{s.avg_score}%"></div></div> {s.avg_score}</td>'
+            f'<td>{s.last_seen[:10]}</td></tr>'
+            for s in branch_stats[:8]
+        )
+        branch_panel = f"""
+      <div class="grid g3">
+        <section class="panel" style="grid-column:1/-1">
+          <h2>Branch health</h2>
+          <table class="btable">
+            <thead><tr><th>Branch</th><th>Sessions</th><th>Avg score</th><th>Last seen</th></tr></thead>
+            <tbody>{branch_rows}</tbody>
+          </table>
+        </section>
+      </div>"""
+    else:
+        branch_panel = ""
+
+    # forecast panel
+    if forecast:
+        fc_rows = "".join(
+            f'<div class="fc-week"><span>Week {i+1}</span><strong>{c}</strong>'
+            f'<div class="bar-track"><div class="bar-fill" style="width:{min(100,c*2)}%"></div></div></div>'
+            for i, c in enumerate(forecast.week_series)
+        )
+        forecast_panel = f"""
+      <div class="grid">
+        <section class="panel">
+          <h2>30-day forecast <small style="font-size:14px;font-weight:400;opacity:.6">confidence: {html.escape(forecast.confidence)}</small></h2>
+          <div class="metrics4">
+            <div class="metric"><span>Daily rate</span><strong>{forecast.daily_rate:.1f}</strong></div>
+            <div class="metric"><span>Projected events</span><strong>{forecast.projected_events:,}</strong></div>
+            <div class="metric"><span>Active days (30d)</span><strong>{forecast.projected_active_days}</strong></div>
+          </div>
+          <div class="fc-grid">{fc_rows}</div>
+        </section>
+        <section class="panel">
+          <h2>Platform proof</h2>
+          <div class="events">
+            <div><span>Claude native hooks</span><strong>ready</strong></div>
+            <div><span>Repo contract score</span><strong>{report.current_score}</strong></div>
+            <div><span>Local-only telemetry</span><strong>on</strong></div>
+          </div>
+        </section>
+      </div>"""
+    else:
+        forecast_panel = ""
+
+    footer_text = (
+        "Public snapshot — local-only telemetry aggregates only: scores, event counts, lifecycle coverage, time-series usability. No prompts, source code, secrets, or local paths included."
+        if public else
+        f"Local-only telemetry. Evidence log: {html.escape(str(report.telemetry_path))}"
+    )
+
     return f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Continuity Impact Monitor</title>
+  <title>repo-context-hooks — Continuity Impact Monitor</title>
   <style>
     :root {{
-      --ink: #17120b;
-      --paper: #f6efe0;
-      --rust: #b54720;
-      --gold: #e6a92f;
-      --moss: #356857;
-      --night: #101820;
-      --line: rgba(23, 18, 11, .18);
+      --ink: #17120b; --paper: #f6efe0; --rust: #b54720;
+      --gold: #e6a92f; --moss: #356857; --night: #101820;
+      --line: rgba(23,18,11,.18);
     }}
     * {{ box-sizing: border-box; }}
     body {{
-      margin: 0;
-      min-height: 100vh;
-      color: var(--ink);
+      margin: 0; min-height: 100vh; color: var(--ink);
       background:
         radial-gradient(circle at 18% 10%, rgba(230,169,47,.42), transparent 28rem),
         radial-gradient(circle at 86% 16%, rgba(53,104,87,.3), transparent 24rem),
         linear-gradient(135deg, #fff8e8 0%, #f5e5c8 52%, #dac39b 100%);
-      font-family: "Aptos", "Segoe UI", sans-serif;
+      font-family: "Aptos","Segoe UI",sans-serif;
     }}
-    .shell {{
-      width: min(1180px, calc(100% - 40px));
-      margin: 0 auto;
-      padding: 54px 0;
-    }}
+    .shell {{ width: min(1220px, calc(100% - 40px)); margin: 0 auto; padding: 54px 0; }}
     .hero {{
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 34px;
-      background: rgba(255, 252, 242, .68);
-      box-shadow: 0 34px 90px rgba(51, 38, 20, .22);
+      position: relative; overflow: hidden; border: 1px solid var(--line);
+      border-radius: 34px; background: rgba(255,252,242,.68);
+      box-shadow: 0 34px 90px rgba(51,38,20,.22);
       padding: clamp(28px, 5vw, 64px);
     }}
     .hero:before {{
-      content: "";
-      position: absolute;
-      inset: 22px;
-      border: 1px dashed rgba(181,71,32,.35);
-      border-radius: 26px;
-      pointer-events: none;
+      content: ""; position: absolute; inset: 22px;
+      border: 1px dashed rgba(181,71,32,.35); border-radius: 26px; pointer-events: none;
     }}
-    .eyebrow {{
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--rust);
-      font-weight: 800;
-      font-size: 12px;
-    }}
+    .eyebrow {{ letter-spacing: .18em; text-transform: uppercase; color: var(--rust); font-weight: 800; font-size: 12px; }}
     h1 {{
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(44px, 7vw, 92px);
-      letter-spacing: -.07em;
-      line-height: .87;
-      margin: 18px 0 20px;
-      max-width: 880px;
+      font-family: Georgia,"Times New Roman",serif;
+      font-size: clamp(40px, 6vw, 80px); letter-spacing: -.07em;
+      line-height: .87; margin: 14px 0 16px; max-width: 880px;
     }}
-    .lede {{
-      max-width: 720px;
-      font-size: clamp(18px, 2vw, 24px);
-      line-height: 1.45;
-    }}
+    .lede {{ max-width: 720px; font-size: clamp(16px, 1.8vw, 22px); line-height: 1.45; }}
     .metrics {{
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-      margin: 34px 0;
+      display: grid; grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 14px; margin: 28px 0;
+    }}
+    .metrics4 {{
+      display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px; margin: 18px 0;
     }}
     .metric {{
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 22px;
-      background: rgba(255,255,255,.44);
-      backdrop-filter: blur(10px);
+      border: 1px solid var(--line); border-radius: 22px; padding: 20px;
+      background: rgba(255,255,255,.44); backdrop-filter: blur(10px);
     }}
     .metric span {{
-      display: block;
-      color: rgba(23,18,11,.64);
-      font-weight: 700;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
+      display: block; color: rgba(23,18,11,.64); font-weight: 700;
+      font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
     }}
     .metric strong {{
-      display: block;
-      margin-top: 8px;
-      font-size: clamp(30px, 4vw, 52px);
-      font-family: Georgia, "Times New Roman", serif;
-      letter-spacing: -.05em;
+      display: block; margin-top: 6px;
+      font-size: clamp(26px, 3.5vw, 46px);
+      font-family: Georgia,"Times New Roman",serif; letter-spacing: -.05em;
     }}
-    .grid {{
-      display: grid;
-      grid-template-columns: 1.25fr .75fr;
-      gap: 18px;
-      margin-top: 18px;
+    .metric sub {{ font-size: 14px; opacity: .6; }}
+    .savings-row {{
+      display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 14px; margin: 14px 0;
     }}
+    .savings-card {{
+      border: 1px solid var(--line); border-radius: 22px; padding: 20px;
+      background: rgba(53,104,87,.08);
+    }}
+    .savings-card span {{
+      display: block; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em; opacity: .7;
+    }}
+    .savings-card strong {{
+      display: block; margin-top: 6px;
+      font-size: clamp(22px, 3vw, 40px);
+      font-family: Georgia,"Times New Roman",serif; color: var(--moss);
+    }}
+    .savings-card em {{ font-style: normal; font-size: 12px; opacity: .6; }}
+    .grid {{ display: grid; grid-template-columns: 1.3fr .7fr; gap: 18px; margin-top: 18px; }}
+    .g3 {{ grid-template-columns: 1fr; }}
     .panel {{
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      background: rgba(255, 252, 242, .72);
-      padding: 26px;
+      border: 1px solid var(--line); border-radius: 28px;
+      background: rgba(255,252,242,.72); padding: 26px;
     }}
     .panel h2 {{
-      margin: 0 0 18px;
-      font-family: Georgia, "Times New Roman", serif;
-      letter-spacing: -.04em;
-      font-size: 30px;
+      margin: 0 0 16px; font-family: Georgia,"Times New Roman",serif;
+      letter-spacing: -.04em; font-size: 28px;
     }}
     .bar-row {{
-      display: grid;
-      grid-template-columns: 90px 1fr 40px;
-      align-items: center;
-      gap: 12px;
-      margin: 12px 0;
-      font-size: 14px;
+      display: grid; grid-template-columns: 100px 1fr 44px;
+      align-items: center; gap: 12px; margin: 10px 0; font-size: 14px;
     }}
     .bar-track {{
-      height: 14px;
-      border-radius: 999px;
-      background: rgba(16,24,32,.1);
-      overflow: hidden;
+      height: 12px; border-radius: 999px;
+      background: rgba(16,24,32,.1); overflow: hidden;
     }}
     .bar-fill {{
-      height: 100%;
-      border-radius: inherit;
+      height: 100%; border-radius: inherit;
       background: linear-gradient(90deg, var(--rust), var(--gold));
     }}
     .events {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 10px;
     }}
     .events div {{
-      padding: 16px;
-      border-radius: 18px;
-      background: var(--night);
-      color: #fff8e8;
+      padding: 16px; border-radius: 18px;
+      background: var(--night); color: #fff8e8;
     }}
-        .events span {{ display: block; opacity: .72; font-size: 12px; }}
-    .events strong {{ font-size: 28px; }}
+    .events span {{ display: block; opacity: .72; font-size: 11px; margin-bottom: 4px; }}
+    .events strong {{ font-size: 26px; font-family: Georgia,serif; }}
+    .lc-grid {{
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px;
+    }}
+    .lc-pill {{
+      border-radius: 14px; padding: 12px 10px; text-align: center; border: 1px solid var(--line);
+    }}
+    .lc-active {{ background: rgba(53,104,87,.12); border-color: var(--moss); }}
+    .lc-empty {{ background: rgba(181,71,32,.06); border-color: rgba(181,71,32,.3); }}
+    .lc-pill span {{ display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; margin-bottom: 4px; }}
+    .lc-pill strong {{ font-size: 22px; font-family: Georgia,serif; }}
     .usability {{
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 12px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px;
     }}
     .usability div, .score-point {{
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 14px;
-      background: rgba(255,255,255,.38);
+      border: 1px solid var(--line); border-radius: 18px;
+      padding: 14px; background: rgba(255,255,255,.38);
     }}
     .usability span, .score-point span {{
-      display: block;
-      color: rgba(23,18,11,.62);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      font-weight: 800;
+      display: block; color: rgba(23,18,11,.62); font-size: 11px;
+      text-transform: uppercase; letter-spacing: .07em; font-weight: 800;
     }}
     .usability strong, .score-point strong {{
-      display: block;
-      font-size: 27px;
-      margin: 4px 0 8px;
-      font-family: Georgia, "Times New Roman", serif;
+      display: block; font-size: 24px; margin: 4px 0 6px;
+      font-family: Georgia,"Times New Roman",serif;
     }}
     .moss {{ background: linear-gradient(90deg, var(--moss), var(--gold)); }}
-    ol {{
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: grid;
-      gap: 10px;
-    }}
+    ol {{ list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }}
     li {{
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 6px 12px;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--line);
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line);
     }}
-    li em {{
-      grid-column: 1 / -1;
-      color: rgba(23,18,11,.58);
-      font-style: normal;
-      font-size: 13px;
-    }}
-    .footer {{
-      margin-top: 18px;
-      color: rgba(23,18,11,.68);
-      font-size: 14px;
-    }}
-    @media (max-width: 820px) {{
-      .metrics, .grid {{ grid-template-columns: 1fr; }}
-      .shell {{ width: min(100% - 24px, 1180px); padding: 24px 0; }}
+    li em {{ grid-column: 1/-1; color: rgba(23,18,11,.58); font-style: normal; font-size: 12px; }}
+    .btable {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
+    .btable th {{ text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; opacity: .6; padding: 6px 8px; border-bottom: 1px solid var(--line); }}
+    .btable td {{ padding: 10px 8px; border-bottom: 1px solid rgba(23,18,11,.07); }}
+    .btable tr:last-child td {{ border-bottom: none; }}
+    .fc-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 14px; }}
+    .fc-week {{ border: 1px solid var(--line); border-radius: 14px; padding: 14px; }}
+    .fc-week span {{ display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; opacity: .6; }}
+    .fc-week strong {{ display: block; font-size: 24px; font-family: Georgia,serif; margin: 4px 0 8px; }}
+    .footer {{ margin-top: 22px; color: rgba(23,18,11,.58); font-size: 13px; line-height: 1.6; }}
+    @media (max-width: 840px) {{
+      .metrics, .savings-row, .lc-grid, .grid, .metrics4 {{ grid-template-columns: 1fr; }}
+      .shell {{ width: min(100% - 24px, 1220px); padding: 24px 0; }}
     }}
   </style>
 </head>
 <body>
   <main class="shell">
     <section class="hero">
-      <div class="eyebrow">repo-context-hooks telemetry</div>
+      <div class="eyebrow">repo-context-hooks · continuity telemetry</div>
       <h1>Continuity Impact Monitor</h1>
-      <p class="lede">A living view of whether hooks are actually preserving repo context, how much better the repo is than a README-only baseline, and which lifecycle events are firing over time.</p>
+      <p class="lede">Live evidence that AI sessions are preserving repo context — score, lifecycle coverage, token savings, branch health, and 30-day trajectory in one view.</p>
+
+      <!-- Primary metrics row -->
       <div class="metrics">
-        <div class="metric"><span>Score</span><strong>{report.current_score}</strong></div>
-        <div class="metric"><span>Baseline</span><strong>{report.estimated_baseline_score}</strong></div>
-        <div class="metric"><span>Uplift</span><strong>+{report.uplift}</strong></div>
-        <div class="metric"><span>Hook events</span><strong>{report.observed_events}</strong></div>
+        <div class="metric"><span>Contract score</span><strong>{report.current_score}</strong></div>
+        <div class="metric"><span>Baseline (no hooks)</span><strong>{report.estimated_baseline_score}</strong></div>
+        <div class="metric"><span>Continuity uplift</span><strong>+{report.uplift}</strong></div>
+        <div class="metric"><span>Hook events total</span><strong>{report.observed_events}</strong></div>
       </div>
+
+      <!-- Context savings row -->
+      <div class="savings-row">
+        <div class="savings-card">
+          <span>Tokens injected</span>
+          <strong>{tokens_injected_str}</strong>
+          <em>~4,500 tok/session × {report.usability.resume_events} sessions</em>
+        </div>
+        <div class="savings-card">
+          <span>Tokens saved (est.)</span>
+          <strong>{tokens_saved_str}</strong>
+          <em>30% of sessions avoid 2,000-tok re-orientation</em>
+        </div>
+        <div class="savings-card">
+          <span>Est. cost saved</span>
+          <strong>{cost_saved_str}</strong>
+          <em>Claude Sonnet $3/M input tokens</em>
+        </div>
+      </div>
+
+      <!-- Activity + event mix -->
       <div class="grid">
         <section class="panel">
-          <h2>Historical pulse</h2>
+          <h2>Daily activity</h2>
           {bars}
         </section>
         <section class="panel">
@@ -862,34 +972,53 @@ def render_monitoring_dashboard(report: ImpactReport) -> str:
           <div class="events">{event_cards}</div>
         </section>
       </div>
+
+      <!-- Lifecycle coverage -->
       <div class="grid">
         <section class="panel">
-          <h2>Usability time series</h2>
-          {score_points}
-        </section>
-        <section class="panel">
-          <h2>Usability metrics</h2>
-          <div class="usability">
-            <div><span>Active days</span><strong>{report.usability.active_days}</strong></div>
-            <div><span>Resume events</span><strong>{report.usability.resume_events}</strong></div>
-            <div><span>Checkpoints</span><strong>{report.usability.checkpoint_events}</strong></div>
-            <div><span>Reloads</span><strong>{report.usability.reload_events}</strong></div>
-            <div><span>Session ends</span><strong>{report.usability.session_end_events}</strong></div>
-            <div><span>Coverage</span><strong>{report.usability.lifecycle_coverage}%</strong></div>
+          <h2>Lifecycle coverage</h2>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center">
+            {donut}
+            <div>
+              <p style="margin:0 0 12px;opacity:.7;font-size:14px">
+                {report.usability.lifecycle_coverage}% of the 4-event lifecycle is instrumented.
+                {'All four hooks are firing.' if report.usability.lifecycle_coverage == 100
+                 else 'session-start is active. session-end, pre-compact, and post-compact will populate after longer sessions.' if report.usability.lifecycle_coverage == 25
+                 else 'Some lifecycle events are missing.'}
+              </p>
+              <div class="lc-grid">{lifecycle_pills}</div>
+            </div>
           </div>
         </section>
+        <section class="panel">
+          <h2>Score history</h2>
+          {score_points}
+        </section>
       </div>
+
+      <!-- Usability metrics + recent evidence -->
       <div class="grid">
         <section class="panel">
           <h2>Recent hook evidence</h2>
           <ol>{recent}</ol>
         </section>
         <section class="panel">
-          <h2>Signal</h2>
-          <p>Latest score {report.history.latest_score}. Historical score delta {report.history.score_delta:+d}. First seen {html.escape(str(report.history.first_seen or "not yet"))}. Latest seen {html.escape(str(report.history.latest_seen or "not yet"))}.</p>
+          <h2>Usability metrics</h2>
+          <div class="usability">
+            <div><span>Active days</span><strong>{report.usability.active_days}</strong></div>
+            <div><span>Sessions</span><strong>{report.usability.resume_events}</strong></div>
+            <div><span>Checkpoints</span><strong>{report.usability.checkpoint_events}</strong></div>
+            <div><span>Reloads</span><strong>{report.usability.reload_events}</strong></div>
+            <div><span>Session ends</span><strong>{report.usability.session_end_events}</strong></div>
+            <div><span>Avg duration</span><strong>{"—" if report.usability.avg_session_duration_minutes is None else f"{report.usability.avg_session_duration_minutes}m"}</strong></div>
+          </div>
         </section>
       </div>
-      <p class="footer">Local-only telemetry. Evidence log: {html.escape(str(report.telemetry_path))}</p>
+
+      {branch_panel}
+      {forecast_panel}
+
+      <p class="footer">{html.escape(footer_text)}</p>
     </section>
   </main>
 </body>
@@ -898,8 +1027,22 @@ def render_monitoring_dashboard(report: ImpactReport) -> str:
 
 
 def write_monitoring_dashboard(report: ImpactReport) -> Path:
+    try:
+        b_stats = branch_scores(
+            Path("."),
+            telemetry_base=report.telemetry_path.parent.parent,
+        )
+    except Exception:
+        b_stats = None
+    try:
+        fc = forecast_activity(
+            Path("."),
+            telemetry_base=report.telemetry_path.parent.parent,
+        )
+    except Exception:
+        fc = None
     report.dashboard_path.write_text(
-        render_monitoring_dashboard(report),
+        render_monitoring_dashboard(report, branch_stats=b_stats, forecast=fc),
         encoding="utf-8",
     )
     return report.dashboard_path
@@ -948,45 +1091,12 @@ def public_monitoring_snapshot(report: ImpactReport) -> dict[str, Any]:
     }
 
 
-def render_public_monitoring_dashboard(report: ImpactReport) -> str:
-    dashboard = render_monitoring_dashboard(report)
-    dashboard = dashboard.replace(
-        f'<div class="metric"><span>Score</span><strong>{report.current_score}</strong></div>',
-        f'<div class="metric"><span>Score {report.current_score}</span><strong>{report.current_score}</strong></div>',
-    )
-    dashboard = dashboard.replace(
-        f'<div class="metric"><span>Uplift</span><strong>+{report.uplift}</strong></div>',
-        f'<div class="metric"><span>+{report.uplift} uplift</span><strong>+{report.uplift}</strong></div>',
-    )
-    dashboard = dashboard.replace(
-        f'<div class="metric"><span>Hook events</span><strong>{report.observed_events}</strong></div>',
-        f'<div class="metric"><span>18+ hook events</span><strong>{report.observed_events}</strong></div>',
-    )
-    proof = """
-      <div class="grid">
-        <section class="panel">
-          <h2>Platform proof</h2>
-          <div class="events"><div><span>Claude native hooks</span><strong>ready</strong></div>
-<div><span>Codex/Kimi repo entry</span><strong>ready</strong></div>
-<div><span>Local-only telemetry</span><strong>on</strong></div></div>
-        </section>
-        <section class="panel">
-          <h2>Privacy boundary</h2>
-          <p>No source code, prompts, compact summaries, issue bodies, secrets, resumes, or personal files are collected.</p>
-        </section>
-      </div>
-"""
-    dashboard = dashboard.replace('      <p class="footer">', proof + '      <p class="footer">')
-    private_footer = (
-        "Local-only telemetry. Evidence log: "
-        f"{html.escape(str(report.telemetry_path))}"
-    )
-    public_footer = (
-        "Public snapshot. Local-only telemetry aggregates only: scores, event "
-        "counts, lifecycle coverage, and time-series usability. No prompts, "
-        "source code, resumes, secrets, or local filesystem paths are included."
-    )
-    return dashboard.replace(private_footer, public_footer)
+def render_public_monitoring_dashboard(
+    report: ImpactReport,
+    branch_stats: list[Any] | None = None,
+    forecast: Any | None = None,
+) -> str:
+    return render_monitoring_dashboard(report, branch_stats=branch_stats, forecast=forecast, public=True)
 
 
 def write_public_monitoring_snapshot(
@@ -996,13 +1106,32 @@ def write_public_monitoring_snapshot(
     output_dir.mkdir(parents=True, exist_ok=True)
     dashboard_path = output_dir / "index.html"
     history_path = output_dir / "history.json"
+
+    # Enrich snapshot with branch + forecast data
+    try:
+        b_stats = branch_scores(report.telemetry_path.parent.parent / ".." / ".." / report.repo_id)
+    except Exception:
+        b_stats = None
+    try:
+        fc = forecast_activity(
+            Path("."),
+            telemetry_base=report.telemetry_path.parent.parent,
+        )
+    except Exception:
+        fc = None
+
+    snap = public_monitoring_snapshot(report)
+    if b_stats:
+        snap["branches"] = [s.to_dict() for s in b_stats]
+    if fc:
+        snap["forecast"] = fc.to_dict()
+
     history_path.write_text(
-        json.dumps(public_monitoring_snapshot(report), indent=2, sort_keys=True)
-        + "\n",
+        json.dumps(snap, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     dashboard_path.write_text(
-        render_public_monitoring_dashboard(report),
+        render_public_monitoring_dashboard(report, branch_stats=b_stats, forecast=fc),
         encoding="utf-8",
     )
     return {

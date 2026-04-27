@@ -13,11 +13,11 @@ def test_public_monitoring_dashboard_exists_and_shows_repo_impact() -> None:
 
     required = [
         "Continuity Impact Monitor",
-        "Score 90",
-        "+70 uplift",
-        "18+ hook events",
+        "Contract score",
+        "Continuity uplift",
+        "Tokens injected",
+        "Lifecycle coverage",
         "Claude native hooks",
-        "Codex/Kimi repo entry",
         "Local-only telemetry",
     ]
     for snippet in required:
@@ -51,8 +51,8 @@ def test_readme_embeds_monitoring_brand_assets() -> None:
     assert "Telemetry Visibility" in readme
     assert "Observable Plot" in readme
     assert "Vega-Lite" in readme
-    assert "Score `90`" in readme
-    assert "Uplift `+70`" in readme
+    assert "90 / 100" in readme
+    assert "+70 points" in readme
 
 
 def test_png_brand_logo_exists_and_has_expected_dimensions() -> None:

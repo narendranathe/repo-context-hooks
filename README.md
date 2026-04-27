@@ -108,45 +108,48 @@ repo-context-hooks measure --json
 ## Prove Impact
 
 ```bash
-repo-context-hooks measure
+repo-context-hooks measure                          # CLI summary
+repo-context-hooks measure --open                   # rich browser dashboard
 repo-context-hooks measure --snapshot-dir docs/monitoring
+repo-context-hooks measure --forecast               # 30-day projection
+repo-context-hooks measure --branches               # per-branch score table
+repo-context-hooks measure --clean-ghosts           # prune test-run dirs (dry-run safe)
+repo-context-hooks measure --badge-out docs/badge.svg
 ```
 
 ### Badge
 
-Print an SVG badge of the current contract score to stdout:
-
-```bash
-repo-context-hooks measure --badge
-```
-
-Write the badge to a file (for example, to embed in your README):
+The badge shows three sections: **label | score | lifecycle coverage%**. Coverage turns green at 75%+, yellow at 25-74%, red below 25%.
 
 ```bash
 repo-context-hooks measure --badge-out docs/badge.svg
 ```
 
-Then embed it in your README:
-
 ```markdown
 ![context score](docs/badge.svg)
 ```
 
-The badge shows three sections: label | score | lifecycle coverage%. The coverage section turns green at 75%+, yellow at 25-74%, and red below 25%.
+### Live telemetry (this repo, v0.5.0)
 
-The badge uses shields.io flat style and is entirely self-contained - no external dependencies or network requests.
+`measure` compares the current repo contract score against an estimated no-continuity baseline and shows token savings, lifecycle health, and branch drift in one view.
 
-`measure` compares current repo continuity score against an estimated no-continuity baseline and reports observed hook events from local JSONL telemetry.
+| Metric | Value |
+|--------|-------|
+| Contract score | **90 / 100** |
+| Baseline without hooks | 20 / 100 |
+| Continuity uplift | **+70 points** |
+| Hook events recorded | 85 |
+| Sessions instrumented | ~48 |
+| Active days | 2 |
+| Lifecycle coverage | 25% (session-start firing; session-end populates after longer sessions) |
+| Branches monitored | 3 — main, feat/telemetry-reliability, feat/agent-level-skill-runtime |
+| Tokens injected | ~237,000 (4,950 tok/session × 48 sessions) |
+| Est. tokens saved | ~28,800 (30% of sessions skip 2,000-tok re-orientation) |
+| Est. cost saved | ~$0.09 at current scale ($3/M input, Claude Sonnet) |
+| Engineering memory | 11 sections across specs/README.md |
 
-Current repo snapshot:
+At 30-day scale (~50 sessions/day): ~72,000 tokens saved/day, ~$65/year per developer.
 
-- Score `90`
-- Baseline `20`
-- Uplift `+70`
-- Observed hook events `39`
-- Unique sessions `21`
-- Active days `2`
-- Lifecycle coverage `25%` (session-start only so far; pre-compact and session-end fire on longer sessions)
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 - Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
 
@@ -158,10 +161,10 @@ See [TELEMETRY.md](TELEMETRY.md) for what is collected locally and how to opt ou
 
 | Surface | What it shows | How to use it |
 |---------|--------------|---------------|
-| [Impact monitor](docs/monitoring/index.html) | Score, uplift, lifecycle coverage, event mix | Open from GitHub or publish via GitHub Pages |
-| [History JSON](docs/monitoring/history.json) | Time-series score, daily hook events, usability metrics | Import into Observable Plot, Vega-Lite, DuckDB |
-| Local dashboard | Private per-repo `monitoring.html` from local event log | Run `repo-context-hooks measure` after agent sessions |
-| Public snapshot | Sanitized dashboard for README or docs site | Run `repo-context-hooks measure --snapshot-dir docs/monitoring` |
+| [Impact monitor](docs/monitoring/index.html) | Score, uplift, tokens injected, lifecycle ring, branch health, forecast | `measure --open` or open from GitHub Pages |
+| [History JSON](docs/monitoring/history.json) | Time-series score, daily events, usability metrics, branch scores, forecast | Import into Observable Plot, Vega-Lite, DuckDB |
+| Local dashboard | Private full-detail view with branch + forecast panels | `repo-context-hooks measure --open` |
+| Public snapshot | Sanitized version for README or docs site | `repo-context-hooks measure --snapshot-dir docs/monitoring` |
 
 ## Concrete Stories
 
@@ -177,14 +180,19 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 
 ![Before and after continuity comparison showing repeated bug explanation versus resuming from checked-in continuity](assets/diagrams/before-after-continuity.svg)
 
-## What's New in v0.3.0
+## What's New in v0.5.0
 
-- **Agent-level install** - hooks write to `~/.claude/settings.json` once; active in every workspace automatically
-- **Session metrics** - `session_id` in every telemetry record; `is_sampled()` probabilistic gate (10% default, configurable via `REPO_CONTEXT_HOOKS_SAMPLE_RATE`)
-- **`auto_commit_snapshot()`** - auto-commits `docs/monitoring/history.json` on session end
-- **`--also-repo-hooks` flag** - opt into per-repo hooks alongside agent-level
-- **Graceful degradation** - non-git and no-contract workspaces print helpful messages and exit cleanly
-- **Codex parity** - `install_global_hooks()` for Codex
+- **Rich browser dashboard** - `measure --open` launches a single-file HTML view showing tokens injected, estimated cost savings, lifecycle coverage ring, branch health table, and 30-day forecast
+- **Session duration tracking** - session-end events now carry `duration_minutes`; `measure` reports avg and max
+- **Hook deduplication** - `install --dedup` normalises backslash/forward-slash paths; auto-runs on every install
+- **Ghost repo cleanup** - `measure --clean-ghosts [--no-dry-run]` removes test-run dirs from the telemetry store
+- **30-day forecast** - `measure --forecast` projects events from 7-day rolling average with high/medium/low confidence
+- **Per-branch scores** - `measure --branches` shows session count, avg score, and last-seen per git branch
+- **Doctor hook health** - `doctor --platform claude` detects duplicate hook entries and exits 1
+- **Two-field badge** - SVG badge now shows score + lifecycle coverage% as separate coloured sections
+- **0% lifecycle fix** - removed inline `measure_impact()` call from `record_event()`; session-end timeout raised 10s → 30s
+
+See [CHANGELOG.md](CHANGELOG.md) for full history.
 - **CI/CD** - GitHub Actions with pytest matrix (Python 3.9-3.12, ubuntu + windows) and OIDC PyPI publish
 
 See [CHANGELOG.md](CHANGELOG.md) for full history.

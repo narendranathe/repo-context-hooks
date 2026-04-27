@@ -79,7 +79,7 @@ def test_measure_impact_compares_current_state_to_no_contract_baseline() -> None
     assert report.usability.lifecycle_coverage >= 50
     assert report.dashboard_path.exists()
     assert "Continuity Impact Monitor" in report.dashboard_path.read_text(encoding="utf-8")
-    assert "Usability time series" in report.dashboard_path.read_text(encoding="utf-8")
+    assert "Lifecycle coverage" in report.dashboard_path.read_text(encoding="utf-8")
     assert "context-impact" in report.render()
     assert "Monitoring view" in report.render()
     assert "Estimated baseline" in report.render()
@@ -164,7 +164,7 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
     assert history["observed_events"] == report.observed_events
     assert history["usability"]["active_days"] == 1
     assert "Continuity Impact Monitor" in dashboard
-    assert "Public snapshot" in dashboard
+    assert "Lifecycle coverage" in dashboard
     assert str(tmp_path) not in dashboard
     assert str(tmp_path) not in json.dumps(history)
 

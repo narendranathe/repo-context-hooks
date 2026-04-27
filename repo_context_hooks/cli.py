@@ -162,6 +162,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Write the SVG badge to this file path (implies --badge).",
     )
     measure.add_argument(
+        "--open",
+        action="store_true",
+        help="Generate the local monitoring dashboard and open it in the browser.",
+    )
+    measure.add_argument(
         "--forecast",
         action="store_true",
         help="Show a 30-day activity projection based on current daily rate.",
@@ -432,6 +437,15 @@ def _measure(args: argparse.Namespace) -> int:
             report,
             output_dir.resolve(),
         )
+
+    if getattr(args, "open", False):
+        import webbrowser
+        from .telemetry import write_monitoring_dashboard
+        dash = write_monitoring_dashboard(report)
+        webbrowser.open(dash.as_uri())
+        print(f"Opened: {dash}")
+        return 0
+
     if getattr(args, "json", False):
         payload = report.to_dict()
         if snapshot is not None:

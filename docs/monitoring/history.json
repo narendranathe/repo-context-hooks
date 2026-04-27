@@ -1,42 +1,49 @@
 {
   "baseline": 20,
   "event_counts": {
-    "session-context-session-start": 4,
-    "session-start": 35
+    "session-start": 91
   },
   "first_seen": "2026-04-26T19:57:31.854624+00:00",
-  "latest_seen": "2026-04-27T01:01:23.011228+00:00",
-  "observed_events": 39,
-  "repo": "repohandoff",
-  "score": 90,
-  "score_distribution": {
-    "avg": 76,
-    "max": 90,
-    "min": 0
+  "forecast": {
+    "confidence": "low",
+    "daily_rate": 45.5,
+    "projected_active_days": 30,
+    "projected_events": 1365,
+    "week_series": [
+      318,
+      318,
+      318,
+      318,
+      91
+    ]
   },
-  "snapshot_at": "2026-04-27T01:30:00Z",
+  "latest_seen": "2026-04-27T20:23:22.081254+00:00",
+  "observed_events": 91,
+  "repo": "repo-context-hooks",
+  "score": 90,
+  "snapshot_at": "2026-04-27T20:23:31Z",
   "time_series": [
     {
       "date": "2026-04-26",
-      "events": 26,
+      "events": 13,
       "score": 90
     },
     {
       "date": "2026-04-27",
-      "events": 13,
+      "events": 78,
       "score": 90
     }
   ],
-  "unique_repos": 2,
-  "unique_sessions": 21,
   "uplift": 70,
   "usability": {
     "active_days": 2,
+    "avg_session_duration_minutes": null,
     "checkpoint_events": 0,
     "lifecycle_coverage": 25,
-    "readiness_minutes_since_last_event": null,
+    "max_session_duration_minutes": null,
+    "readiness_minutes_since_last_event": 0,
     "reload_events": 0,
-    "resume_events": 35,
+    "resume_events": 91,
     "session_end_events": 0
   }
 }
