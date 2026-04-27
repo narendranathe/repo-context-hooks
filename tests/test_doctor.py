@@ -493,3 +493,84 @@ def test_doctor_rejects_placeholder_kimi_agents_file() -> None:
     assert report.ok is False
     assert any(item.endswith("AGENTS.md") for item in report.invalid)
     assert "INVALID" in report.render()
+
+
+# ---------------------------------------------------------------------------
+# check_hook_health tests
+# ---------------------------------------------------------------------------
+
+import json as _json
+
+from repo_context_hooks.doctor import check_hook_health
+
+
+def test_check_hook_health_detects_duplicates(tmp_path: Path) -> None:
+    """Two groups with the same normalised command (backslash vs forward-slash) are duplicates."""
+    settings = {
+        "hooks": {
+            "SessionStart": [
+                {
+                    "matcher": "",
+                    "hooks": [
+                        {"type": "command", "command": "python C:\\Users\\naren\\.claude\\scripts\\foo.py session-start"},
+                        {"type": "command", "command": "python C:\\Users\\naren\\.claude\\scripts\\bar.py session-start"},
+                    ],
+                },
+                {
+                    "matcher": "",
+                    "hooks": [
+                        {"type": "command", "command": "python C:/Users/naren/.claude/scripts/foo.py session-start"},
+                        {"type": "command", "command": "python C:/Users/naren/.claude/scripts/bar.py session-start"},
+                    ],
+                },
+            ]
+        }
+    }
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(_json.dumps(settings), encoding="utf-8")
+
+    issues = check_hook_health(settings_path)
+
+    assert len(issues) == 2
+    assert all(i["event"] == "SessionStart" for i in issues)
+    assert all(i["issue"] == "duplicate" for i in issues)
+    norm_cmds = {i["command"] for i in issues}
+    assert "python C:/Users/naren/.claude/scripts/foo.py session-start" in norm_cmds
+    assert "python C:/Users/naren/.claude/scripts/bar.py session-start" in norm_cmds
+
+
+def test_check_hook_health_clean_settings(tmp_path: Path) -> None:
+    """A settings.json with no duplicate commands returns an empty list."""
+    settings = {
+        "hooks": {
+            "SessionStart": [
+                {
+                    "matcher": "",
+                    "hooks": [
+                        {"type": "command", "command": "python /home/user/.claude/scripts/foo.py session-start"},
+                    ],
+                }
+            ],
+            "SessionEnd": [
+                {
+                    "matcher": "",
+                    "hooks": [
+                        {"type": "command", "command": "python /home/user/.claude/scripts/foo.py session-end"},
+                    ],
+                }
+            ],
+        }
+    }
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(_json.dumps(settings), encoding="utf-8")
+
+    issues = check_hook_health(settings_path)
+
+    assert issues == []
+
+
+def test_check_hook_health_missing_file(tmp_path: Path) -> None:
+    """A path that does not exist returns an empty list without crashing."""
+    issues = check_hook_health(tmp_path / "nonexistent_settings.json")
+
+    assert issues == []
