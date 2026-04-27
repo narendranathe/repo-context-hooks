@@ -229,9 +229,18 @@ def record_telemetry(repo_root: Path, specs_readme: Path, ul_path: Path) -> None
 def main() -> int:
     repo_root_raw = git_output("rev-parse", "--show-toplevel")
     if not repo_root_raw:
+        print("no git repo detected — skipping workspace context")
         return 0
 
     repo_root = Path(repo_root_raw)
+
+    if not (repo_root / "specs" / "README.md").exists():
+        if EVENT in {"pre-compact", "post-compact", "session-end"}:
+            print("nothing to checkpoint — no workspace contract")
+        else:
+            print("no workspace contract found — run `repo-context-hooks init` to set one up")
+        return 0
+
     summary = extract_repo_summary(repo_root)
     ul_path = ensure_ubiquitous_language(repo_root)
     specs_readme = ensure_specs_readme(repo_root, summary, ul_path)

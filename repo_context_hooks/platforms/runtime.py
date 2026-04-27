@@ -109,8 +109,8 @@ def _save_json(path: Path, data: dict) -> None:
 
 
 def global_hook_payload(scripts_dir: Path) -> dict:
-    repo_specs = str(scripts_dir / "repo_specs_memory.py")
-    session_ctx = str(scripts_dir / "session_context.py")
+    repo_specs = (scripts_dir / "repo_specs_memory.py").as_posix()
+    session_ctx = (scripts_dir / "session_context.py").as_posix()
     return {
         "SessionStart": [
             {
@@ -159,7 +159,26 @@ def install_global_hooks(
     existing_hooks = settings.get("hooks", {})
     if not isinstance(existing_hooks, dict):
         existing_hooks = {}
-    existing_hooks.update(global_hook_payload(scripts_dir))
+    payload = global_hook_payload(scripts_dir)
+    changed = False
+    for event, new_groups in payload.items():
+        existing_list = existing_hooks.get(event, [])
+        if not isinstance(existing_list, list):
+            existing_list = []
+        for new_group in new_groups:
+            new_cmds = {h.get("command", "") for h in new_group.get("hooks", [])}
+            already_installed = any(
+                h.get("command", "") in new_cmds
+                for eg in existing_list
+                if isinstance(eg, dict)
+                for h in eg.get("hooks", [])
+            )
+            if not already_installed:
+                existing_list.append(new_group)
+                changed = True
+        existing_hooks[event] = existing_list
+    if not changed:
+        return {"settings.json": "skipped"}
     settings["hooks"] = existing_hooks
     _save_json(settings_path, settings)
     return {"settings.json": "installed"}

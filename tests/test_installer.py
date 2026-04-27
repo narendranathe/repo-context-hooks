@@ -145,9 +145,9 @@ def test_install_global_hooks_uses_absolute_script_paths() -> None:
         for group in event_hooks
         for hook in group["hooks"]
     ]
-    expected_scripts_dir = str(
+    expected_scripts_dir = (
         agent_home / ".claude" / "skills" / "context-handoff-hooks" / "scripts"
-    )
+    ).as_posix()
     for command in all_commands:
         assert "$CLAUDE_PROJECT_DIR" not in command, (
             f"Global hooks must not use $CLAUDE_PROJECT_DIR: {command}"

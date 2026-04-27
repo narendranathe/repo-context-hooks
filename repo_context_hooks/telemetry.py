@@ -111,7 +111,7 @@ def session_id(repo_root: Path) -> str:
     return new_id
 
 
-def is_sampled(repo_root: Path, rate: float = 0.3) -> bool:
+def is_sampled(repo_root: Path, rate: float = 0.1) -> bool:
     state_dir = _session_state_dir(repo_root)
     sampled_file = state_dir / _SESSION_SAMPLED_FILE
 

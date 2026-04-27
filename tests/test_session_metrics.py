@@ -225,6 +225,9 @@ def test_hook_script_skips_telemetry_when_not_sampled() -> None:
 def test_hook_script_writes_telemetry_when_sampled() -> None:
     tmp = _tmp_dir()
     repo = _make_git_repo(tmp / "repo")
+    # workspace contract required now that graceful degradation exits early without it
+    (repo / "specs").mkdir()
+    (repo / "specs" / "README.md").write_text("# Engineering Memory\n", encoding="utf-8")
     telemetry_dir = tmp / "telemetry"
 
     env = {
