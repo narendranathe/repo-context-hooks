@@ -167,3 +167,55 @@ def test_write_public_monitoring_snapshot_sanitizes_local_paths() -> None:
     assert "Public snapshot" in dashboard
     assert str(tmp_path) not in dashboard
     assert str(tmp_path) not in json.dumps(history)
+
+
+# --- purge_ghost_repos tests ---
+
+def test_purge_ghost_repos_dry_run_does_not_delete(tmp_path):
+    from repo_context_hooks.telemetry import purge_ghost_repos, EVENTS_FILE
+    ghost = tmp_path / "ghost-id"
+    ghost.mkdir()
+    (ghost / EVENTS_FILE).write_text(
+        '{"event_name":"session-start","repo_name":"repo"}\n', encoding="utf-8"
+    )
+    result = purge_ghost_repos(telemetry_base=tmp_path, dry_run=True)
+    assert result["removed"] == 1
+    assert ghost.exists(), "dry_run must not delete"
+
+
+def test_purge_ghost_repos_deletes_on_confirm(tmp_path):
+    from repo_context_hooks.telemetry import purge_ghost_repos, EVENTS_FILE
+    ghost = tmp_path / "ghost-id"
+    ghost.mkdir()
+    (ghost / EVENTS_FILE).write_text(
+        '{"event_name":"session-start","repo_name":"repo"}\n', encoding="utf-8"
+    )
+    result = purge_ghost_repos(telemetry_base=tmp_path, dry_run=False)
+    assert result["removed"] == 1
+    assert not ghost.exists()
+
+
+def test_purge_ghost_repos_keeps_two_event_repos(tmp_path):
+    from repo_context_hooks.telemetry import purge_ghost_repos, EVENTS_FILE
+    legit = tmp_path / "legit-id"
+    legit.mkdir()
+    (legit / EVENTS_FILE).write_text(
+        '{"event_name":"session-start","repo_name":"repo"}\n'
+        '{"event_name":"session-end","repo_name":"repo"}\n',
+        encoding="utf-8",
+    )
+    result = purge_ghost_repos(telemetry_base=tmp_path, dry_run=False)
+    assert result["removed"] == 0
+    assert legit.exists()
+
+
+def test_purge_ghost_repos_keeps_non_ghost_names(tmp_path):
+    from repo_context_hooks.telemetry import purge_ghost_repos, EVENTS_FILE
+    real_repo = tmp_path / "real-id"
+    real_repo.mkdir()
+    (real_repo / EVENTS_FILE).write_text(
+        '{"event_name":"session-start","repo_name":"autoapply-ai"}\n', encoding="utf-8"
+    )
+    result = purge_ghost_repos(telemetry_base=tmp_path, dry_run=False)
+    assert result["removed"] == 0
+    assert real_repo.exists()

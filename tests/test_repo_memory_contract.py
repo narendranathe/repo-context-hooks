@@ -53,8 +53,11 @@ def test_repo_tracks_canonical_memory_files() -> None:
     for section in expected_sections:
         assert section in specs, f"missing specs section: {section}"
 
-    assert "Branch snapshot:" not in specs
-    assert "Last commit:" not in specs
+    # These strings belong only in Session Checkpoints, not in the main body.
+    checkpoints_marker = "## Session Checkpoints"
+    body = specs.split(checkpoints_marker)[0] if checkpoints_marker in specs else specs
+    assert "Branch snapshot:" not in body
+    assert "Last commit:" not in body
 
 
 def test_repo_specs_memory_bootstrap_avoids_branch_and_commit_noise() -> None:

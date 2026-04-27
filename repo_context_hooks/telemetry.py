@@ -1011,6 +1011,48 @@ def write_public_monitoring_snapshot(
     }
 
 
+_GHOST_REPO_NAMES: frozenset[str] = frozenset({"repo", "tmp", "temp", "test"})
+
+
+def purge_ghost_repos(
+    telemetry_base: Path | None = None,
+    dry_run: bool = True,
+) -> dict[str, Any]:
+    """Remove telemetry dirs with <2 events and a ghost repo name.
+
+    Returns {"removed": N, "bytes_freed": M, "dirs": [...paths...]}.
+    Pass dry_run=False to actually delete.
+    """
+    import shutil
+
+    base = telemetry_base or _default_telemetry_base()
+    if not base.exists():
+        return {"removed": 0, "bytes_freed": 0, "dirs": []}
+
+    removed = 0
+    bytes_freed = 0
+    removed_dirs: list[str] = []
+
+    for entry in base.iterdir():
+        if not entry.is_dir():
+            continue
+        events_file = entry / EVENTS_FILE
+        events = _read_events(events_file)
+        if len(events) >= 2:
+            continue
+        repo_name = events[0].get("repo_name", "") if events else entry.name
+        if repo_name not in _GHOST_REPO_NAMES:
+            continue
+        dir_size = sum(f.stat().st_size for f in entry.rglob("*") if f.is_file())
+        removed_dirs.append(str(entry))
+        bytes_freed += dir_size
+        removed += 1
+        if not dry_run:
+            shutil.rmtree(entry, ignore_errors=True)
+
+    return {"removed": removed, "bytes_freed": bytes_freed, "dirs": removed_dirs}
+
+
 def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> ImpactReport:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)

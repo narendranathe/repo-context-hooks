@@ -161,6 +161,17 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         help="Write the SVG badge to this file path (implies --badge).",
     )
+    measure.add_argument(
+        "--clean-ghosts",
+        action="store_true",
+        help="Remove test-run ghost repos from the telemetry store (dry-run by default).",
+    )
+    measure.add_argument(
+        "--no-dry-run",
+        action="store_false",
+        dest="dry_run",
+        help="Actually delete ghost repos (use with --clean-ghosts).",
+    )
 
     platforms = subparsers.add_parser(
         "platforms",
@@ -347,6 +358,20 @@ def _uninstall(args: argparse.Namespace) -> int:
 
 
 def _measure(args: argparse.Namespace) -> int:
+    if getattr(args, "clean_ghosts", False):
+        from .telemetry import purge_ghost_repos
+        dry_run = getattr(args, "dry_run", True)
+        result = purge_ghost_repos(dry_run=dry_run)
+        action = "Would remove" if dry_run else "Removed"
+        freed_kb = result["bytes_freed"] // 1024
+        print(f"{action} {result['removed']} ghost repo dirs ({freed_kb} KB freed)")
+        if result["dirs"]:
+            for d in result["dirs"]:
+                print(f"  - {d}")
+        if dry_run and result["removed"] > 0:
+            print("Re-run with --no-dry-run to actually delete.")
+        return 0
+
     repo_root = Path(args.repo_root).resolve()
     report = measure_impact(repo_root=repo_root)
 
