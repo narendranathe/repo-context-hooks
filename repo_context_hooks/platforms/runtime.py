@@ -143,7 +143,7 @@ def global_hook_payload(scripts_dir: Path, telemetry: bool = True) -> dict:
             {
                 "matcher": "",
                 "hooks": [
-                    {"type": "command", "command": f"{prefix}python {repo_specs} session-end", "timeout": 10},
+                    {"type": "command", "command": f"{prefix}python {repo_specs} session-end", "timeout": 30},
                 ],
             }
         ],

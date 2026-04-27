@@ -48,7 +48,9 @@ def test_record_event_writes_local_jsonl_outside_repo() -> None:
     assert payload["repo_id"]
     assert payload["repo_contract_score"] > 0
     assert payload["details"]["context_bytes"] == 123
-    assert (event_path.parent / "monitoring.html").exists()
+    # monitoring.html is no longer generated inline by record_event;
+    # it is only produced when the `measure` CLI is explicitly called.
+    assert not (event_path.parent / "monitoring.html").exists()
 
 
 def test_measure_impact_compares_current_state_to_no_contract_baseline() -> None:

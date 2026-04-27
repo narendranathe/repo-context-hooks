@@ -7,6 +7,8 @@ import json
 import os
 import random
 import subprocess
+import tempfile
+import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -87,8 +89,26 @@ def telemetry_events_path(repo_root: Path, base: Path | None = None) -> Path:
     return telemetry_dir(repo_root, base=base) / EVENTS_FILE
 
 
+def _canonical_repo_root(repo_root: Path) -> str:
+    """Return the main worktree root so all worktrees share one session state dir."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--git-common-dir"],
+            capture_output=True, text=True, check=True,
+        )
+        common = Path(result.stdout.strip())
+        if common.name == ".git":
+            return str(common.parent.resolve())
+    except Exception:
+        pass
+    return str(repo_root.resolve())
+
+
 def _session_state_dir(repo_root: Path) -> Path:
-    path = repo_root / _SESSION_STATE_DIR
+    """Session state in OS temp dir, keyed by canonical repo root — survives git clean."""
+    canonical = _canonical_repo_root(repo_root)
+    key = hashlib.sha1(canonical.encode()).hexdigest()[:12]
+    path = Path(tempfile.gettempdir()) / f"rch-session-{key}"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -111,12 +131,24 @@ def session_id(repo_root: Path) -> str:
     return new_id
 
 
-def is_sampled(repo_root: Path, rate: float = 0.1) -> bool:
+def is_sampled(repo_root: Path, rate: float = 1.0) -> bool:
+    # Hard override: env var bypasses all file state and random logic
+    explicit = os.environ.get("REPO_CONTEXT_HOOKS_TELEMETRY")
+    if explicit is not None:
+        return explicit.lower() in ("1", "true", "yes")
+
     state_dir = _session_state_dir(repo_root)
     sampled_file = state_dir / _SESSION_SAMPLED_FILE
 
     if sampled_file.exists():
-        return sampled_file.read_text(encoding="utf-8").strip() == "true"
+        age = time.time() - sampled_file.stat().st_mtime
+        if age <= 8 * 3600:
+            return sampled_file.read_text(encoding="utf-8").strip() == "true"
+        # Stale state from a killed session — re-roll
+        try:
+            sampled_file.unlink()
+        except OSError:
+            pass
 
     rate_str = os.environ.get("REPO_CONTEXT_HOOKS_SAMPLE_RATE")
     if rate_str is not None:
@@ -131,7 +163,7 @@ def is_sampled(repo_root: Path, rate: float = 0.1) -> bool:
 
 
 def clear_session_state(repo_root: Path) -> None:
-    state_dir = repo_root / _SESSION_STATE_DIR
+    state_dir = _session_state_dir(repo_root)
     for name in (_SESSION_ID_FILE, _SESSION_SAMPLED_FILE):
         f = state_dir / name
         if f.exists():
@@ -226,6 +258,7 @@ def record_event(
     source: str = "repo-context-hooks",
     telemetry_base: Path | None = None,
     details: dict[str, Any] | None = None,
+    skip_dashboard: bool = False,
 ) -> Path:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)
@@ -245,10 +278,6 @@ def record_event(
     path = telemetry_events_path(repo_root, base=telemetry_base)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, sort_keys=True) + "\n")
-    try:
-        measure_impact(repo_root, telemetry_base=telemetry_base)
-    except Exception:
-        pass
     return path
 
 

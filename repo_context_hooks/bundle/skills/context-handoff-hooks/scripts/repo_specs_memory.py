@@ -215,6 +215,7 @@ def record_telemetry(repo_root: Path, specs_readme: Path, ul_path: Path) -> None
             EVENT,
             source="repo_specs_memory",
             details={"specs_readme": str(specs_readme), "glossary": str(ul_path)},
+            skip_dashboard=True,
         )
         print(f"- Telemetry: `{event_path}`")
 
