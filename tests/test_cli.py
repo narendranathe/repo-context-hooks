@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 from repo_context_hooks.cli import (
+    _detect_platforms,
     _doctor,
     _init,
     _install,
@@ -644,3 +645,221 @@ def test_install_omits_workspace_section_without_also_repo_hooks(
     out = capsys.readouterr().out
     assert "=== Agent skill install ===" in out
     assert "=== Workspace artifacts ===" not in out
+
+
+# ---------------------------------------------------------------------------
+# _detect_platforms() tests
+# ---------------------------------------------------------------------------
+
+
+def test_detect_platforms_finds_claude_if_dot_claude_exists(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """_detect_platforms returns 'claude' when ~/.claude/ exists."""
+    dot_claude = tmp_path / ".claude"
+    dot_claude.mkdir()
+    monkeypatch.setattr("repo_context_hooks.cli.Path.home", lambda: tmp_path)
+    detected = _detect_platforms()
+    assert "claude" in detected
+
+
+def test_detect_platforms_empty_if_nothing_exists(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """_detect_platforms returns empty list when no agent home dirs exist."""
+    monkeypatch.setattr("repo_context_hooks.cli.Path.home", lambda: tmp_path)
+    detected = _detect_platforms()
+    assert detected == []
+
+
+def test_detect_platforms_finds_multiple(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """_detect_platforms returns all platforms whose home dirs exist."""
+    (tmp_path / ".claude").mkdir()
+    (tmp_path / ".cursor").mkdir()
+    monkeypatch.setattr("repo_context_hooks.cli.Path.home", lambda: tmp_path)
+    detected = _detect_platforms()
+    assert "claude" in detected
+    assert "cursor" in detected
+
+
+# ---------------------------------------------------------------------------
+# _install() auto-detection tests
+# ---------------------------------------------------------------------------
+
+
+def test_install_auto_detects_when_no_platform_arg(
+    monkeypatch,
+    capsys,
+) -> None:
+    """When args.platform is None, _install() auto-detects and installs detected platforms."""
+    tmp_path = _tmp_dir()
+    captured_platforms: list[str] = []
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli._detect_platforms",
+        lambda: ["claude"],
+    )
+
+    def fake_install_platform(
+        platform: str,
+        repo_root,
+        force: bool = False,
+        home=None,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
+        telemetry: bool = True,
+    ):
+        captured_platforms.append(platform)
+        return SimpleNamespace(
+            summary="Claude native support installed.",
+            home_target=None,
+            home_statuses={"context-handoff-hooks": "installed"},
+            repo_statuses={},
+            warnings=(),
+            manual_steps=(),
+        )
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.install_platform",
+        fake_install_platform,
+    )
+
+    args = Namespace(
+        platform=None,
+        force=False,
+        skip_repo_hooks=False,
+        also_repo_hooks=False,
+        no_telemetry=False,
+        repo_root=str(tmp_path),
+    )
+
+    assert _install(args) == 0
+    assert captured_platforms == ["claude"]
+    out = capsys.readouterr().out
+    assert "Auto-detected platforms: claude" in out
+
+
+def test_install_falls_back_to_claude_when_nothing_detected(
+    monkeypatch,
+    capsys,
+) -> None:
+    """When _detect_platforms returns [], _install() defaults to claude."""
+    tmp_path = _tmp_dir()
+    captured_platforms: list[str] = []
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli._detect_platforms",
+        lambda: [],
+    )
+
+    def fake_install_platform(
+        platform: str,
+        repo_root,
+        force: bool = False,
+        home=None,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
+        telemetry: bool = True,
+    ):
+        captured_platforms.append(platform)
+        return SimpleNamespace(
+            summary="Claude native support installed.",
+            home_target=None,
+            home_statuses={"context-handoff-hooks": "installed"},
+            repo_statuses={},
+            warnings=(),
+            manual_steps=(),
+        )
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.install_platform",
+        fake_install_platform,
+    )
+
+    args = Namespace(
+        platform=None,
+        force=False,
+        skip_repo_hooks=False,
+        also_repo_hooks=False,
+        no_telemetry=False,
+        repo_root=str(tmp_path),
+    )
+
+    assert _install(args) == 0
+    assert captured_platforms == ["claude"]
+    out = capsys.readouterr().out
+    assert "No agent home directories detected. Defaulting to --platform claude." in out
+
+
+def test_parser_install_platform_is_optional() -> None:
+    """install subcommand must accept no --platform flag."""
+    parser = build_parser()
+    args = parser.parse_args(["install"])
+    assert args.platform is None
+
+
+def test_parser_install_platform_still_works_with_flag() -> None:
+    """Backward compat: --platform claude must still parse correctly."""
+    parser = build_parser()
+    args = parser.parse_args(["install", "--platform", "claude"])
+    assert args.platform == "claude"
+
+
+def test_install_multi_platform_prints_section_headers(
+    monkeypatch,
+    capsys,
+) -> None:
+    """When multiple platforms detected, section headers use platform names."""
+    tmp_path = _tmp_dir()
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli._detect_platforms",
+        lambda: ["claude", "cursor"],
+    )
+
+    def fake_install_platform(
+        platform: str,
+        repo_root,
+        force: bool = False,
+        home=None,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
+        telemetry: bool = True,
+    ):
+        return SimpleNamespace(
+            summary=f"{platform} installed.",
+            home_target=None,
+            home_statuses={},
+            repo_statuses={},
+            warnings=(),
+            manual_steps=(),
+        )
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.install_platform",
+        fake_install_platform,
+    )
+
+    args = Namespace(
+        platform=None,
+        force=False,
+        skip_repo_hooks=False,
+        also_repo_hooks=False,
+        no_telemetry=False,
+        repo_root=str(tmp_path),
+    )
+
+    assert _install(args) == 0
+    out = capsys.readouterr().out
+    assert "=== Installing for claude ===" in out
+    assert "=== Installing for cursor ===" in out
+    assert "Auto-detected platforms: claude, cursor" in out
+    # Multi-platform: no "=== Agent skill install ===" header
+    assert "=== Agent skill install ===" not in out
+    # doctor hint uses --all-platforms
+    assert "doctor --all-platforms" in out

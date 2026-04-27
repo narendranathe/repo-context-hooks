@@ -26,9 +26,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     install.add_argument(
         "--platform",
-        required=True,
+        required=False,
+        default=None,
         choices=supported_platform_ids(),
-        help="Target platform for installation.",
+        help="Target platform for installation. If omitted, auto-detects installed agents.",
     )
     install.add_argument(
         "--repo-root",
@@ -201,6 +202,16 @@ def _platforms(args: argparse.Namespace | None = None) -> int:
     return 0
 
 
+def _detect_platforms() -> list[str]:
+    """Return platform IDs whose agent home directory exists."""
+    home = Path.home()
+    detected = []
+    for platform_id in supported_platform_ids():
+        if (home / f".{platform_id}").is_dir():
+            detected.append(platform_id)
+    return detected
+
+
 def _install(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
     also_repo_hooks = getattr(args, "also_repo_hooks", False)
@@ -210,43 +221,59 @@ def _install(args: argparse.Namespace) -> int:
         print("Repo context skipped: target is not a git repository.")
         also_repo_hooks = False
 
-    result = install_platform(
-        platform=args.platform,
-        repo_root=repo_root,
-        force=args.force,
-        install_repo_context=False,
-        also_repo_hooks=also_repo_hooks,
-        telemetry=telemetry,
-    )
-
-    # --- Agent skill install (always shown) ---
-    print("=== Agent skill install ===")
-    print(result.summary)
-    if result.home_target is not None:
-        print(f"Installed platform skills to: {result.home_target}")
-    if result.home_statuses:
-        for name, status in result.home_statuses.items():
-            print(f"- {name}: {status}")
-    for warning in result.warnings:
-        print(f"Warning: {warning}")
-    for step in result.manual_steps:
-        print(f"Manual: {step}")
-
-    # --- Workspace artifacts (only shown when --also-repo-hooks is passed) ---
-    if also_repo_hooks:
-        print("=== Workspace artifacts ===")
-        if result.repo_statuses:
-            for name, status in result.repo_statuses.items():
-                print(f"- {name}: {status}")
+    # Determine which platforms to install
+    if args.platform:
+        platforms_to_install = [args.platform]
+    else:
+        platforms_to_install = _detect_platforms()
+        if not platforms_to_install:
+            # Fall back to claude if nothing detected
+            platforms_to_install = ["claude"]
+            print("No agent home directories detected. Defaulting to --platform claude.")
         else:
-            print("No workspace artifacts installed.")
+            print(f"Auto-detected platforms: {', '.join(platforms_to_install)}")
+
+    # Install each platform
+    for platform in platforms_to_install:
+        if len(platforms_to_install) > 1:
+            print(f"\n=== Installing for {platform} ===")
+        result = install_platform(
+            platform=platform,
+            repo_root=repo_root,
+            force=args.force,
+            install_repo_context=False,
+            also_repo_hooks=also_repo_hooks,
+            telemetry=telemetry,
+        )
+        if len(platforms_to_install) == 1:
+            print("=== Agent skill install ===")
+        print(result.summary)
+        if result.home_target is not None:
+            print(f"Installed platform skills to: {result.home_target}")
+        if result.home_statuses:
+            for name, status in result.home_statuses.items():
+                print(f"- {name}: {status}")
+        for warning in result.warnings:
+            print(f"Warning: {warning}")
+        for step in result.manual_steps:
+            print(f"Manual: {step}")
+        if also_repo_hooks:
+            print("=== Workspace artifacts ===")
+            if result.repo_statuses:
+                for name, status in result.repo_statuses.items():
+                    print(f"- {name}: {status}")
+            else:
+                print("No workspace artifacts installed.")
 
     # --- What happens next (first-run guidance) ---
     print("")
     print("=== What happens next ===")
     print("Every session will now start with workspace context from specs/README.md")
     print("Run `repo-context-hooks init` in any repo to set up a workspace contract")
-    print(f"Run `repo-context-hooks doctor --platform {args.platform}` to check setup health")
+    if len(platforms_to_install) == 1:
+        print(f"Run `repo-context-hooks doctor --platform {platforms_to_install[0]}` to check setup health")
+    else:
+        print("Run `repo-context-hooks doctor --all-platforms` to check setup health")
     print("Run `repo-context-hooks measure` to see continuity evidence over time")
 
     return 0
