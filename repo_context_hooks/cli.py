@@ -241,6 +241,14 @@ def _install(args: argparse.Namespace) -> int:
         else:
             print("No workspace artifacts installed.")
 
+    # --- What happens next (first-run guidance) ---
+    print("")
+    print("=== What happens next ===")
+    print("Every session will now start with workspace context from specs/README.md")
+    print("Run `repo-context-hooks init` in any repo to set up a workspace contract")
+    print(f"Run `repo-context-hooks doctor --platform {args.platform}` to check setup health")
+    print("Run `repo-context-hooks measure` to see continuity evidence over time")
+
     return 0
 
 
