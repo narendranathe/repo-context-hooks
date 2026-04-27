@@ -1,0 +1,29 @@
+site_name: repo-context-hooks
+site_description: Hook-based repo context continuity for coding agents
+site_url: https://narendranathe.github.io/repo-context-hooks/
+repo_url: https://github.com/narendranathe/repo-context-hooks
+repo_name: narendranathe/repo-context-hooks
+
+theme:
+  name: material
+  palette:
+    primary: indigo
+    accent: indigo
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - search.suggest
+
+nav:
+  - Home: index.md
+  - Install Guide: architecture.md
+  - Platforms: platforms.md
+  - Platform Playbooks: platform-playbooks.md
+  - Telemetry Policy: telemetry-policy.md
+  - Monitoring: monitoring.md
+  - Competitive Analysis: competitive-analysis.md
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - admonition
