@@ -62,6 +62,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Bake REPO_CONTEXT_HOOKS_TELEMETRY=0 into hook command strings (local opt-out).",
     )
+    install.add_argument(
+        "--dedup",
+        action="store_true",
+        help="Remove duplicate hook entries from settings.json before installing.",
+    )
 
     init = subparsers.add_parser(
         "init",
@@ -231,6 +236,12 @@ def _install(args: argparse.Namespace) -> int:
         print("Repo context skipped: target is not a git repository.")
         also_repo_hooks = False
 
+    # Auto-dedup on every install (also triggered explicitly by --dedup flag)
+    from .platforms.runtime import deduplicate_hooks
+    dedup_result = deduplicate_hooks(Path.home())
+    if dedup_result.get("removed", 0) > 0:
+        print(f"Removed {dedup_result['removed']} duplicate hook entries")
+
     # Determine which platforms to install
     if args.platform:
         platforms_to_install = [args.platform]
@@ -343,7 +354,7 @@ def _measure(args: argparse.Namespace) -> int:
     show_badge = getattr(args, "badge", False) or badge_out is not None
     if show_badge:
         from .badge import render_badge
-        svg = render_badge(report.current_score)
+        svg = render_badge(report.current_score, report.usability.lifecycle_coverage)
         if badge_out:
             Path(badge_out).write_text(svg, encoding="utf-8")
             print(f"Badge written to: {badge_out}")

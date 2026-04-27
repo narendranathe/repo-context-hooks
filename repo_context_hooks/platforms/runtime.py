@@ -11,6 +11,10 @@ from typing import Dict, Iterable, Tuple
 SKILL_PLATFORMS = ("claude",)
 
 
+def _normalise_hook_cmd(cmd: str) -> str:
+    return cmd.replace("\\", "/").strip()
+
+
 def bundle_root() -> Path:
     return Path(__file__).resolve().parents[1] / "bundle"
 
@@ -169,8 +173,9 @@ def install_global_hooks(
             existing_list = []
         for new_group in new_groups:
             new_cmds = {h.get("command", "") for h in new_group.get("hooks", [])}
+            new_cmds_norm = {_normalise_hook_cmd(c) for c in new_cmds}
             already_installed = any(
-                h.get("command", "") in new_cmds
+                _normalise_hook_cmd(h.get("command", "")) in new_cmds_norm
                 for eg in existing_list
                 if isinstance(eg, dict)
                 for h in eg.get("hooks", [])
@@ -184,6 +189,47 @@ def install_global_hooks(
     settings["hooks"] = existing_hooks
     _save_json(settings_path, settings)
     return {"settings.json": "installed"}
+
+
+def deduplicate_hooks(
+    agent_home: Path,
+    skill_name: str = "context-handoff-hooks",
+) -> dict:
+    """Remove duplicate hook entries from settings.json. Returns {"removed": N}."""
+    settings_path = agent_home / ".claude" / "settings.json"
+    settings = _load_json(settings_path)
+    hooks = settings.get("hooks", {})
+    if not isinstance(hooks, dict):
+        return {"removed": 0}
+
+    removed = 0
+    cleaned: dict = {}
+    for event, groups in hooks.items():
+        if not isinstance(groups, list):
+            cleaned[event] = groups
+            continue
+        seen_cmds: set[str] = set()
+        new_groups = []
+        for group in groups:
+            if not isinstance(group, dict):
+                new_groups.append(group)
+                continue
+            new_hook_list = []
+            for h in group.get("hooks", []):
+                norm = _normalise_hook_cmd(h.get("command", ""))
+                if norm and norm in seen_cmds:
+                    removed += 1
+                else:
+                    seen_cmds.add(norm)
+                    new_hook_list.append(h)
+            if new_hook_list:
+                new_groups.append({**group, "hooks": new_hook_list})
+        cleaned[event] = new_groups
+
+    if removed > 0:
+        settings["hooks"] = cleaned
+        _save_json(settings_path, settings)
+    return {"removed": removed}
 
 
 def hook_payload(repo_root: Path) -> dict:

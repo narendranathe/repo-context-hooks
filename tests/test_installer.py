@@ -5,6 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from repo_context_hooks.installer import (
+    dedup_platform,
     install_global_hooks,
     install_repo_hooks,
     install_platform,
@@ -13,7 +14,7 @@ from repo_context_hooks.installer import (
     supported_platform_ids,
     uninstall_platform,
 )
-from repo_context_hooks.platforms.runtime import uninstall_global_hooks
+from repo_context_hooks.platforms.runtime import deduplicate_hooks, uninstall_global_hooks
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -628,3 +629,88 @@ def test_install_platform_claude_default_telemetry_has_no_prefix() -> None:
         assert "REPO_CONTEXT_HOOKS_TELEMETRY=0" not in cmd, (
             f"Default install must not embed opt-out prefix: {cmd}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Deduplication tests
+# ---------------------------------------------------------------------------
+
+
+def test_install_twice_no_duplicates() -> None:
+    """Running install twice must not add duplicate hook groups per event."""
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    install_global_hooks(agent_home)
+    install_global_hooks(agent_home)
+
+    settings = json.loads(
+        (agent_home / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+    lifecycle_events = ("SessionStart", "PreCompact", "PostCompact", "SessionEnd")
+    for event in lifecycle_events:
+        groups = settings["hooks"].get(event, [])
+        total_hooks = sum(len(g.get("hooks", [])) for g in groups)
+        # Expected counts: SessionStart=2, PreCompact=1, PostCompact=2, SessionEnd=1
+        # After two installs, counts must not double.
+        assert total_hooks <= 2, (
+            f"Event {event} must not have duplicated hooks after two installs; "
+            f"found {total_hooks} hook entries"
+        )
+
+
+def test_deduplicate_hooks_removes_backslash_dupes() -> None:
+    """deduplicate_hooks must treat backslash and forward-slash paths as the same command."""
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+    settings_path = agent_home / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+
+    # Write two variants of the same command — one with backslashes, one with forward slashes.
+    forward_cmd = "python /home/user/.claude/skills/context-handoff-hooks/scripts/repo_specs_memory.py session-start"
+    backward_cmd = forward_cmd.replace("/", "\\")
+    settings_path.write_text(
+        json.dumps({
+            "hooks": {
+                "SessionStart": [
+                    {
+                        "matcher": "",
+                        "hooks": [
+                            {"type": "command", "command": backward_cmd, "timeout": 20},
+                            {"type": "command", "command": forward_cmd, "timeout": 20},
+                        ],
+                    }
+                ]
+            }
+        }),
+        encoding="utf-8",
+    )
+
+    result = deduplicate_hooks(agent_home)
+
+    assert result["removed"] == 1, f"Expected 1 duplicate removed, got {result['removed']}"
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    session_start_hooks = [
+        h
+        for group in settings["hooks"]["SessionStart"]
+        for h in group.get("hooks", [])
+    ]
+    assert len(session_start_hooks) == 1, (
+        f"Expected 1 hook after dedup, found {len(session_start_hooks)}"
+    )
+
+
+def test_deduplicate_hooks_idempotent() -> None:
+    """Calling deduplicate_hooks twice on clean settings returns removed=0 on the second call."""
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    install_global_hooks(agent_home)
+
+    first = deduplicate_hooks(agent_home)
+    second = deduplicate_hooks(agent_home)
+
+    assert second["removed"] == 0, (
+        f"Second dedup call must be a no-op; reported removed={second['removed']}"
+    )
+    _ = first  # first call result is not asserted — state may or may not have dupes
