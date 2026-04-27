@@ -219,3 +219,40 @@ def test_purge_ghost_repos_keeps_non_ghost_names(tmp_path):
     result = purge_ghost_repos(telemetry_base=tmp_path, dry_run=False)
     assert result["removed"] == 0
     assert real_repo.exists()
+
+
+# --- forecast_activity tests ---
+
+def test_forecast_empty_telemetry(tmp_path):
+    from repo_context_hooks.telemetry import forecast_activity
+    f = forecast_activity(tmp_path, telemetry_base=tmp_path / "telem")
+    assert f.daily_rate == 0.0
+    assert f.projected_events == 0
+    assert f.confidence == "low"
+
+
+def test_forecast_known_event_rate(tmp_path, monkeypatch):
+    import datetime, json
+    from repo_context_hooks.telemetry import forecast_activity, EVENTS_FILE, telemetry_events_path
+
+    telem_base = tmp_path / "telem"
+    events_file = telemetry_events_path(tmp_path, base=telem_base)
+    # 7 events on 7 distinct days = rate of 1/day
+    lines = []
+    for i in range(7):
+        day = (datetime.date(2026, 1, 1) + datetime.timedelta(days=i)).isoformat()
+        event = {"event_name": "session-start", "timestamp": f"{day}T12:00:00+00:00"}
+        lines.append(json.dumps(event))
+    events_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    f = forecast_activity(tmp_path, telemetry_base=telem_base)
+    assert f.confidence == "high"
+    assert f.daily_rate == 1.0
+    assert f.projected_events == 30
+
+
+def test_forecast_to_dict_has_required_keys(tmp_path):
+    from repo_context_hooks.telemetry import forecast_activity
+    f = forecast_activity(tmp_path, telemetry_base=tmp_path / "telem")
+    d = f.to_dict()
+    assert set(d) >= {"daily_rate", "projected_events", "projected_active_days", "confidence", "week_series"}

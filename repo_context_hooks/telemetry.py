@@ -1011,6 +1011,92 @@ def write_public_monitoring_snapshot(
     }
 
 
+@dataclass(frozen=True)
+class ForecastReport:
+    daily_rate: float
+    projected_events: int
+    projected_active_days: int
+    confidence: str  # "high" | "medium" | "low"
+    week_series: tuple[int, ...]
+
+    def render(self) -> str:
+        lines = [
+            f"30-day forecast (confidence: {self.confidence})",
+            f"  Daily rate: {self.daily_rate:.1f} events/day",
+            f"  Projected events (30d): {self.projected_events}",
+            f"  Projected active days (30d): {self.projected_active_days}",
+            "  Week breakdown:",
+        ]
+        for i, count in enumerate(self.week_series, 1):
+            lines.append(f"    Week {i}: {count} events")
+        return "\n".join(lines)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "daily_rate": self.daily_rate,
+            "projected_events": self.projected_events,
+            "projected_active_days": self.projected_active_days,
+            "confidence": self.confidence,
+            "week_series": list(self.week_series),
+        }
+
+
+def forecast_activity(
+    repo_root: Path,
+    days: int = 30,
+    telemetry_base: Path | None = None,
+) -> ForecastReport:
+    """Project future activity from the rolling 7-day average event rate."""
+    path = telemetry_events_path(repo_root, base=telemetry_base)
+    events = _read_events(path)
+
+    if not events:
+        return ForecastReport(
+            daily_rate=0.0,
+            projected_events=0,
+            projected_active_days=0,
+            confidence="low",
+            week_series=tuple(0 for _ in range(days // 7 + (1 if days % 7 else 0))),
+        )
+
+    daily_counts: dict[str, int] = {}
+    for event in events:
+        ts = _parse_timestamp(event.get("timestamp"))
+        if ts is None:
+            continue
+        day_key = ts.date().isoformat()
+        daily_counts[day_key] = daily_counts.get(day_key, 0) + 1
+
+    num_days = len(daily_counts)
+    sorted_days = sorted(daily_counts.keys(), reverse=True)
+    window_days = sorted_days[:7]
+    window_total = sum(daily_counts[d] for d in window_days)
+    window_len = len(window_days)
+    daily_rate = window_total / window_len if window_len > 0 else 0.0
+
+    if num_days >= 7:
+        confidence = "high"
+    elif num_days >= 3:
+        confidence = "medium"
+    else:
+        confidence = "low"
+
+    week_count = days // 7 + (1 if days % 7 else 0)
+    week_size = 7
+    week_series = tuple(round(daily_rate * min(week_size, days - i * week_size)) for i in range(week_count))
+
+    projected_events = round(daily_rate * days)
+    projected_active_days = round(num_days / max(1, len(sorted_days)) * days) if sorted_days else 0
+
+    return ForecastReport(
+        daily_rate=round(daily_rate, 2),
+        projected_events=projected_events,
+        projected_active_days=projected_active_days,
+        confidence=confidence,
+        week_series=week_series,
+    )
+
+
 _GHOST_REPO_NAMES: frozenset[str] = frozenset({"repo", "tmp", "temp", "test"})
 
 

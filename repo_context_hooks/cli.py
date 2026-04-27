@@ -162,6 +162,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Write the SVG badge to this file path (implies --badge).",
     )
     measure.add_argument(
+        "--forecast",
+        action="store_true",
+        help="Show a 30-day activity projection based on current daily rate.",
+    )
+    measure.add_argument(
         "--clean-ghosts",
         action="store_true",
         help="Remove test-run ghost repos from the telemetry store (dry-run by default).",
@@ -373,6 +378,16 @@ def _measure(args: argparse.Namespace) -> int:
         return 0
 
     repo_root = Path(args.repo_root).resolve()
+
+    if getattr(args, "forecast", False):
+        from .telemetry import forecast_activity
+        forecast = forecast_activity(repo_root)
+        if getattr(args, "json", False):
+            _print_json(forecast.to_dict())
+        else:
+            print(forecast.render())
+        return 0
+
     report = measure_impact(repo_root=repo_root)
 
     badge_out = getattr(args, "badge_out", None)
