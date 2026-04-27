@@ -149,3 +149,45 @@ jobs:
             exit 1
           }
           Write-Host "No backslash paths - OK"
+
+  platform-matrix:
+    name: Platform matrix (${{ matrix.platform }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [claude, cursor, codex, replit, windsurf, lovable, openclaw, ollama, kimi]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: Install platform ${{ matrix.platform }} and run doctor
+        shell: bash
+        run: |
+          AGENT_HOME=$(mktemp -d)
+          REPO_ROOT=$(mktemp -d)
+          git init "$REPO_ROOT"
+          git -C "$REPO_ROOT" config user.email "ci@test.local"
+          git -C "$REPO_ROOT" config user.name "CI"
+          python -c "
+          from pathlib import Path
+          from repo_context_hooks.installer import install_platform
+
+          platform = '${{ matrix.platform }}'
+          home = Path('$AGENT_HOME')
+          repo = Path('$REPO_ROOT')
+
+          result = install_platform(platform, repo_root=repo, home=home, force=True)
+          print(f'Platform: {platform}')
+          print(f'Summary: {result.summary}')
+          print(f'Home statuses: {result.home_statuses}')
+          print(f'Warnings: {result.warnings}')
+          "
+          echo "Install succeeded for ${{ matrix.platform }}"
