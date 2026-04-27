@@ -957,7 +957,7 @@
 <h1 id="repo-context-hooks-design">Repo Context Hooks Design</h1>
 <p>Date: 2026-04-17
 Status: Proposed
-Author: Codex with Narendranath Edara</p>
+Author:  Narendranath Edara</p>
 <h2 id="summary">Summary</h2>
 <p>This spec repositions the current <code>repohandoff</code> package into a clearer, community-shareable product named <code>repo-context-hooks</code>.</p>
 <p>The product solves a narrow but painful problem: coding-agent sessions often lose tactical project context across restarts, compaction, and handoffs. Claude Code's documentation already exposes the right lifecycle primitives through <code>SessionStart</code>, <code>PreCompact</code>, and <code>SessionEnd</code>; this project packages those ideas into a repo-local workflow that teams can install, understand, and extend.</p>
