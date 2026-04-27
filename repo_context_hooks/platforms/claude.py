@@ -63,10 +63,11 @@ class ClaudeAdapter:
         home: Path | None = None,
         install_repo_context: bool = False,
         also_repo_hooks: bool = False,
+        telemetry: bool = True,
     ) -> InstallResult:
         h = home or Path.home()
         home_target, home_statuses = install_skills_bundle("claude", force=force, home=h)
-        global_statuses = install_global_hooks(h)
+        global_statuses = install_global_hooks(h, telemetry=telemetry)
         home_statuses = {**home_statuses, **global_statuses}
 
         repo_statuses: dict[str, str] = {}

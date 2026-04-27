@@ -49,12 +49,26 @@ def install_platform(
     home: Path | None = None,
     install_repo_context: bool = False,
     also_repo_hooks: bool = False,
+    telemetry: bool = True,
 ) -> InstallResult:
     adapter = get_registry().get(platform)
-    return adapter.install(
-        repo_root=repo_root.resolve(),
-        force=force,
-        home=home,
-        install_repo_context=install_repo_context,
-        also_repo_hooks=also_repo_hooks,
-    )
+    # Pass telemetry only to adapters that accept it (ClaudeAdapter does;
+    # partial-support adapters use a fixed signature without telemetry).
+    try:
+        return adapter.install(
+            repo_root=repo_root.resolve(),
+            force=force,
+            home=home,
+            install_repo_context=install_repo_context,
+            also_repo_hooks=also_repo_hooks,
+            telemetry=telemetry,
+        )
+    except TypeError:
+        # Adapter does not accept telemetry kwarg — fall back without it.
+        return adapter.install(
+            repo_root=repo_root.resolve(),
+            force=force,
+            home=home,
+            install_repo_context=install_repo_context,
+            also_repo_hooks=also_repo_hooks,
+        )

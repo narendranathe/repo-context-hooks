@@ -56,6 +56,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Overwrite existing installed artifacts.",
     )
+    install.add_argument(
+        "--no-telemetry",
+        action="store_true",
+        help="Bake REPO_CONTEXT_HOOKS_TELEMETRY=0 into hook command strings (local opt-out).",
+    )
 
     init = subparsers.add_parser(
         "init",
@@ -199,6 +204,7 @@ def _platforms(args: argparse.Namespace | None = None) -> int:
 def _install(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
     also_repo_hooks = getattr(args, "also_repo_hooks", False)
+    telemetry = not getattr(args, "no_telemetry", False)
 
     if also_repo_hooks and not (repo_root / ".git").exists():
         print("Repo context skipped: target is not a git repository.")
@@ -210,6 +216,7 @@ def _install(args: argparse.Namespace) -> int:
         force=args.force,
         install_repo_context=False,
         also_repo_hooks=also_repo_hooks,
+        telemetry=telemetry,
     )
 
     # --- Agent skill install (always shown) ---

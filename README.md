@@ -8,89 +8,45 @@ Agent-level continuity skill for coding agents.
 
 ![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
 
-`repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. It runs at the agent runtime level - installed once to `~/.claude/skills/`, `~/.codex/skills/`, or equivalent agent home - and uses repository workspace contracts as its durable persistence layer.
+`repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. Install once to agent home — every workspace you open picks it up automatically.
 
 The goal: a new agent session should start with full project context without rediscovering everything from scratch.
 
-## Install as Agent Skill (primary path)
+## Install
 
 ```bash
-# Claude Code
-python -m pip install repo-context-hooks
+pip install repo-context-hooks
 repo-context-hooks install --platform claude
-
-# Codex
-repo-context-hooks install --platform codex
 ```
 
-This installs the skill to agent home (`~/.claude/skills/context-handoff-hooks/`). Once installed, every Claude Code session in any workspace picks up the continuity skill automatically.
+That's the full install. Hooks write to `~/.claude/settings.json` and activate in every workspace from that point on.
 
-## Set Up Workspace Contract (per-repo, optional)
+Need per-repo hooks too?
 
 ```bash
-python -m pip install -e .
+repo-context-hooks install --platform claude --also-repo-hooks
+```
+
+## Set Up a Workspace Contract (per-repo)
+
+```bash
 repo-context-hooks init          # scaffold specs/README.md, UBIQUITOUS_LANGUAGE.md
-repo-context-hooks doctor        # verify workspace contract health
+repo-context-hooks doctor        # verify contract health
 repo-context-hooks recommend     # suggest next steps
 ```
 
-`doctor` answers "is this workspace contract healthy?" `recommend` answers "what should the agent do next in this workspace?"
+`doctor` answers "is this workspace contract healthy?" `recommend` answers "what should the agent do next?"
 
-## Pick Your Platform
-
-Run one platform install command after the repo contract is healthy.
-
-Claude:
-
-```bash
-repo-context-hooks install --platform claude
-```
-
-Cursor:
-
-```bash
-repo-context-hooks install --platform cursor
-```
-
-Codex:
+## Other Platforms
 
 ```bash
 repo-context-hooks install --platform codex
-```
-
-Replit:
-
-```bash
+repo-context-hooks install --platform cursor
 repo-context-hooks install --platform replit
-```
-
-Windsurf:
-
-```bash
 repo-context-hooks install --platform windsurf
-```
-
-Lovable:
-
-```bash
 repo-context-hooks install --platform lovable
-```
-
-OpenClaw:
-
-```bash
 repo-context-hooks install --platform openclaw
-```
-
-Ollama:
-
-```bash
 repo-context-hooks install --platform ollama
-```
-
-Kimi:
-
-```bash
 repo-context-hooks install --platform kimi
 ```
 
@@ -108,120 +64,80 @@ The old approach (install a hook per repo) means every new workspace starts from
 
 ## How It Works
 
-The continuity loop is agent-first:
-
-1. agent skill loads at session start and reads workspace contract from repo
-2. captures tactical state into `specs/README.md` before compact or handoff
-3. reloads from repo state at next session start - not from fragile session memory
-4. leaves the next session a cleaner handoff than the one inherited
-
-Claude exposes the full lifecycle surface. Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi benefit from the same workspace contract through narrower platform-specific surfaces.
+1. Agent skill loads at session start and reads workspace contract from repo
+2. Captures tactical state into `specs/README.md` before compact or handoff
+3. Reloads from repo state at next session start - not from fragile session memory
+4. Leaves the next session a cleaner handoff than the one inherited
 
 ![Lifecycle flow diagram showing an interrupted bugfix, a checkpoint written to specs/README.md, and the next session resuming from repo state](assets/diagrams/lifecycle-flow.svg)
 
-## Supported Today
+## Supported Platforms
 
-The public support story is intentionally narrow and explicit. These are the platforms currently supported:
+| Platform | Support | Notes |
+|----------|---------|-------|
+| Claude | `native` | Full lifecycle hooks, session transitions, continuity checkpoints |
+| Codex | `partial` | Repo-native continuity via `AGENTS.md`; `install_global_hooks()` writes marker to `~/.codex/settings.json` |
+| Cursor | `partial` | Repo contract and instruction surfaces; no Claude-style lifecycle parity |
+| Replit | `partial` | `replit.md` and repo contract; no native lifecycle hooks |
+| Windsurf | `partial` | Root `AGENTS.md` and `.windsurf/rules`; no native lifecycle hooks |
+| Lovable | `partial` | Repo knowledge exports plus `AGENTS.md`; requires manual UI steps |
+| OpenClaw | `partial` | `SOUL.md`, `USER.md`, `TOOLS.md`, `AGENTS.md`; requires manual workspace config |
+| Ollama | `partial` | `Modelfile.repo-context` for local-model workflows |
+| Kimi | `partial` | Root `AGENTS.md` for Kimi Code CLI; no generic API or lifecycle hooks |
 
-- Claude (`native`): strongest support for repo hooks, session transitions, and continuity checkpoints.
-- Cursor (`partial`): supports the repo contract and instruction surfaces, but not full Claude-style lifecycle parity.
-- Codex (`partial`): supports repo-native continuity through checked-in repo docs and `AGENTS.md`, but not native lifecycle hooks.
-- Replit (`partial`): supports repo-native continuity through `replit.md` and the repo contract, but not native lifecycle hooks or compact automation.
-- Windsurf (`partial`): supports repo-native continuity through root `AGENTS.md` and `.windsurf/rules`, but not native lifecycle hooks or compact automation.
-- Lovable (`partial`): supports repo-owned knowledge exports plus `AGENTS.md`, but still requires manual Project Knowledge and Workspace Knowledge steps in the Lovable UI.
-- OpenClaw (`partial`): supports repo-root workspace files such as `SOUL.md`, `USER.md`, `TOOLS.md`, and `AGENTS.md`, but still requires manual OpenClaw workspace configuration.
-- Ollama (`partial`): supports a repo-owned `Modelfile.repo-context` for local-model workflows, but Ollama itself is not a repo-aware agent runtime.
-- Kimi (`partial`): supports root `AGENTS.md` for Kimi Code CLI project context, but not generic Kimi API setup or lifecycle hooks.
+See [docs/platforms.md](docs/platforms.md) for the full support matrix.
 
-## Platform Support
-
-The support tiers are `native`, `partial`, and `planned`.
-
-See [docs/platforms.md](docs/platforms.md) for the support matrix, platform-specific caveats, and the current claim boundary. The short version is that we do not claim universal agent support, and we do not claim hook parity or compact automation for Cursor, Codex, Replit, Windsurf, Lovable, OpenClaw, Ollama, or Kimi.
-
-## Readiness And Recommendations
-
-Use the new repo-first commands together:
+## Readiness and Recommendations
 
 ```bash
 repo-context-hooks doctor --all-platforms
 repo-context-hooks recommend
 ```
 
-- `doctor --all-platforms` prints a compact readiness matrix across the current support matrix.
-- `recommend` ranks the best next setup paths for the current repo, prints the repo signals it used, and gives the exact next install command to run.
-
-That combination keeps the product honest: readiness is verification, recommendation is advice, and neither widens the public support claim.
-
-For scripts, CI, and agent wrappers, add `--json`:
+For scripts and CI:
 
 ```bash
 repo-context-hooks platforms --json
 repo-context-hooks doctor --json
-repo-context-hooks doctor --all-platforms --json
 repo-context-hooks recommend --json
 repo-context-hooks measure --json
 ```
 
 ## Prove Impact
 
-`repo-context-hooks` now includes a local evidence loop so teams can show what continuity changed instead of only claiming it helped.
-
 ```bash
 repo-context-hooks measure
-repo-context-hooks measure --json
 repo-context-hooks measure --snapshot-dir docs/monitoring
 ```
 
-`measure` compares the current repo continuity score against an estimated no-continuity baseline, then reports observed hook and skill events from local JSONL telemetry. Hook scripts write small events to your OS cache by default, outside the git repo. If that cache is unavailable in a sandbox, telemetry falls back to `.repo-context-hooks/`, which `init` adds to `.gitignore`.
-
-Use `--snapshot-dir` when you intentionally want to publish a sanitized dashboard and `history.json` from your local evidence. The snapshot includes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
-
-Use it before and after installing a platform adapter:
-
-```bash
-repo-context-hooks measure
-repo-context-hooks install --platform claude
-# start a new Claude session or run a compact/session-end flow
-repo-context-hooks measure
-```
-
-The output is intentionally operational rather than magical: it shows repo-contract readiness, observed lifecycle events, evidence-log location, and concrete recommendations. See [docs/monitoring.md](docs/monitoring.md) for the metric definitions, privacy boundary, and before/after workflow.
+`measure` compares current repo continuity score against an estimated no-continuity baseline and reports observed hook events from local JSONL telemetry.
 
 Current repo snapshot:
 
 - Score `90`
 - Baseline `20`
 - Uplift `+70`
-- Observed hook events `32`
+- Observed hook events `39`
+- Unique sessions `21`
 - Active days `2`
-- Lifecycle coverage `100%`
+- Lifecycle coverage `25%` (session-start only so far; pre-compact and session-end fire on longer sessions)
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 - Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
 
-Remote telemetry is not enabled in the MVP. Any future community usage metrics must be explicit opt-in and follow [docs/telemetry-policy.md](docs/telemetry-policy.md).
+Remote telemetry is not enabled. Any future community metrics require explicit opt-in per [docs/telemetry-policy.md](docs/telemetry-policy.md).
+
+See [TELEMETRY.md](TELEMETRY.md) for what is collected locally and how to opt out.
 
 ## Telemetry Visibility
 
-The landing-page proof surface is designed to be inspectable, portable, and honest. The repo does not ask users to trust a hidden service; it gives them local telemetry, a generated HTML monitor, and a checked-in JSON snapshot they can visualize anywhere.
-
 | Surface | What it shows | How to use it |
-| --- | --- | --- |
-| [Impact monitor](docs/monitoring/index.html) | Score, uplift, lifecycle coverage, event mix, and recent hook evidence | Open it directly from GitHub or publish it with GitHub Pages |
-| [History JSON](docs/monitoring/history.json) | Time-series score, daily hook events, and usability metrics | Import into Observable Plot, Vega-Lite, Evidence, DuckDB, or a docs site |
-| Local dashboard | Private per-repo `monitoring.html` generated beside the local event log | Run `repo-context-hooks measure` after real agent sessions |
-| Public snapshot | Sanitized dashboard and `history.json` for a README, demo, or adoption note | Run `repo-context-hooks measure --snapshot-dir docs/monitoring` |
-
-Visualization tools that fit the current MVP:
-
-- Observable Plot for a lightweight public notebook over `docs/monitoring/history.json`.
-- Vega-Lite for an embeddable JSON-driven chart in docs or a portfolio case study.
-- GitHub Pages for hosting `docs/monitoring/index.html` without adding a backend.
-- DuckDB or SQLite for local trend analysis once the JSONL log grows across many sessions.
+|---------|--------------|---------------|
+| [Impact monitor](docs/monitoring/index.html) | Score, uplift, lifecycle coverage, event mix | Open from GitHub or publish via GitHub Pages |
+| [History JSON](docs/monitoring/history.json) | Time-series score, daily hook events, usability metrics | Import into Observable Plot, Vega-Lite, DuckDB |
+| Local dashboard | Private per-repo `monitoring.html` from local event log | Run `repo-context-hooks measure` after agent sessions |
+| Public snapshot | Sanitized dashboard for README or docs site | Run `repo-context-hooks measure --snapshot-dir docs/monitoring` |
 
 ## Concrete Stories
-
-The visuals in this repo are about specific interrupted-work situations, not abstract architecture theater.
 
 ### Interrupted Task Recovery
 
@@ -229,11 +145,23 @@ A compact event lands in the middle of a bugfix. The useful checkpoint is writte
 
 ![Repo contract diagram showing the open PR story in README.md, handoff notes in specs/README.md, and a Cursor, Codex, or Replit session re-entering with repo context](assets/diagrams/repo-contract.svg)
 
-### Before And After Handoffs
+### Before and After Handoffs
 
 Without a checked-in continuity contract, teams repeat themselves. With one, the next session can reopen the repo and keep moving.
 
 ![Before and after continuity comparison showing repeated bug explanation versus resuming from checked-in continuity](assets/diagrams/before-after-continuity.svg)
+
+## What's New in v0.3.0
+
+- **Agent-level install** - hooks write to `~/.claude/settings.json` once; active in every workspace automatically
+- **Session metrics** - `session_id` in every telemetry record; `is_sampled()` probabilistic gate (10% default, configurable via `REPO_CONTEXT_HOOKS_SAMPLE_RATE`)
+- **`auto_commit_snapshot()`** - auto-commits `docs/monitoring/history.json` on session end
+- **`--also-repo-hooks` flag** - opt into per-repo hooks alongside agent-level
+- **Graceful degradation** - non-git and no-contract workspaces print helpful messages and exit cleanly
+- **Codex parity** - `install_global_hooks()` for Codex
+- **CI/CD** - GitHub Actions with pytest matrix (Python 3.9-3.12, ubuntu + windows) and OIDC PyPI publish
+
+See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 ## See Also
 
@@ -246,12 +174,13 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 - [Competitive analysis](docs/competitive-analysis.md)
 - [Minimal repo example](examples/minimal-repo/)
 - [Multi-project example](examples/multi-project/)
+- [CHANGELOG](CHANGELOG.md)
 
 ## Development
 
 ```bash
-python -m pip install -e .
-python -m pytest -q --basetemp .pytest-tmp-readme-full
+pip install -e ".[dev]"
+python -m pytest -q
 ```
 
 Pull requests are welcome when they make the repo contract clearer, more durable, or easier to adopt without widening the product claims beyond what the implementation supports.

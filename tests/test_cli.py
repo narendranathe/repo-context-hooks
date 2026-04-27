@@ -95,6 +95,7 @@ def test_install_skips_repo_context_outside_git_repo(
         home=None,
         install_repo_context: bool = False,
         also_repo_hooks: bool = False,
+        telemetry: bool = True,
     ):
         calls.append(also_repo_hooks)
         return SimpleNamespace(
@@ -116,6 +117,7 @@ def test_install_skips_repo_context_outside_git_repo(
         force=False,
         skip_repo_hooks=False,
         also_repo_hooks=True,
+        no_telemetry=False,
         repo_root=str(tmp_path),
     )
 
@@ -140,6 +142,7 @@ def test_install_respects_skip_repo_hooks(
         home=None,
         install_repo_context: bool = False,
         also_repo_hooks: bool = False,
+        telemetry: bool = True,
     ):
         calls.append(also_repo_hooks)
         return SimpleNamespace(
@@ -161,6 +164,7 @@ def test_install_respects_skip_repo_hooks(
         force=False,
         skip_repo_hooks=True,
         also_repo_hooks=False,
+        no_telemetry=False,
         repo_root=str(tmp_path),
     )
 
@@ -463,6 +467,7 @@ def test_install_prints_two_section_output_with_also_repo_hooks(
         home=None,
         install_repo_context: bool = False,
         also_repo_hooks: bool = False,
+        telemetry: bool = True,
     ):
         return SimpleNamespace(
             summary="Claude native support installed.",
@@ -483,6 +488,7 @@ def test_install_prints_two_section_output_with_also_repo_hooks(
         force=False,
         skip_repo_hooks=False,
         also_repo_hooks=True,
+        no_telemetry=False,
         repo_root=str(tmp_path),
     )
 
@@ -492,6 +498,108 @@ def test_install_prints_two_section_output_with_also_repo_hooks(
     assert "=== Workspace artifacts ===" in out
     assert "Claude native support installed." in out
     assert "repo_specs_memory.py: installed" in out
+
+
+def test_parser_install_no_telemetry_flag() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["install", "--platform", "claude", "--no-telemetry"])
+    assert args.no_telemetry is True
+
+
+def test_parser_install_no_telemetry_defaults_false() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["install", "--platform", "claude"])
+    assert args.no_telemetry is False
+
+
+def test_install_passes_telemetry_false_when_no_telemetry_flag(
+    monkeypatch,
+    capsys,
+) -> None:
+    """_install() must pass telemetry=False to install_platform when --no-telemetry is set."""
+    tmp_path = _tmp_dir()
+    captured_telemetry: list[bool] = []
+
+    def fake_install_platform(
+        platform: str,
+        repo_root,
+        force: bool = False,
+        home=None,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
+        telemetry: bool = True,
+    ):
+        captured_telemetry.append(telemetry)
+        return SimpleNamespace(
+            summary="Claude native support installed.",
+            home_target=None,
+            home_statuses={"settings.json": "installed"},
+            repo_statuses={},
+            warnings=(),
+            manual_steps=(),
+        )
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.install_platform",
+        fake_install_platform,
+    )
+
+    args = Namespace(
+        platform="claude",
+        force=False,
+        skip_repo_hooks=False,
+        also_repo_hooks=False,
+        no_telemetry=True,
+        repo_root=str(tmp_path),
+    )
+
+    assert _install(args) == 0
+    assert captured_telemetry == [False], "install_platform must receive telemetry=False"
+
+
+def test_install_passes_telemetry_true_by_default(
+    monkeypatch,
+    capsys,
+) -> None:
+    """_install() must pass telemetry=True when --no-telemetry is absent."""
+    tmp_path = _tmp_dir()
+    captured_telemetry: list[bool] = []
+
+    def fake_install_platform(
+        platform: str,
+        repo_root,
+        force: bool = False,
+        home=None,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
+        telemetry: bool = True,
+    ):
+        captured_telemetry.append(telemetry)
+        return SimpleNamespace(
+            summary="Claude native support installed.",
+            home_target=None,
+            home_statuses={"settings.json": "installed"},
+            repo_statuses={},
+            warnings=(),
+            manual_steps=(),
+        )
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.install_platform",
+        fake_install_platform,
+    )
+
+    args = Namespace(
+        platform="claude",
+        force=False,
+        skip_repo_hooks=False,
+        also_repo_hooks=False,
+        no_telemetry=False,
+        repo_root=str(tmp_path),
+    )
+
+    assert _install(args) == 0
+    assert captured_telemetry == [True], "install_platform must receive telemetry=True by default"
 
 
 def test_install_omits_workspace_section_without_also_repo_hooks(
@@ -507,6 +615,7 @@ def test_install_omits_workspace_section_without_also_repo_hooks(
         home=None,
         install_repo_context: bool = False,
         also_repo_hooks: bool = False,
+        telemetry: bool = True,
     ):
         return SimpleNamespace(
             summary="Claude native support installed.",
@@ -527,6 +636,7 @@ def test_install_omits_workspace_section_without_also_repo_hooks(
         force=False,
         skip_repo_hooks=False,
         also_repo_hooks=False,
+        no_telemetry=False,
         repo_root=str(tmp_path),
     )
 

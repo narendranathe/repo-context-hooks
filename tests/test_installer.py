@@ -504,3 +504,127 @@ def test_uninstall_no_op_when_nothing_installed() -> None:
 
     assert result["context-handoff-hooks"] == "not found"
     assert result["settings.json"] == "not found"
+
+
+# ---------------------------------------------------------------------------
+# --no-telemetry / telemetry=False tests
+# ---------------------------------------------------------------------------
+
+
+def test_global_hook_payload_no_telemetry_prefixes_all_commands() -> None:
+    """global_hook_payload(telemetry=False) must prefix every command with REPO_CONTEXT_HOOKS_TELEMETRY=0."""
+    from repo_context_hooks.platforms.runtime import global_hook_payload
+
+    scripts_dir = Path("/fake/skills/context-handoff-hooks/scripts")
+    payload = global_hook_payload(scripts_dir, telemetry=False)
+
+    all_commands = [
+        hook["command"]
+        for event_hooks in payload.values()
+        for group in event_hooks
+        for hook in group["hooks"]
+    ]
+    assert all_commands, "payload must contain at least one command"
+    for cmd in all_commands:
+        assert cmd.startswith("REPO_CONTEXT_HOOKS_TELEMETRY=0 "), (
+            f"Expected telemetry opt-out prefix on: {cmd}"
+        )
+
+
+def test_global_hook_payload_default_has_no_prefix() -> None:
+    """global_hook_payload() with default telemetry=True must NOT prefix commands."""
+    from repo_context_hooks.platforms.runtime import global_hook_payload
+
+    scripts_dir = Path("/fake/skills/context-handoff-hooks/scripts")
+    payload = global_hook_payload(scripts_dir)
+
+    all_commands = [
+        hook["command"]
+        for event_hooks in payload.values()
+        for group in event_hooks
+        for hook in group["hooks"]
+    ]
+    for cmd in all_commands:
+        assert not cmd.startswith("REPO_CONTEXT_HOOKS_TELEMETRY=0 "), (
+            f"Default payload must not have opt-out prefix: {cmd}"
+        )
+
+
+def test_install_global_hooks_no_telemetry_writes_prefix_to_settings() -> None:
+    """install_global_hooks(telemetry=False) must write prefixed command strings to settings.json."""
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    install_global_hooks(agent_home, telemetry=False)
+
+    settings_path = agent_home / ".claude" / "settings.json"
+    assert settings_path.exists()
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+
+    all_commands = [
+        hook["command"]
+        for event_hooks in settings["hooks"].values()
+        for group in event_hooks
+        for hook in group["hooks"]
+    ]
+    assert all_commands, "settings.json must contain hook commands"
+    for cmd in all_commands:
+        assert cmd.startswith("REPO_CONTEXT_HOOKS_TELEMETRY=0 "), (
+            f"Hook command must carry opt-out prefix when telemetry=False: {cmd}"
+        )
+
+
+def test_install_platform_claude_no_telemetry_writes_prefix() -> None:
+    """install_platform(..., telemetry=False) must bake opt-out prefix into hook commands."""
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+
+    result = install_platform(
+        "claude",
+        repo_root=repo,
+        home=tmp_path / "home",
+        telemetry=False,
+    )
+
+    agent_settings = tmp_path / "home" / ".claude" / "settings.json"
+    assert agent_settings.exists()
+    settings = json.loads(agent_settings.read_text(encoding="utf-8"))
+
+    all_commands = [
+        hook["command"]
+        for event_hooks in settings["hooks"].values()
+        for group in event_hooks
+        for hook in group["hooks"]
+    ]
+    assert all_commands
+    for cmd in all_commands:
+        assert cmd.startswith("REPO_CONTEXT_HOOKS_TELEMETRY=0 "), (
+            f"Installed command must carry opt-out prefix: {cmd}"
+        )
+    assert result.home_statuses.get("settings.json") == "installed"
+
+
+def test_install_platform_claude_default_telemetry_has_no_prefix() -> None:
+    """Default install (telemetry=True) must not add any env-var prefix to hook commands."""
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+
+    install_platform("claude", repo_root=repo, home=tmp_path / "home")
+
+    settings = json.loads(
+        (tmp_path / "home" / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+    all_commands = [
+        hook["command"]
+        for event_hooks in settings["hooks"].values()
+        for group in event_hooks
+        for hook in group["hooks"]
+    ]
+    for cmd in all_commands:
+        assert "REPO_CONTEXT_HOOKS_TELEMETRY=0" not in cmd, (
+            f"Default install must not embed opt-out prefix: {cmd}"
+        )

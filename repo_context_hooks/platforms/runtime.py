@@ -108,16 +108,17 @@ def _save_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-def global_hook_payload(scripts_dir: Path) -> dict:
+def global_hook_payload(scripts_dir: Path, telemetry: bool = True) -> dict:
     repo_specs = (scripts_dir / "repo_specs_memory.py").as_posix()
     session_ctx = (scripts_dir / "session_context.py").as_posix()
+    prefix = "" if telemetry else "REPO_CONTEXT_HOOKS_TELEMETRY=0 "
     return {
         "SessionStart": [
             {
                 "matcher": "",
                 "hooks": [
-                    {"type": "command", "command": f"python {repo_specs} session-start", "timeout": 20},
-                    {"type": "command", "command": f"python {session_ctx} session-start", "timeout": 20},
+                    {"type": "command", "command": f"{prefix}python {repo_specs} session-start", "timeout": 20},
+                    {"type": "command", "command": f"{prefix}python {session_ctx} session-start", "timeout": 20},
                 ],
             }
         ],
@@ -125,7 +126,7 @@ def global_hook_payload(scripts_dir: Path) -> dict:
             {
                 "matcher": "",
                 "hooks": [
-                    {"type": "command", "command": f"python {repo_specs} pre-compact", "timeout": 15},
+                    {"type": "command", "command": f"{prefix}python {repo_specs} pre-compact", "timeout": 15},
                 ],
             }
         ],
@@ -133,8 +134,8 @@ def global_hook_payload(scripts_dir: Path) -> dict:
             {
                 "matcher": "",
                 "hooks": [
-                    {"type": "command", "command": f"python {repo_specs} post-compact", "timeout": 20},
-                    {"type": "command", "command": f"python {session_ctx} post-compact", "timeout": 20},
+                    {"type": "command", "command": f"{prefix}python {repo_specs} post-compact", "timeout": 20},
+                    {"type": "command", "command": f"{prefix}python {session_ctx} post-compact", "timeout": 20},
                 ],
             }
         ],
@@ -142,7 +143,7 @@ def global_hook_payload(scripts_dir: Path) -> dict:
             {
                 "matcher": "",
                 "hooks": [
-                    {"type": "command", "command": f"python {repo_specs} session-end", "timeout": 10},
+                    {"type": "command", "command": f"{prefix}python {repo_specs} session-end", "timeout": 10},
                 ],
             }
         ],
@@ -152,6 +153,7 @@ def global_hook_payload(scripts_dir: Path) -> dict:
 def install_global_hooks(
     agent_home: Path,
     skill_name: str = "context-handoff-hooks",
+    telemetry: bool = True,
 ) -> Dict[str, str]:
     scripts_dir = agent_home / ".claude" / "skills" / skill_name / "scripts"
     settings_path = agent_home / ".claude" / "settings.json"
@@ -159,7 +161,7 @@ def install_global_hooks(
     existing_hooks = settings.get("hooks", {})
     if not isinstance(existing_hooks, dict):
         existing_hooks = {}
-    payload = global_hook_payload(scripts_dir)
+    payload = global_hook_payload(scripts_dir, telemetry=telemetry)
     changed = False
     for event, new_groups in payload.items():
         existing_list = existing_hooks.get(event, [])
