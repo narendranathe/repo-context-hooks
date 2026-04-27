@@ -132,6 +132,8 @@ Then embed it in your README:
 ![context score](docs/badge.svg)
 ```
 
+The badge shows three sections: label | score | lifecycle coverage%. The coverage section turns green at 75%+, yellow at 25-74%, and red below 25%.
+
 The badge uses shields.io flat style and is entirely self-contained - no external dependencies or network requests.
 
 `measure` compares current repo continuity score against an estimated no-continuity baseline and reports observed hook events from local JSONL telemetry.

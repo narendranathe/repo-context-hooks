@@ -62,6 +62,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Bake REPO_CONTEXT_HOOKS_TELEMETRY=0 into hook command strings (local opt-out).",
     )
+    install.add_argument(
+        "--dedup",
+        action="store_true",
+        help="Remove duplicate hook entries from settings.json before installing.",
+    )
 
     init = subparsers.add_parser(
         "init",
@@ -156,6 +161,27 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         help="Write the SVG badge to this file path (implies --badge).",
     )
+    measure.add_argument(
+        "--forecast",
+        action="store_true",
+        help="Show a 30-day activity projection based on current daily rate.",
+    )
+    measure.add_argument(
+        "--branches",
+        action="store_true",
+        help="Show per-branch score and session count, sorted by last seen.",
+    )
+    measure.add_argument(
+        "--clean-ghosts",
+        action="store_true",
+        help="Remove test-run ghost repos from the telemetry store (dry-run by default).",
+    )
+    measure.add_argument(
+        "--no-dry-run",
+        action="store_false",
+        dest="dry_run",
+        help="Actually delete ghost repos (use with --clean-ghosts).",
+    )
 
     platforms = subparsers.add_parser(
         "platforms",
@@ -230,6 +256,12 @@ def _install(args: argparse.Namespace) -> int:
     if also_repo_hooks and not (repo_root / ".git").exists():
         print("Repo context skipped: target is not a git repository.")
         also_repo_hooks = False
+
+    # Auto-dedup on every install (also triggered explicitly by --dedup flag)
+    from .platforms.runtime import deduplicate_hooks
+    dedup_result = deduplicate_hooks(Path.home())
+    if dedup_result.get("removed", 0) > 0:
+        print(f"Removed {dedup_result['removed']} duplicate hook entries")
 
     # Determine which platforms to install
     if args.platform:
@@ -336,14 +368,53 @@ def _uninstall(args: argparse.Namespace) -> int:
 
 
 def _measure(args: argparse.Namespace) -> int:
+    if getattr(args, "clean_ghosts", False):
+        from .telemetry import purge_ghost_repos
+        dry_run = getattr(args, "dry_run", True)
+        result = purge_ghost_repos(dry_run=dry_run)
+        action = "Would remove" if dry_run else "Removed"
+        freed_kb = result["bytes_freed"] // 1024
+        print(f"{action} {result['removed']} ghost repo dirs ({freed_kb} KB freed)")
+        if result["dirs"]:
+            for d in result["dirs"]:
+                print(f"  - {d}")
+        if dry_run and result["removed"] > 0:
+            print("Re-run with --no-dry-run to actually delete.")
+        return 0
+
     repo_root = Path(args.repo_root).resolve()
+
+    if getattr(args, "forecast", False):
+        from .telemetry import forecast_activity
+        forecast = forecast_activity(repo_root)
+        if getattr(args, "json", False):
+            _print_json(forecast.to_dict())
+        else:
+            print(forecast.render())
+        return 0
+
+    if getattr(args, "branches", False):
+        from .telemetry import branch_scores
+        stats = branch_scores(repo_root)
+        if getattr(args, "json", False):
+            _print_json([s.to_dict() for s in stats])
+        else:
+            if not stats:
+                print("No branch data found.")
+            else:
+                print(f"{'Branch':<30} {'Sessions':>8} {'Avg Score':>9} {'Last Seen'}")
+                print("-" * 65)
+                for s in stats:
+                    print(f"{s.branch:<30} {s.session_count:>8} {s.avg_score:>9} {s.last_seen[:10]}")
+        return 0
+
     report = measure_impact(repo_root=repo_root)
 
     badge_out = getattr(args, "badge_out", None)
     show_badge = getattr(args, "badge", False) or badge_out is not None
     if show_badge:
         from .badge import render_badge
-        svg = render_badge(report.current_score)
+        svg = render_badge(report.current_score, report.usability.lifecycle_coverage)
         if badge_out:
             Path(badge_out).write_text(svg, encoding="utf-8")
             print(f"Badge written to: {badge_out}")

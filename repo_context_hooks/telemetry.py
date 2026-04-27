@@ -7,6 +7,8 @@ import json
 import os
 import random
 import subprocess
+import tempfile
+import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +18,7 @@ from typing import Any
 EVENTS_FILE = "events.jsonl"
 _SESSION_ID_FILE = "current-session-id"
 _SESSION_SAMPLED_FILE = "current-session-sampled"
+_SESSION_START_TS_FILE = "current-session-start-ts"
 _SESSION_STATE_DIR = ".repo-context-hooks"
 
 
@@ -87,8 +90,26 @@ def telemetry_events_path(repo_root: Path, base: Path | None = None) -> Path:
     return telemetry_dir(repo_root, base=base) / EVENTS_FILE
 
 
+def _canonical_repo_root(repo_root: Path) -> str:
+    """Return the main worktree root so all worktrees share one session state dir."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--git-common-dir"],
+            capture_output=True, text=True, check=True,
+        )
+        common = Path(result.stdout.strip())
+        if common.name == ".git":
+            return str(common.parent.resolve())
+    except Exception:
+        pass
+    return str(repo_root.resolve())
+
+
 def _session_state_dir(repo_root: Path) -> Path:
-    path = repo_root / _SESSION_STATE_DIR
+    """Session state in OS temp dir, keyed by canonical repo root — survives git clean."""
+    canonical = _canonical_repo_root(repo_root)
+    key = hashlib.sha1(canonical.encode()).hexdigest()[:12]
+    path = Path(tempfile.gettempdir()) / f"rch-session-{key}"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -111,12 +132,24 @@ def session_id(repo_root: Path) -> str:
     return new_id
 
 
-def is_sampled(repo_root: Path, rate: float = 0.1) -> bool:
+def is_sampled(repo_root: Path, rate: float = 1.0) -> bool:
+    # Hard override: env var bypasses all file state and random logic
+    explicit = os.environ.get("REPO_CONTEXT_HOOKS_TELEMETRY")
+    if explicit is not None:
+        return explicit.lower() in ("1", "true", "yes")
+
     state_dir = _session_state_dir(repo_root)
     sampled_file = state_dir / _SESSION_SAMPLED_FILE
 
     if sampled_file.exists():
-        return sampled_file.read_text(encoding="utf-8").strip() == "true"
+        age = time.time() - sampled_file.stat().st_mtime
+        if age <= 8 * 3600:
+            return sampled_file.read_text(encoding="utf-8").strip() == "true"
+        # Stale state from a killed session — re-roll
+        try:
+            sampled_file.unlink()
+        except OSError:
+            pass
 
     rate_str = os.environ.get("REPO_CONTEXT_HOOKS_SAMPLE_RATE")
     if rate_str is not None:
@@ -130,9 +163,31 @@ def is_sampled(repo_root: Path, rate: float = 0.1) -> bool:
     return decision
 
 
+def record_session_start_time(repo_root: Path) -> None:
+    """Write an ISO timestamp to state dir so session-end can compute duration."""
+    ts = dt.datetime.now(dt.timezone.utc).isoformat()
+    (_session_state_dir(repo_root) / _SESSION_START_TS_FILE).write_text(ts, encoding="utf-8")
+
+
+def read_session_duration_minutes(repo_root: Path) -> int | None:
+    """Return elapsed minutes since session-start, or None if no start timestamp found."""
+    ts_file = _session_state_dir(repo_root) / _SESSION_START_TS_FILE
+    if not ts_file.exists():
+        return None
+    try:
+        raw = ts_file.read_text(encoding="utf-8").strip()
+        start = dt.datetime.fromisoformat(raw)
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=dt.timezone.utc)
+        delta = dt.datetime.now(dt.timezone.utc) - start
+        return max(0, round(delta.total_seconds() / 60))
+    except Exception:
+        return None
+
+
 def clear_session_state(repo_root: Path) -> None:
-    state_dir = repo_root / _SESSION_STATE_DIR
-    for name in (_SESSION_ID_FILE, _SESSION_SAMPLED_FILE):
+    state_dir = _session_state_dir(repo_root)
+    for name in (_SESSION_ID_FILE, _SESSION_SAMPLED_FILE, _SESSION_START_TS_FILE):
         f = state_dir / name
         if f.exists():
             try:
@@ -226,11 +281,13 @@ def record_event(
     source: str = "repo-context-hooks",
     telemetry_base: Path | None = None,
     details: dict[str, Any] | None = None,
+    skip_dashboard: bool = False,
+    duration_minutes: int | None = None,
 ) -> Path:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)
     sid = session_id(repo_root)
-    event = {
+    event: dict[str, Any] = {
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
         "event_name": event_name,
         "session_id": sid,
@@ -242,13 +299,11 @@ def record_event(
         "estimated_baseline_score": signals["estimated_baseline_score"],
         "details": details or {},
     }
+    if duration_minutes is not None:
+        event["duration_minutes"] = duration_minutes
     path = telemetry_events_path(repo_root, base=telemetry_base)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, sort_keys=True) + "\n")
-    try:
-        measure_impact(repo_root, telemetry_base=telemetry_base)
-    except Exception:
-        pass
     return path
 
 
@@ -304,6 +359,8 @@ class UsabilityMetrics:
     session_end_events: int
     lifecycle_coverage: int
     readiness_minutes_since_last_event: int | None
+    avg_session_duration_minutes: int | None
+    max_session_duration_minutes: int | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -314,6 +371,8 @@ class UsabilityMetrics:
             "session_end_events": self.session_end_events,
             "lifecycle_coverage": self.lifecycle_coverage,
             "readiness_minutes_since_last_event": self.readiness_minutes_since_last_event,
+            "avg_session_duration_minutes": self.avg_session_duration_minutes,
+            "max_session_duration_minutes": self.max_session_duration_minutes,
         }
 
 
@@ -351,6 +410,10 @@ class ImpactReport:
             lines.append(f"Historical score delta: {self.history.score_delta:+d}")
             lines.append(f"Lifecycle coverage: {self.usability.lifecycle_coverage}%")
             lines.append(f"Active days: {self.usability.active_days}")
+            if self.usability.avg_session_duration_minutes is not None:
+                lines.append(f"Avg session duration: {self.usability.avg_session_duration_minutes} min")
+            if self.usability.max_session_duration_minutes is not None:
+                lines.append(f"Max session duration: {self.usability.max_session_duration_minutes} min")
         if self.event_counts:
             lines.append("Event counts:")
             lines.extend(
@@ -490,6 +553,14 @@ def _build_usability(events: list[dict[str, Any]], history: ImpactHistory) -> Us
             ),
         )
 
+    durations = [
+        int(e["duration_minutes"])
+        for e in events
+        if _event_name(e) == "session-end" and isinstance(e.get("duration_minutes"), (int, float))
+    ]
+    avg_dur = round(sum(durations) / len(durations)) if durations else None
+    max_dur = max(durations) if durations else None
+
     return UsabilityMetrics(
         active_days=len(history.daily_event_counts),
         resume_events=sum(1 for name in names if "session-start" in name),
@@ -500,6 +571,8 @@ def _build_usability(events: list[dict[str, Any]], history: ImpactHistory) -> Us
         session_end_events=sum(1 for name in names if name == "session-end"),
         lifecycle_coverage=round(len(unique_lifecycle) / 4 * 100),
         readiness_minutes_since_last_event=minutes_since_last,
+        avg_session_duration_minutes=avg_dur,
+        max_session_duration_minutes=max_dur,
     )
 
 
@@ -936,6 +1009,189 @@ def write_public_monitoring_snapshot(
         "dashboard_path": str(dashboard_path),
         "history_path": str(history_path),
     }
+
+
+@dataclass(frozen=True)
+class ForecastReport:
+    daily_rate: float
+    projected_events: int
+    projected_active_days: int
+    confidence: str  # "high" | "medium" | "low"
+    week_series: tuple[int, ...]
+
+    def render(self) -> str:
+        lines = [
+            f"30-day forecast (confidence: {self.confidence})",
+            f"  Daily rate: {self.daily_rate:.1f} events/day",
+            f"  Projected events (30d): {self.projected_events}",
+            f"  Projected active days (30d): {self.projected_active_days}",
+            "  Week breakdown:",
+        ]
+        for i, count in enumerate(self.week_series, 1):
+            lines.append(f"    Week {i}: {count} events")
+        return "\n".join(lines)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "daily_rate": self.daily_rate,
+            "projected_events": self.projected_events,
+            "projected_active_days": self.projected_active_days,
+            "confidence": self.confidence,
+            "week_series": list(self.week_series),
+        }
+
+
+def forecast_activity(
+    repo_root: Path,
+    days: int = 30,
+    telemetry_base: Path | None = None,
+) -> ForecastReport:
+    """Project future activity from the rolling 7-day average event rate."""
+    path = telemetry_events_path(repo_root, base=telemetry_base)
+    events = _read_events(path)
+
+    if not events:
+        return ForecastReport(
+            daily_rate=0.0,
+            projected_events=0,
+            projected_active_days=0,
+            confidence="low",
+            week_series=tuple(0 for _ in range(days // 7 + (1 if days % 7 else 0))),
+        )
+
+    daily_counts: dict[str, int] = {}
+    for event in events:
+        ts = _parse_timestamp(event.get("timestamp"))
+        if ts is None:
+            continue
+        day_key = ts.date().isoformat()
+        daily_counts[day_key] = daily_counts.get(day_key, 0) + 1
+
+    num_days = len(daily_counts)
+    sorted_days = sorted(daily_counts.keys(), reverse=True)
+    window_days = sorted_days[:7]
+    window_total = sum(daily_counts[d] for d in window_days)
+    window_len = len(window_days)
+    daily_rate = window_total / window_len if window_len > 0 else 0.0
+
+    if num_days >= 7:
+        confidence = "high"
+    elif num_days >= 3:
+        confidence = "medium"
+    else:
+        confidence = "low"
+
+    week_count = days // 7 + (1 if days % 7 else 0)
+    week_size = 7
+    week_series = tuple(round(daily_rate * min(week_size, days - i * week_size)) for i in range(week_count))
+
+    projected_events = round(daily_rate * days)
+    projected_active_days = round(num_days / max(1, len(sorted_days)) * days) if sorted_days else 0
+
+    return ForecastReport(
+        daily_rate=round(daily_rate, 2),
+        projected_events=projected_events,
+        projected_active_days=projected_active_days,
+        confidence=confidence,
+        week_series=week_series,
+    )
+
+
+@dataclass(frozen=True)
+class BranchStat:
+    branch: str
+    session_count: int
+    avg_score: int
+    last_seen: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "branch": self.branch,
+            "session_count": self.session_count,
+            "avg_score": self.avg_score,
+            "last_seen": self.last_seen,
+        }
+
+
+def branch_scores(
+    repo_root: Path,
+    telemetry_base: Path | None = None,
+) -> list[BranchStat]:
+    """Return per-branch stats sorted by last_seen descending."""
+    path = telemetry_events_path(repo_root, base=telemetry_base)
+    events = _read_events(path)
+
+    branch_data: dict[str, dict[str, Any]] = {}
+    for event in events:
+        branch = str(event.get("branch") or "unknown")
+        score = event.get("repo_contract_score")
+        ts = event.get("timestamp", "")
+        sid = event.get("session_id", "")
+
+        if branch not in branch_data:
+            branch_data[branch] = {"scores": [], "sessions": set(), "last_seen": ""}
+        if isinstance(score, (int, float)):
+            branch_data[branch]["scores"].append(int(score))
+        if sid:
+            branch_data[branch]["sessions"].add(sid)
+        if ts > branch_data[branch]["last_seen"]:
+            branch_data[branch]["last_seen"] = ts
+
+    stats = []
+    for branch, data in branch_data.items():
+        scores = data["scores"]
+        avg = round(sum(scores) / len(scores)) if scores else 0
+        stats.append(BranchStat(
+            branch=branch,
+            session_count=len(data["sessions"]),
+            avg_score=avg,
+            last_seen=data["last_seen"],
+        ))
+
+    stats.sort(key=lambda s: s.last_seen, reverse=True)
+    return stats
+
+
+_GHOST_REPO_NAMES: frozenset[str] = frozenset({"repo", "tmp", "temp", "test"})
+
+
+def purge_ghost_repos(
+    telemetry_base: Path | None = None,
+    dry_run: bool = True,
+) -> dict[str, Any]:
+    """Remove telemetry dirs with <2 events and a ghost repo name.
+
+    Returns {"removed": N, "bytes_freed": M, "dirs": [...paths...]}.
+    Pass dry_run=False to actually delete.
+    """
+    import shutil
+
+    base = telemetry_base or _default_telemetry_base()
+    if not base.exists():
+        return {"removed": 0, "bytes_freed": 0, "dirs": []}
+
+    removed = 0
+    bytes_freed = 0
+    removed_dirs: list[str] = []
+
+    for entry in base.iterdir():
+        if not entry.is_dir():
+            continue
+        events_file = entry / EVENTS_FILE
+        events = _read_events(events_file)
+        if len(events) >= 2:
+            continue
+        repo_name = events[0].get("repo_name", "") if events else entry.name
+        if repo_name not in _GHOST_REPO_NAMES:
+            continue
+        dir_size = sum(f.stat().st_size for f in entry.rglob("*") if f.is_file())
+        removed_dirs.append(str(entry))
+        bytes_freed += dir_size
+        removed += 1
+        if not dry_run:
+            shutil.rmtree(entry, ignore_errors=True)
+
+    return {"removed": removed, "bytes_freed": bytes_freed, "dirs": removed_dirs}
 
 
 def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> ImpactReport:

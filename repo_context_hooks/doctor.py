@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -295,6 +296,58 @@ def diagnose_repo_contract(repo_root: Path) -> DoctorReport:
     )
 
 
+def _normalise_hook_cmd(cmd: str) -> str:
+    return cmd.replace("\\", "/").strip()
+
+
+def check_hook_health(settings_path: Path) -> list[dict[str, str]]:
+    """Detect duplicate hook entries in a Claude settings.json file.
+
+    Two hook commands are considered duplicates if they normalise to the same
+    string (backslash == forward-slash).  Returns a list of dicts:
+        [{"event": "SessionStart", "command": "...", "issue": "duplicate"}]
+    Returns an empty list when the file does not exist or has no hooks.
+    """
+    if not settings_path.exists():
+        return []
+
+    try:
+        text = settings_path.read_text(encoding="utf-8", errors="ignore").strip()
+        if not text:
+            return []
+        data = json.loads(text)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+    hooks_section = data.get("hooks", {})
+    if not isinstance(hooks_section, dict):
+        return []
+
+    issues: list[dict[str, str]] = []
+    for event, groups in hooks_section.items():
+        if not isinstance(groups, list):
+            continue
+
+        # Collect all normalised commands across every group for this event
+        seen: dict[str, int] = {}  # normalised_cmd -> count of times seen
+        for group in groups:
+            if not isinstance(group, dict):
+                continue
+            for hook in group.get("hooks", []):
+                if not isinstance(hook, dict):
+                    continue
+                raw_cmd = hook.get("command", "")
+                norm = _normalise_hook_cmd(raw_cmd)
+                if norm:
+                    seen[norm] = seen.get(norm, 0) + 1
+
+        for norm_cmd, count in seen.items():
+            if count > 1:
+                issues.append({"event": event, "command": norm_cmd, "issue": "duplicate"})
+
+    return issues
+
+
 def diagnose_platform(
     platform: str,
     repo_root: Path,
@@ -306,6 +359,7 @@ def diagnose_platform(
     present: list[str] = []
     missing: list[str] = []
     invalid: list[str] = []
+    warnings: list[str] = list(plan.warnings)
     for item in (*plan.home_paths, *plan.repo_paths):
         path = Path(item)
         if not path.exists():
@@ -316,13 +370,46 @@ def diagnose_platform(
         else:
             invalid.append(item)
 
+    # Hook health check: detect duplicates in agent-level settings.json (claude only)
+    hook_ok = True
+    if platform == "claude":
+        effective_home = home if home is not None else Path.home()
+        agent_home = effective_home / ".claude"
+        hook_issues = check_hook_health(agent_home / "settings.json")
+        if hook_issues:
+            # Count duplicates per event for a concise summary
+            event_counts: dict[str, int] = {}
+            for issue in hook_issues:
+                ev = issue["event"]
+                event_counts[ev] = event_counts.get(ev, 0) + 1
+            for ev, dup_count in sorted(event_counts.items()):
+                # Compute total hooks for this event so report reads:
+                # "SessionStart: 4 hooks (2 duplicate)"
+                try:
+                    settings_data = json.loads(
+                        (agent_home / "settings.json").read_text(encoding="utf-8", errors="ignore")
+                    )
+                    groups = settings_data.get("hooks", {}).get(ev, [])
+                    total = sum(
+                        len(g.get("hooks", []))
+                        for g in groups
+                        if isinstance(g, dict)
+                    )
+                except Exception:
+                    total = dup_count * 2
+                warnings.append(
+                    f"{ev}: {total} hooks ({dup_count} duplicate) - "
+                    f"run `repo-context-hooks install --platform claude` to deduplicate"
+                )
+            hook_ok = False
+
     return DoctorReport(
         platform_id=platform,
-        ok=not missing and not invalid,
+        ok=not missing and not invalid and hook_ok,
         present=tuple(present),
         missing=tuple(missing),
         invalid=tuple(invalid),
-        warnings=plan.warnings,
+        warnings=tuple(warnings),
     )
 
 

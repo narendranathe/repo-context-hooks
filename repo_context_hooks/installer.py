@@ -6,12 +6,22 @@ from typing import Dict, Tuple
 from .platforms import InstallResult, get_registry
 from .platforms.runtime import (
     bundle_root,
+    deduplicate_hooks,
     install_global_hooks,
     install_repo_hooks,
     install_skills_bundle,
     platform_skill_dir,
     uninstall_global_hooks,
 )
+
+
+def dedup_platform(platform: str, home: Path | None = None) -> dict:
+    """Remove duplicate hook entries from the agent home settings.json.
+
+    Returns ``{"removed": N}`` where N is the number of duplicate hooks dropped.
+    """
+    get_registry().get(platform)  # validate platform exists
+    return deduplicate_hooks(agent_home=home or Path.home())
 
 
 def supported_platform_ids() -> tuple[str, ...]:

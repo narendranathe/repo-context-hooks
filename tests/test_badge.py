@@ -19,49 +19,49 @@ def _tmp_dir() -> Path:
 
 
 def test_render_badge_green() -> None:
-    svg = render_badge(90)
+    svg = render_badge(90, 80)
     assert "4c1" in svg
     assert "90" in svg
     assert "<svg" in svg
 
 
 def test_render_badge_yellow() -> None:
-    svg = render_badge(70)
+    svg = render_badge(70, 50)
     assert "db1" in svg
     assert "70" in svg
     assert "<svg" in svg
 
 
 def test_render_badge_red() -> None:
-    svg = render_badge(40)
+    svg = render_badge(40, 10)
     assert "e05" in svg
     assert "40" in svg
     assert "<svg" in svg
 
 
 def test_render_badge_boundary_green_at_80() -> None:
-    svg = render_badge(80)
+    svg = render_badge(80, 50)
     assert "4c1" in svg
 
 
 def test_render_badge_boundary_yellow_at_60() -> None:
-    svg = render_badge(60)
+    svg = render_badge(60, 50)
     assert "db1" in svg
 
 
 def test_render_badge_boundary_red_at_59() -> None:
-    svg = render_badge(59)
+    svg = render_badge(59, 50)
     assert "e05" in svg
 
 
 def test_render_badge_custom_label() -> None:
-    svg = render_badge(85, label="my score")
+    svg = render_badge(85, 60, label="my score")
     assert "my score" in svg
     assert "85" in svg
 
 
 def test_render_badge_is_valid_svg() -> None:
-    svg = render_badge(90)
+    svg = render_badge(90, 50)
     assert svg.strip().startswith("<svg")
     assert "</svg>" in svg
     # No unescaped < or > in text content (they appear in tags, but label is plain text)
@@ -69,11 +69,38 @@ def test_render_badge_is_valid_svg() -> None:
     assert "context score" in svg
 
 
+def test_render_badge_coverage_green() -> None:
+    svg = render_badge(90, 80)
+    # Both score (90 -> green) and coverage (80 -> green) sections are green
+    assert svg.count("#4c1") >= 2
+
+
+def test_render_badge_coverage_yellow() -> None:
+    svg = render_badge(90, 50)
+    # Coverage 50 -> yellow
+    assert "db1" in svg
+
+
+def test_render_badge_coverage_red() -> None:
+    svg = render_badge(90, 10)
+    # Coverage 10 -> red
+    assert "e05" in svg
+
+
+def test_render_badge_shows_coverage_percent() -> None:
+    svg = render_badge(90, 25)
+    assert "25%" in svg
+
+
 def test_measure_badge_flag_outputs_svg(monkeypatch, capsys) -> None:
     tmp_path = _tmp_dir()
 
+    class FakeUsability:
+        lifecycle_coverage = 25
+
     class FakeReport:
         current_score = 90
+        usability = FakeUsability()
 
         def render(self) -> str:
             return "[OK] context-impact"
@@ -99,14 +126,19 @@ def test_measure_badge_flag_outputs_svg(monkeypatch, capsys) -> None:
     assert "<svg" in out
     assert "4c1" in out  # score 90 -> green
     assert "90" in out
+    assert "25%" in out
 
 
 def test_measure_badge_out_writes_file(monkeypatch, capsys) -> None:
     tmp_path = _tmp_dir()
     badge_path = tmp_path / "badge.svg"
 
+    class FakeUsability:
+        lifecycle_coverage = 50
+
     class FakeReport:
         current_score = 70
+        usability = FakeUsability()
 
         def render(self) -> str:
             return "[OK] context-impact"
@@ -135,14 +167,19 @@ def test_measure_badge_out_writes_file(monkeypatch, capsys) -> None:
     assert "<svg" in content
     assert "db1" in content  # score 70 -> yellow
     assert "70" in content
+    assert "50%" in content
 
 
 def test_measure_normal_output_unaffected(monkeypatch, capsys) -> None:
     """Normal measure output still works when neither --badge nor --badge-out is passed."""
     tmp_path = _tmp_dir()
 
+    class FakeUsability:
+        lifecycle_coverage = 25
+
     class FakeReport:
         current_score = 90
+        usability = FakeUsability()
 
         def render(self) -> str:
             return "[OK] context-impact score=90"

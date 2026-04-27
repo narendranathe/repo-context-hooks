@@ -2,7 +2,7 @@
 
 Date: 2026-04-17
 Status: Proposed
-Author: Codex with Narendranath Edara
+Author:  Narendranath Edara
 
 ## Summary
 
