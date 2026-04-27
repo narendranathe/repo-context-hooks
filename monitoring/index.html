@@ -1,0 +1,1004 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Hook-based repo context continuity for coding agents">
+      
+      
+      
+        <link rel="canonical" href="https://narendranathe.github.io/repo-context-hooks/monitoring/">
+      
+      
+        <link rel="prev" href="../telemetry-policy/">
+      
+      
+        <link rel="next" href="../competitive-analysis/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Monitoring - repo-context-hooks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#monitoring-and-impact-evidence" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="repo-context-hooks" class="md-header__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            repo-context-hooks
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Monitoring
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../platforms/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platforms
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../platform-playbooks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platform Playbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../telemetry-policy/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Telemetry Policy
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../competitive-analysis/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Competitive Analysis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="repo-context-hooks" class="md-nav__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    repo-context-hooks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../platform-playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../telemetry-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-measured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Gets Measured
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Storage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#privacy-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Privacy Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#before-and-after-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before And After Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-interpret-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How To Interpret It
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../competitive-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-measured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Gets Measured
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Storage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#privacy-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Privacy Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#before-and-after-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before And After Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-interpret-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How To Interpret It
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="monitoring-and-impact-evidence">Monitoring And Impact Evidence</h1>
+<p><code>repo-context-hooks</code> includes local monitoring so maintainers can prove the continuity loop is active and compare a repo's current readiness against a no-continuity baseline.</p>
+<p>This is not a hosted analytics product. It is a local evidence layer for agent-enabled repositories.</p>
+<p>Remote telemetry is not enabled in the MVP. If remote community metrics are added later, they must be explicit opt-in and follow <a href="../telemetry-policy/">Telemetry Policy</a>.</p>
+<h2 id="quick-start">Quick Start</h2>
+<p>Run a measurement before installing any platform adapter:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>measure
+</code></pre></div>
+<p>Install the strongest available adapter for lifecycle evidence:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>install<span class="w"> </span>--platform<span class="w"> </span>claude
+</code></pre></div>
+<p>Start a new agent session, run a compact flow, or end a session so the hooks have a chance to fire. Then measure again:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>measure
+</code></pre></div>
+<p>For scripts, dashboards, and CI experiments:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>measure<span class="w"> </span>--json
+</code></pre></div>
+<p>To intentionally refresh a checked-in public dashboard from local evidence:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>measure<span class="w"> </span>--snapshot-dir<span class="w"> </span>docs/monitoring
+</code></pre></div>
+<p>The public snapshot for this repo lives at <a href="./">docs/monitoring/index.html</a>. It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory. The public snapshot writer sanitizes local paths and publishes aggregate scores, event counts, lifecycle coverage, and time-series usability only.</p>
+<h2 id="visualization-tools">Visualization Tools</h2>
+<p>The MVP intentionally keeps visualization boring in the best way: one static HTML dashboard plus one portable JSON file. That makes the data easy to inspect without introducing a hosted telemetry service.</p>
+<p>Good next visualization surfaces:</p>
+<ul>
+<li>GitHub README: link to <code>docs/monitoring/index.html</code> and <code>docs/monitoring/history.json</code>.</li>
+<li>GitHub Pages: publish the static monitor as a shareable dashboard.</li>
+<li>Observable Plot: import <code>docs/monitoring/history.json</code> and chart score, event volume, and lifecycle coverage.</li>
+<li>Vega-Lite: embed a declarative time-series chart in docs or a portfolio case study.</li>
+<li>Evidence, DuckDB, or SQLite: analyze longer local telemetry history across many repos or sessions.</li>
+</ul>
+<p>Suggested README-facing metrics:</p>
+<ul>
+<li>continuity score</li>
+<li>uplift over the README-only baseline</li>
+<li>observed hook events</li>
+<li>active days</li>
+<li>lifecycle coverage</li>
+<li>resume, checkpoint, reload, and session-end counts</li>
+</ul>
+<h2 id="what-gets-measured">What Gets Measured</h2>
+<p>The report includes:</p>
+<ul>
+<li>current continuity score</li>
+<li>estimated baseline score without repo continuity</li>
+<li>estimated uplift</li>
+<li>observed hook and skill events</li>
+<li>event counts by lifecycle stage</li>
+<li>score time series</li>
+<li>daily event counts</li>
+<li>active days</li>
+<li>resume events</li>
+<li>checkpoint events</li>
+<li>reload events</li>
+<li>session-end events</li>
+<li>lifecycle coverage</li>
+<li>local evidence-log path</li>
+<li>recommendations for missing setup</li>
+</ul>
+<p>The score is intentionally simple. It rewards the repo contract files that help a fresh agent resume work:</p>
+<ul>
+<li><code>README.md</code></li>
+<li><code>specs/README.md</code></li>
+<li>required engineering-memory sections</li>
+<li><code>UBIQUITOUS_LANGUAGE.md</code></li>
+<li><code>AGENTS.md</code></li>
+<li><code>CLAUDE.md</code></li>
+<li>Claude lifecycle hook registration when available</li>
+</ul>
+<p>The baseline is intentionally conservative: it estimates what a repo has if an agent can only rely on the user-facing README and no continuity contract.</p>
+<h2 id="evidence-storage">Evidence Storage</h2>
+<p>Hook scripts append small JSONL events to a local cache directory by default, not to the repository.</p>
+<p>Default locations:</p>
+<ul>
+<li>Windows: <code>%LOCALAPPDATA%\repo-context-hooks\telemetry\</code></li>
+<li>macOS/Linux: <code>$XDG_CACHE_HOME/repo-context-hooks/telemetry/</code> or <code>~/.cache/repo-context-hooks/telemetry/</code></li>
+</ul>
+<p>Override the location when testing or collecting a shareable experiment:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">set</span><span class="w"> </span><span class="nv">REPO_CONTEXT_HOOKS_TELEMETRY_DIR</span><span class="o">=</span>C:<span class="se">\t</span>mp<span class="se">\r</span>epo-context-hooks-telemetry
+repo-context-hooks<span class="w"> </span>measure
+</code></pre></div>
+<p>If the OS cache path is unavailable in a sandboxed environment, the CLI falls back to <code>.repo-context-hooks/telemetry/</code> inside the repo. <code>repo-context-hooks init</code> adds <code>.repo-context-hooks/</code> to <code>.gitignore</code> so fallback telemetry does not become commit noise.</p>
+<p>PowerShell users can set it for the current shell:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$env:REPO_CONTEXT_HOOKS_TELEMETRY_DIR</span> <span class="p">=</span> <span class="s2">&quot;C:\tmp\repo-context-hooks-telemetry&quot;</span>
+<span class="n">repo-context-hooks</span> <span class="nb">measure</span>
+</code></pre></div>
+<h2 id="privacy-boundary">Privacy Boundary</h2>
+<p>Telemetry is local-only by default.</p>
+<p>Events include:</p>
+<ul>
+<li>timestamp</li>
+<li>event name</li>
+<li>event source</li>
+<li>hashed repo id</li>
+<li>repo folder name</li>
+<li>git branch name</li>
+<li>repo continuity score</li>
+<li>estimated baseline score</li>
+<li>small event details such as counts and local file paths</li>
+</ul>
+<p>Events do not upload code, prompts, compact summaries, issue bodies, or file contents.</p>
+<p>No cookies are used by the CLI. Cookies are only appropriate for a future optional web dashboard, not for hook or MCP telemetry.</p>
+<h2 id="before-and-after-workflow">Before And After Workflow</h2>
+<p>Use this sequence when you want evidence for a README, blog post, internal adoption note, or recruiter-facing demo:</p>
+<ol>
+<li>Run <code>repo-context-hooks measure</code> before setup and save the output.</li>
+<li>Run <code>repo-context-hooks init</code>.</li>
+<li>Run <code>repo-context-hooks doctor</code>.</li>
+<li>Run <code>repo-context-hooks install --platform claude</code> for native hook evidence, or install the best partial adapter for your platform.</li>
+<li>Start a new agent session and do real work.</li>
+<li>Trigger a compact or session-end flow when available.</li>
+<li>Run <code>repo-context-hooks measure</code> again.</li>
+<li>Compare the uplift, observed events, and recommendations.</li>
+<li>If the evidence is shareable, run <code>repo-context-hooks measure --snapshot-dir docs/monitoring</code> and review the generated files before committing them.</li>
+</ol>
+<p>For reproducible comparisons:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>measure<span class="w"> </span>--json<span class="w"> </span>&gt;<span class="w"> </span>before.json
+repo-context-hooks<span class="w"> </span>init
+repo-context-hooks<span class="w"> </span>install<span class="w"> </span>--platform<span class="w"> </span>claude
+repo-context-hooks<span class="w"> </span>measure<span class="w"> </span>--json<span class="w"> </span>&gt;<span class="w"> </span>after.json
+repo-context-hooks<span class="w"> </span>measure<span class="w"> </span>--snapshot-dir<span class="w"> </span>docs/monitoring
+</code></pre></div>
+<h2 id="how-to-interpret-it">How To Interpret It</h2>
+<p>Good signs:</p>
+<ul>
+<li>current score is much higher than baseline</li>
+<li>event counts include session-start and compact or session-end events</li>
+<li>recommendations shrink after setup</li>
+<li>telemetry path points outside the git repo, or under ignored <code>.repo-context-hooks/</code> when sandbox fallback is needed</li>
+</ul>
+<p>Weak signs:</p>
+<ul>
+<li>current score is close to baseline</li>
+<li>no observed events after agent usage</li>
+<li><code>AGENTS.md</code> is missing for partial platforms</li>
+<li>Claude hook registration is missing when native support is expected</li>
+</ul>
+<p>This evidence is not a scientific productivity benchmark. It is a practical continuity audit: did the repo contain enough context, did the hooks fire, and can the next agent see a better handoff than a bare README?</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tabs", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

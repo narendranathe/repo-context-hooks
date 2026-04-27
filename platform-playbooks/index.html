@@ -1,0 +1,1769 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Hook-based repo context continuity for coding agents">
+      
+      
+      
+        <link rel="canonical" href="https://narendranathe.github.io/repo-context-hooks/platform-playbooks/">
+      
+      
+        <link rel="prev" href="../platforms/">
+      
+      
+        <link rel="next" href="../telemetry-policy/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Platform Playbooks - repo-context-hooks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#platform-playbooks" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="repo-context-hooks" class="md-header__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            repo-context-hooks
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Platform Playbooks
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../platforms/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platforms
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platform Playbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../telemetry-policy/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Telemetry Policy
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../monitoring/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../competitive-analysis/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Competitive Analysis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="repo-context-hooks" class="md-nav__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    repo-context-hooks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Playbooks
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#replit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Replit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restart-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restart checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#windsurf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windsurf
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windsurf">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layering-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layering example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lovable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lovable
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lovable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resync-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resync loop
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openclaw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenClaw
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenClaw">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safe-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe split
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ollama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ollama
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ollama">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safe-smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe smoke test
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kimi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kimi
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Kimi">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-merge-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        /init merge example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../telemetry-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../competitive-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#replit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Replit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restart-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restart checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#windsurf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windsurf
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windsurf">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layering-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layering example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lovable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lovable
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lovable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resync-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resync loop
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openclaw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenClaw
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenClaw">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safe-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe split
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ollama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ollama
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ollama">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safe-smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe smoke test
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kimi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kimi
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Kimi">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-gets-installed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What gets installed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-remains-manual_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What remains manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-doctor-verifies_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What doctor verifies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-claim_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What not to claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-merge-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        /init merge example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="platform-playbooks">Platform Playbooks</h1>
+<p>These playbooks explain what to do after <code>repo-context-hooks init</code>, <code>repo-context-hooks doctor</code>, and <code>repo-context-hooks install --platform &lt;name&gt;</code> for each partial platform.</p>
+<p>Use them as the operating guide for platforms that do not expose Claude-style lifecycle hooks. The core rule is simple: keep <code>README.md</code>, <code>specs/README.md</code>, and <code>AGENTS.md</code> as the repo contract, then map that contract into the strongest real surface each platform exposes.</p>
+<p>Every partial platform has the same claim boundary:</p>
+<ul>
+<li>no native lifecycle hooks</li>
+<li>no compact automation</li>
+<li>no Claude-style hook parity</li>
+<li>no claim that hosted or runtime state is verified unless <code>doctor</code> can check it locally</li>
+</ul>
+<h2 id="replit">Replit</h2>
+<p>Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/2</p>
+<h3 id="what-gets-installed">What gets installed</h3>
+<ul>
+<li><code>AGENTS.md</code></li>
+<li><code>replit.md</code></li>
+</ul>
+<h3 id="what-remains-manual">What remains manual</h3>
+<ul>
+<li>Start or resume the Replit Agent from the repo root.</li>
+<li>Tell the agent to read <code>replit.md</code>, <code>AGENTS.md</code>, <code>README.md</code>, and <code>specs/README.md</code> before making changes.</li>
+<li>Write durable decisions or next work back into repo docs before ending the session.</li>
+</ul>
+<h3 id="what-doctor-verifies">What <code>doctor</code> verifies</h3>
+<ul>
+<li><code>AGENTS.md</code> exists and points to the repo contract.</li>
+<li><code>replit.md</code> exists and references <code>README.md</code>, <code>specs/README.md</code>, and <code>AGENTS.md</code>.</li>
+</ul>
+<h3 id="what-not-to-claim">What not to claim</h3>
+<ul>
+<li>Do not claim native lifecycle hooks.</li>
+<li>Do not claim compact automation.</li>
+<li>Do not claim that Replit interruption or resume behavior is controlled by this package.</li>
+</ul>
+<h3 id="restart-checklist">Restart checklist</h3>
+<ol>
+<li>Re-open the repo at the project root.</li>
+<li>Read <code>replit.md</code>, <code>AGENTS.md</code>, <code>README.md</code>, and <code>specs/README.md</code>.</li>
+<li>Capture the last completed change and the next step in <code>specs/README.md</code> before handing off again.</li>
+</ol>
+<h2 id="windsurf">Windsurf</h2>
+<p>Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/8</p>
+<h3 id="what-gets-installed_1">What gets installed</h3>
+<ul>
+<li><code>AGENTS.md</code></li>
+<li><code>.windsurf/rules/repo-context-continuity.md</code></li>
+</ul>
+<h3 id="what-remains-manual_1">What remains manual</h3>
+<ul>
+<li>Keep root <code>AGENTS.md</code> as the short repo operating contract.</li>
+<li>Use <code>.windsurf/rules/repo-context-continuity.md</code> as the always-on Cascade rule that points back to the repo contract.</li>
+<li>Add project-specific Windsurf rules separately if the repo needs them, but do not duplicate the whole contract.</li>
+</ul>
+<h3 id="what-doctor-verifies_1">What <code>doctor</code> verifies</h3>
+<ul>
+<li><code>AGENTS.md</code> exists and points to the repo contract.</li>
+<li><code>.windsurf/rules/repo-context-continuity.md</code> exists and references <code>README.md</code>, <code>specs/README.md</code>, and <code>AGENTS.md</code>.</li>
+</ul>
+<h3 id="what-not-to-claim_1">What not to claim</h3>
+<ul>
+<li>Do not claim native lifecycle hooks.</li>
+<li>Do not claim compact automation.</li>
+<li>Do not claim that Windsurf rules are equivalent to Claude hooks.</li>
+</ul>
+<h3 id="layering-example">Layering example</h3>
+<ul>
+<li>Put repo continuity in <code>AGENTS.md</code> and <code>.windsurf/rules/repo-context-continuity.md</code>.</li>
+<li>Put team-wide or personal Cascade preferences in separate Windsurf rules.</li>
+<li>Keep this repo rule focused on repo-specific continuity only.</li>
+</ul>
+<h2 id="lovable">Lovable</h2>
+<p>Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/3</p>
+<h3 id="what-gets-installed_2">What gets installed</h3>
+<ul>
+<li><code>AGENTS.md</code></li>
+<li><code>.lovable/project-knowledge.md</code></li>
+<li><code>.lovable/workspace-knowledge.md</code></li>
+</ul>
+<h3 id="what-remains-manual_2">What remains manual</h3>
+<ul>
+<li>Connect Lovable to the synced GitHub repository.</li>
+<li>Paste <code>.lovable/project-knowledge.md</code> into Lovable Project Knowledge.</li>
+<li>Paste <code>.lovable/workspace-knowledge.md</code> into Lovable Workspace Knowledge if shared rules are useful.</li>
+<li>Re-paste the hosted knowledge fields whenever the repo-owned exports change.</li>
+</ul>
+<h3 id="what-doctor-verifies_2">What <code>doctor</code> verifies</h3>
+<ul>
+<li>The local repo-owned export files exist.</li>
+<li>The export files reference the repo contract.</li>
+</ul>
+<h3 id="what-not-to-claim_2">What not to claim</h3>
+<ul>
+<li>Do not claim native lifecycle hooks.</li>
+<li>Do not claim compact automation.</li>
+<li>Do not claim local verification of Lovable's hosted Project Knowledge or Workspace Knowledge state.</li>
+</ul>
+<h3 id="resync-loop">Resync loop</h3>
+<ol>
+<li>Update <code>.lovable/project-knowledge.md</code> or <code>.lovable/workspace-knowledge.md</code> in git.</li>
+<li>Push the repo changes to the default branch.</li>
+<li>Re-paste the updated file into the matching Lovable UI field so the hosted field stays a mirror of the repo-owned export.</li>
+</ol>
+<h2 id="openclaw">OpenClaw</h2>
+<p>Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/5</p>
+<h3 id="what-gets-installed_3">What gets installed</h3>
+<ul>
+<li><code>AGENTS.md</code></li>
+<li><code>SOUL.md</code></li>
+<li><code>USER.md</code></li>
+<li><code>TOOLS.md</code></li>
+</ul>
+<h3 id="what-remains-manual_3">What remains manual</h3>
+<ul>
+<li>Point OpenClaw <code>agents.defaults.workspace</code> to the repo root, or copy the generated files into the active OpenClaw workspace.</li>
+<li>Keep secrets and private memory out of public repos.</li>
+<li>Run OpenClaw setup or doctor after changing workspace configuration.</li>
+</ul>
+<h3 id="what-doctor-verifies_3">What <code>doctor</code> verifies</h3>
+<ul>
+<li>The generated workspace files exist locally.</li>
+<li>The workspace files reference <code>README.md</code>, <code>specs/README.md</code>, <code>AGENTS.md</code>, and the repo as the continuity source of truth.</li>
+</ul>
+<h3 id="what-not-to-claim_3">What not to claim</h3>
+<ul>
+<li>Do not claim native lifecycle hooks.</li>
+<li>Do not claim compact automation.</li>
+<li>Do not claim that local <code>doctor</code> verifies the active OpenClaw workspace path.</li>
+</ul>
+<h3 id="safe-split">Safe split</h3>
+<ul>
+<li>Keep repo-safe project guidance in <code>AGENTS.md</code>, <code>SOUL.md</code>, <code>USER.md</code>, and <code>TOOLS.md</code>.</li>
+<li>Keep personal workflow notes, secrets, and private memory in a private workspace, not in the public repo files.</li>
+</ul>
+<h2 id="ollama">Ollama</h2>
+<p>Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/4</p>
+<h3 id="what-gets-installed_4">What gets installed</h3>
+<ul>
+<li><code>AGENTS.md</code></li>
+<li><code>Modelfile.repo-context</code></li>
+</ul>
+<h3 id="what-remains-manual_4">What remains manual</h3>
+<ul>
+<li>Edit the <code>FROM</code> line in <code>Modelfile.repo-context</code> if you prefer a different local model.</li>
+<li>Run <code>ollama create repo-context-helper -f Modelfile.repo-context</code>.</li>
+<li>Use the created model through an agent wrapper that can read repo files, or paste <code>README.md</code>, <code>specs/README.md</code>, and <code>AGENTS.md</code> when using direct <code>ollama run</code>.</li>
+</ul>
+<h3 id="what-doctor-verifies_4">What <code>doctor</code> verifies</h3>
+<ul>
+<li><code>Modelfile.repo-context</code> exists.</li>
+<li>The Modelfile includes <code>FROM</code>, <code>SYSTEM</code>, <code>README.md</code>, <code>specs/README.md</code>, <code>AGENTS.md</code>, and the repo continuity instruction.</li>
+</ul>
+<h3 id="what-not-to-claim_4">What not to claim</h3>
+<ul>
+<li>Do not claim native lifecycle hooks.</li>
+<li>Do not claim compact automation.</li>
+<li>Do not claim Ollama reads repo files automatically.</li>
+</ul>
+<p>Ollama is a model runtime. It does not read repo files automatically. <code>repo-context-hooks</code> gives it a repeatable repo-context prompt, but an agent wrapper or user prompt must still provide the actual file contents.</p>
+<h3 id="safe-smoke-test">Safe smoke test</h3>
+<ol>
+<li>Create the model with <code>ollama create repo-context-helper -f Modelfile.repo-context</code>.</li>
+<li>Start a short prompt without pasting repo files.</li>
+<li>Confirm the model asks for <code>README.md</code>, <code>specs/README.md</code>, and <code>AGENTS.md</code> instead of inventing repo state.</li>
+</ol>
+<h2 id="kimi">Kimi</h2>
+<p>Follow-up issue: https://github.com/narendranathe/repo-context-hooks/issues/6</p>
+<h3 id="what-gets-installed_5">What gets installed</h3>
+<ul>
+<li><code>AGENTS.md</code></li>
+</ul>
+<h3 id="what-remains-manual_5">What remains manual</h3>
+<ul>
+<li>Run or review Kimi Code CLI <code>/init</code> output.</li>
+<li>Merge any generated Kimi guidance with the repo-owned <code>AGENTS.md</code> contract.</li>
+<li>Keep Kimi-specific rules out of public claims until a stable Kimi rules path is documented.</li>
+</ul>
+<h3 id="what-doctor-verifies_5">What <code>doctor</code> verifies</h3>
+<ul>
+<li><code>AGENTS.md</code> exists and points to <code>README.md</code>, <code>specs/README.md</code>, and the repo as the continuity source of truth.</li>
+</ul>
+<h3 id="what-not-to-claim_5">What not to claim</h3>
+<ul>
+<li>Do not claim native lifecycle hooks.</li>
+<li>Do not claim compact automation.</li>
+<li>Do not claim generic Kimi API setup.</li>
+</ul>
+<p>This support is for Kimi Code CLI project context, not generic Kimi API setup.</p>
+<h3 id="init-merge-example"><code>/init</code> merge example</h3>
+<ol>
+<li>Run Kimi Code CLI <code>/init</code> or review its generated guidance.</li>
+<li>Keep the repo-owned <code>AGENTS.md</code> contract as the baseline.</li>
+<li>Merge any useful project-structure or build notes from <code>/init</code> into <code>AGENTS.md</code> without replacing the repo contract.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tabs", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

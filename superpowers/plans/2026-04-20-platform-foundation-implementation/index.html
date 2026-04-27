@@ -1,0 +1,1281 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Hook-based repo context continuity for coding agents">
+      
+      
+      
+        <link rel="canonical" href="https://narendranathe.github.io/repo-context-hooks/superpowers/plans/2026-04-20-platform-foundation-implementation/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Platform Foundation Implementation Plan - repo-context-hooks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#platform-foundation-implementation-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="repo-context-hooks" class="md-header__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            repo-context-hooks
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Platform Foundation Implementation Plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../platforms/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platforms
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../platform-playbooks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platform Playbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../telemetry-policy/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Telemetry Policy
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../monitoring/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../competitive-analysis/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Competitive Analysis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="repo-context-hooks" class="md-nav__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    repo-context-hooks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../platform-playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../telemetry-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../competitive-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#task-1-introduce-platform-metadata-and-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1: Introduce Platform Metadata And Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-2-add-install-plans-and-phase-1-adapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2: Add Install Plans And Phase 1 Adapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-3-add-cli-platforms-and-doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 3: Add CLI platforms And doctor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-4-install-real-repo-artifacts-for-cursor-and-codex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4: Install Real Repo Artifacts For Cursor And Codex
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-5-reposition-public-docs-and-support-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 5: Reposition Public Docs And Support Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-6-upgrade-diagrams-and-create-planned-platform-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 6: Upgrade Diagrams And Create Planned-Platform Issues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-7-full-verification-and-pr-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 7: Full Verification And PR Update
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="platform-foundation-implementation-plan">Platform Foundation Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Replace the tuple-based installer with a real platform-adapter foundation, ship Claude/Cursor/Codex support tiers, add <code>platforms</code> and <code>doctor</code> commands, reposition public docs, and create GitHub issues for planned platforms.</p>
+<p><strong>Architecture:</strong> Introduce a narrow adapter registry that produces install and validation behavior per platform. Ship Claude as the flagship <code>native</code> lifecycle implementation for Phase 1, add useful <code>partial</code> support for Cursor and Codex, and derive CLI/docs support claims from code-owned metadata instead of hand-written promises.</p>
+<p><strong>Tech Stack:</strong> Python 3.9+, setuptools CLI package, pytest, git, GitHub issues</p>
+<hr />
+<h3 id="task-1-introduce-platform-metadata-and-registry">Task 1: Introduce Platform Metadata And Registry</h3>
+<p><strong>Files:</strong>
+- Create: <code>repo_context_hooks/platforms/__init__.py</code>
+- Create: <code>repo_context_hooks/platforms/base.py</code>
+- Create: <code>repo_context_hooks/platforms/registry.py</code>
+- Test: <code>tests/test_platform_registry.py</code>
+- Modify: <code>repo_context_hooks/installer.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing registry tests</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks.platforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_registry</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_registry_exposes_phase1_platform_ids</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">registry</span> <span class="o">=</span> <span class="n">get_registry</span><span class="p">()</span>
+
+    <span class="k">assert</span> <span class="p">[</span><span class="n">adapter</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">adapter</span> <span class="ow">in</span> <span class="n">registry</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span> <span class="o">==</span> <span class="p">[</span>
+        <span class="s2">&quot;claude&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cursor&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;codex&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_registry_support_tiers_match_phase1_contract</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">registry</span> <span class="o">=</span> <span class="n">get_registry</span><span class="p">()</span>
+
+    <span class="k">assert</span> <span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;claude&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">support_tier</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;native&quot;</span>
+    <span class="k">assert</span> <span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cursor&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">support_tier</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;partial&quot;</span>
+    <span class="k">assert</span> <span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;codex&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">support_tier</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;partial&quot;</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Run test to verify it fails</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_platform_registry.py -q --basetemp .pytest-tmp-platform-registry-red</code>
+Expected: FAIL with import errors for <code>repo_context_hooks.platforms</code> or missing registry objects.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add minimal platform base types and registry</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Protocol</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SupportTier</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="n">NATIVE</span> <span class="o">=</span> <span class="s2">&quot;native&quot;</span>
+    <span class="n">PARTIAL</span> <span class="o">=</span> <span class="s2">&quot;partial&quot;</span>
+    <span class="n">PLANNED</span> <span class="o">=</span> <span class="s2">&quot;planned&quot;</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PlatformMetadata</span><span class="p">:</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">display_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">support_tier</span><span class="p">:</span> <span class="n">SupportTier</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PlatformAdapter</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">PlatformMetadata</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PlatformRegistry</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adapters</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">PlatformAdapter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_adapters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PlatformAdapter</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">adapter</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">adapter</span> <span class="k">for</span> <span class="n">adapter</span> <span class="ow">in</span> <span class="n">adapters</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PlatformAdapter</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adapters</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">platform_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlatformAdapter</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adapters</span><span class="p">[</span><span class="n">platform_id</span><span class="p">]</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Run test to verify it passes</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_platform_registry.py -q --basetemp .pytest-tmp-platform-registry-green</code>
+Expected: PASS</p>
+<ul>
+<li>[ ] <strong>Step 5: Refactor installer to stop owning <code>PLATFORMS</code></strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">.platforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_registry</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">supported_platform_ids</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">adapter</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">adapter</span> <span class="ow">in</span> <span class="n">get_registry</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 6: Run focused tests for registry and installer</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_platform_registry.py tests/test_installer.py -q --basetemp .pytest-tmp-platform-registry-full</code>
+Expected: PASS with updated installer behavior.</p>
+<ul>
+<li>[ ] <strong>Step 7: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>repo_context_hooks/platforms<span class="w"> </span>repo_context_hooks/installer.py<span class="w"> </span>tests/test_platform_registry.py<span class="w"> </span>tests/test_installer.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: add platform registry foundation&quot;</span>
+</code></pre></div>
+<h3 id="task-2-add-install-plans-and-phase-1-adapters">Task 2: Add Install Plans And Phase 1 Adapters</h3>
+<p><strong>Files:</strong>
+- Create: <code>repo_context_hooks/platforms/claude.py</code>
+- Create: <code>repo_context_hooks/platforms/cursor.py</code>
+- Create: <code>repo_context_hooks/platforms/codex.py</code>
+- Modify: <code>repo_context_hooks/platforms/base.py</code>
+- Modify: <code>repo_context_hooks/platforms/__init__.py</code>
+- Modify: <code>repo_context_hooks/installer.py</code>
+- Test: <code>tests/test_platform_install_plans.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing adapter-plan tests</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks.platforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_registry</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_claude_plan_includes_repo_hooks</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">adapter</span> <span class="o">=</span> <span class="n">get_registry</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;claude&quot;</span><span class="p">)</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">build_install_plan</span><span class="p">(</span><span class="n">repo_root</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;home&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">installs_repo_context</span> <span class="ow">is</span> <span class="kc">True</span>
+    <span class="k">assert</span> <span class="s2">&quot;.claude/settings.json&quot;</span> <span class="ow">in</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">repo_paths</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_cursor_plan_targets_cursor_rules_and_agents</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">adapter</span> <span class="o">=</span> <span class="n">get_registry</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cursor&quot;</span><span class="p">)</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">build_install_plan</span><span class="p">(</span><span class="n">repo_root</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;home&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.cursor/rules/repo-context-continuity.mdc&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">repo_paths</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;AGENTS.md&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">repo_paths</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">installs_repo_context</span> <span class="ow">is</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_codex_plan_installs_repo_contract_only</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">adapter</span> <span class="o">=</span> <span class="n">get_registry</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;codex&quot;</span><span class="p">)</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">build_install_plan</span><span class="p">(</span><span class="n">repo_root</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;home&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">home_paths</span> <span class="o">==</span> <span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;AGENTS.md&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">repo_paths</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;no bundled lifecycle skills&quot;</span> <span class="ow">in</span> <span class="n">warning</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">warnings</span><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Run test to verify it fails</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_platform_install_plans.py -q --basetemp .pytest-tmp-install-plans-red</code>
+Expected: FAIL because adapters do not expose <code>build_install_plan</code>.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add <code>InstallPlan</code> and implement Claude/Cursor/Codex adapters</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InstallPlan</span><span class="p">:</span>
+    <span class="n">platform_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">home_paths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">repo_paths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">warnings</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">manual_steps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">installs_repo_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CursorAdapter</span><span class="p">:</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">PlatformMetadata</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;cursor&quot;</span><span class="p">,</span>
+        <span class="n">display_name</span><span class="o">=</span><span class="s2">&quot;Cursor&quot;</span><span class="p">,</span>
+        <span class="n">support_tier</span><span class="o">=</span><span class="n">SupportTier</span><span class="o">.</span><span class="n">PARTIAL</span><span class="p">,</span>
+        <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Installs repo continuity rules and agent instructions for Cursor.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_install_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstallPlan</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">InstallPlan</span><span class="p">(</span>
+            <span class="n">platform_id</span><span class="o">=</span><span class="s2">&quot;cursor&quot;</span><span class="p">,</span>
+            <span class="n">home_paths</span><span class="o">=</span><span class="p">(),</span>
+            <span class="n">repo_paths</span><span class="o">=</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">repo_root</span> <span class="o">/</span> <span class="s2">&quot;.cursor&quot;</span> <span class="o">/</span> <span class="s2">&quot;rules&quot;</span> <span class="o">/</span> <span class="s2">&quot;repo-context-continuity.mdc&quot;</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">repo_root</span> <span class="o">/</span> <span class="s2">&quot;AGENTS.md&quot;</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">installs_repo_context</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Update installer to delegate to adapters</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">install_platform</span><span class="p">(</span><span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstallResult</span><span class="p">:</span>
+    <span class="n">adapter</span> <span class="o">=</span> <span class="n">get_registry</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">build_install_plan</span><span class="p">(</span><span class="n">repo_root</span><span class="o">=</span><span class="n">repo_root</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">adapter</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">repo_root</span><span class="o">=</span><span class="n">repo_root</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span> <span class="n">plan</span><span class="o">=</span><span class="n">plan</span><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 5: Run test to verify it passes</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_platform_install_plans.py tests/test_installer.py -q --basetemp .pytest-tmp-install-plans-green</code>
+Expected: PASS</p>
+<ul>
+<li>[ ] <strong>Step 6: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>repo_context_hooks/platforms<span class="w"> </span>repo_context_hooks/installer.py<span class="w"> </span>tests/test_platform_install_plans.py<span class="w"> </span>tests/test_installer.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: add phase1 platform adapters&quot;</span>
+</code></pre></div>
+<h3 id="task-3-add-cli-platforms-and-doctor">Task 3: Add CLI <code>platforms</code> And <code>doctor</code></h3>
+<p><strong>Files:</strong>
+- Modify: <code>repo_context_hooks/cli.py</code>
+- Create: <code>repo_context_hooks/doctor.py</code>
+- Test: <code>tests/test_cli.py</code>
+- Test: <code>tests/test_doctor.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing CLI and doctor tests</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_parser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks.doctor</span><span class="w"> </span><span class="kn">import</span> <span class="n">diagnose_platform</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_parser_supports_platforms_and_doctor_commands</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">build_parser</span><span class="p">()</span>
+
+    <span class="k">assert</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;platforms&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;platforms&quot;</span>
+    <span class="k">assert</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;doctor&quot;</span><span class="p">,</span> <span class="s2">&quot;--platform&quot;</span><span class="p">,</span> <span class="s2">&quot;claude&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;doctor&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_doctor_reports_missing_cursor_rule</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">diagnose_platform</span><span class="p">(</span><span class="s2">&quot;cursor&quot;</span><span class="p">,</span> <span class="n">repo_root</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;home&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">report</span><span class="o">.</span><span class="n">ok</span> <span class="ow">is</span> <span class="kc">False</span>
+    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;.cursor/rules/repo-context-continuity.mdc&quot;</span> <span class="ow">in</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">missing</span><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Run test to verify it fails</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_cli.py tests/test_doctor.py -q --basetemp .pytest-tmp-doctor-red</code>
+Expected: FAIL with missing command and module errors.</p>
+<ul>
+<li>[ ] <strong>Step 3: Implement <code>platforms</code> output and doctor validation</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_platforms</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">adapter</span> <span class="ow">in</span> <span class="n">get_registry</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">metadata</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">support_tier</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">summary</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_doctor</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">diagnose_platform</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">platform</span><span class="p">,</span> <span class="n">repo_root</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">repo_root</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
+    <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">ok</span> <span class="k">else</span> <span class="mi">1</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Implement minimal report object</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DoctorReport</span><span class="p">:</span>
+    <span class="n">platform_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">present</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">missing</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span> <span class="k">else</span> <span class="s2">&quot;MISSING&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">platform_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">present</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">missing</span><span class="p">])</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 5: Run test to verify it passes</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_cli.py tests/test_doctor.py -q --basetemp .pytest-tmp-doctor-green</code>
+Expected: PASS</p>
+<ul>
+<li>[ ] <strong>Step 6: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>repo_context_hooks/cli.py<span class="w"> </span>repo_context_hooks/doctor.py<span class="w"> </span>tests/test_cli.py<span class="w"> </span>tests/test_doctor.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: add platform listing and doctor commands&quot;</span>
+</code></pre></div>
+<h3 id="task-4-install-real-repo-artifacts-for-cursor-and-codex">Task 4: Install Real Repo Artifacts For Cursor And Codex</h3>
+<p><strong>Files:</strong>
+- Create: <code>repo_context_hooks/bundle/templates/AGENTS.md</code>
+- Create: <code>repo_context_hooks/bundle/templates/cursor-rule.mdc</code>
+- Modify: <code>repo_context_hooks/platforms/cursor.py</code>
+- Modify: <code>repo_context_hooks/platforms/codex.py</code>
+- Modify: <code>repo_context_hooks/platforms/claude.py</code>
+- Test: <code>tests/test_platform_artifacts.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing artifact-install tests</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks.installer</span><span class="w"> </span><span class="kn">import</span> <span class="n">install_platform</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_install_cursor_writes_rule_and_agents</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;repo&quot;</span>
+    <span class="n">repo</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;.git&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">install_platform</span><span class="p">(</span><span class="s2">&quot;cursor&quot;</span><span class="p">,</span> <span class="n">repo_root</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;home&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;.cursor&quot;</span> <span class="o">/</span> <span class="s2">&quot;rules&quot;</span> <span class="o">/</span> <span class="s2">&quot;repo-context-continuity.mdc&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;AGENTS.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="s2">&quot;Cursor&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">summary</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_install_codex_preserves_agents_without_installing_skills</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;repo&quot;</span>
+    <span class="n">repo</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;.git&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+    <span class="n">install_platform</span><span class="p">(</span><span class="s2">&quot;codex&quot;</span><span class="p">,</span> <span class="n">repo_root</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;home&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;AGENTS.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;home&quot;</span> <span class="o">/</span> <span class="s2">&quot;.codex&quot;</span> <span class="o">/</span> <span class="s2">&quot;skills&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Run test to verify it fails</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_platform_artifacts.py -q --basetemp .pytest-tmp-artifacts-red</code>
+Expected: FAIL because the Cursor and Codex repo artifacts are not yet installed.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add reusable templates and wire adapters to them</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>---
+description: Repo context continuity
+alwaysApply: true
+---
+
+- Treat README.md as the user-facing source of truth.
+- Treat specs/README.md as engineering continuity memory.
+- Read AGENTS.md before making major changes.
+- Preserve next-work state when handing off or switching sessions.
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="gh"># AGENTS.md</span>
+
+Start by reading:
+
+<span class="k">-</span><span class="w"> </span>README.md
+<span class="k">-</span><span class="w"> </span>specs/README.md
+
+Use the repo as the continuity source of truth. Preserve decisions, next work, and constraints in repo files rather than chat-only state.
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Run test to verify it passes</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_platform_artifacts.py tests/test_platform_install_plans.py -q --basetemp .pytest-tmp-artifacts-green</code>
+Expected: PASS</p>
+<ul>
+<li>[ ] <strong>Step 5: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>repo_context_hooks/bundle/templates<span class="w"> </span>repo_context_hooks/platforms<span class="w"> </span>tests/test_platform_artifacts.py<span class="w"> </span>tests/test_platform_install_plans.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: install cursor and codex repo artifacts&quot;</span>
+</code></pre></div>
+<h3 id="task-5-reposition-public-docs-and-support-matrix">Task 5: Reposition Public Docs And Support Matrix</h3>
+<p><strong>Files:</strong>
+- Modify: <code>README.md</code>
+- Create: <code>docs/platforms.md</code>
+- Modify: <code>docs/architecture.md</code>
+- Modify: <code>docs/competitive-analysis.md</code>
+- Modify: <code>tests/test_readme_contract.py</code>
+- Create: <code>tests/test_platform_docs.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing docs contract tests</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+
+<span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_readme_mentions_tested_phase1_platforms</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">&quot;README.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="s2">&quot;Claude&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="k">assert</span> <span class="s2">&quot;Cursor&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="k">assert</span> <span class="s2">&quot;Codex&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="k">assert</span> <span class="s2">&quot;tested in Phase 1&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_platform_docs_include_support_tiers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">&quot;docs&quot;</span> <span class="o">/</span> <span class="s2">&quot;platforms.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="s2">&quot;native&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="k">assert</span> <span class="s2">&quot;partial&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="k">assert</span> <span class="s2">&quot;planned&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Run test to verify it fails</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_readme_contract.py tests/test_platform_docs.py -q --basetemp .pytest-tmp-docs-red</code>
+Expected: FAIL because the current README still exposes outdated sections and no <code>docs/platforms.md</code> file exists.</p>
+<ul>
+<li>[ ] <strong>Step 3: Rewrite README around product outcomes and tested support</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="gu">## Tested In Phase 1</span>
+
+<span class="k">-</span><span class="w"> </span>Claude (<span class="sb">`native`</span>)
+<span class="k">-</span><span class="w"> </span>Cursor (<span class="sb">`partial`</span>)
+<span class="k">-</span><span class="w"> </span>Codex (<span class="sb">`partial`</span>)
+
+<span class="gu">## Planned Next</span>
+
+See [<span class="nt">docs/platforms.md</span>](<span class="na">docs/platforms.md</span>) for the roadmap and support tiers.
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Add platform matrix doc</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="gh"># Platform Support</span>
+
+| Platform | Tier | What works | What does not |
+| --- | --- | --- | --- |
+| Claude | native | skills, repo hooks, lifecycle continuity | n/a |
+| Cursor | partial | rules, AGENTS.md, repo contract | no Claude-style hook parity |
+| Codex | partial | AGENTS.md, repo contract | no native lifecycle hooks or bundled lifecycle skills |
+| Replit | planned | issue only | not implemented |
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 5: Update README contract tests to remove internal-only sections</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="n">expected_sections</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;# repo-context-hooks&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;## Why This Exists&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;## How It Works&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;## Tested In Phase 1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;## Platform Support&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;## Examples&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;## Development&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 6: Run test to verify it passes</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_readme_contract.py tests/test_platform_docs.py -q --basetemp .pytest-tmp-docs-green</code>
+Expected: PASS</p>
+<ul>
+<li>[ ] <strong>Step 7: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>README.md<span class="w"> </span>docs/platforms.md<span class="w"> </span>docs/architecture.md<span class="w"> </span>docs/competitive-analysis.md<span class="w"> </span>tests/test_readme_contract.py<span class="w"> </span>tests/test_platform_docs.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;docs: reposition platform support story&quot;</span>
+</code></pre></div>
+<h3 id="task-6-upgrade-diagrams-and-create-planned-platform-issues">Task 6: Upgrade Diagrams And Create Planned-Platform Issues</h3>
+<p><strong>Files:</strong>
+- Modify: <code>assets/diagrams/lifecycle-flow.svg</code>
+- Modify: <code>assets/diagrams/repo-contract.svg</code>
+- Modify: <code>assets/diagrams/before-after-continuity.svg</code>
+- Create: <code>docs/launch/platform-roadmap.md</code>
+- Modify: <code>docs/demo/animation-plan.md</code>
+- Create: <code>tests/test_visual_contract.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing visual/docs tests</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+
+<span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_lifecycle_diagram_mentions_real_interrupted_workflow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">&quot;assets&quot;</span> <span class="o">/</span> <span class="s2">&quot;diagrams&quot;</span> <span class="o">/</span> <span class="s2">&quot;lifecycle-flow.svg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="s2">&quot;bugfix interrupted by compact&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_platform_roadmap_doc_links_planned_platforms</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">&quot;docs&quot;</span> <span class="o">/</span> <span class="s2">&quot;launch&quot;</span> <span class="o">/</span> <span class="s2">&quot;platform-roadmap.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="s2">&quot;Replit&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="k">assert</span> <span class="s2">&quot;Lovable&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="k">assert</span> <span class="s2">&quot;Ollama&quot;</span> <span class="ow">in</span> <span class="n">text</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Run test to verify it fails</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_visual_contract.py -q --basetemp .pytest-tmp-visual-red</code>
+Expected: FAIL because diagrams are still abstract and the roadmap doc does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Replace abstract diagram copy with concrete task-story language</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>&lt;text&gt;Bugfix interrupted by compact&lt;/text&gt;
+&lt;text&gt;Checkpoint written to specs/README.md&lt;/text&gt;
+&lt;text&gt;Next session resumes from repo state&lt;/text&gt;
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Create roadmap issue brief doc for GitHub issues</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="gh"># Planned Platform Roadmap</span>
+
+<span class="k">-</span><span class="w"> </span>Replit: workspace agent integration and repo-contract injection
+<span class="k">-</span><span class="w"> </span>Lovable: GitHub-sync adapter strategy and repo instruction export
+<span class="k">-</span><span class="w"> </span>Ollama: local runtime strategy, likely partial/manual
+<span class="k">-</span><span class="w"> </span>OpenClaw: orchestration adapter investigation
+<span class="k">-</span><span class="w"> </span>Kimi: integration surface investigation
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 5: Run test to verify it passes</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_visual_contract.py tests/test_readme_contract.py tests/test_platform_docs.py -q --basetemp .pytest-tmp-visual-green</code>
+Expected: PASS after diagrams and roadmap docs match the new contract.</p>
+<ul>
+<li>[ ] <strong>Step 6: Create GitHub issues from the roadmap</strong></li>
+</ul>
+<p>Run: <code>gh issue create --title "Platform: Replit adapter"</code> and repeat for Lovable, Ollama, OpenClaw, and Kimi using the roadmap doc for the issue body.
+Expected: five new GitHub issues linked from <code>docs/launch/platform-roadmap.md</code></p>
+<ul>
+<li>[ ] <strong>Step 7: Commit</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>assets/diagrams<span class="w"> </span>docs/demo/animation-plan.md<span class="w"> </span>docs/launch/platform-roadmap.md<span class="w"> </span>tests/test_visual_contract.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;docs: add platform roadmap and concrete diagrams&quot;</span>
+</code></pre></div>
+<h3 id="task-7-full-verification-and-pr-update">Task 7: Full Verification And PR Update</h3>
+<p><strong>Files:</strong>
+- Modify: <code>README.md</code>
+- Modify: <code>docs/platforms.md</code>
+- Modify: <code>tests/test_cli.py</code>
+- Modify: <code>tests/test_installer.py</code>
+- Modify: <code>tests/test_readme_contract.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Run the full test suite</strong></li>
+</ul>
+<p>Run: <code>python -m pytest -q --basetemp .pytest-tmp-platform-foundation-full</code>
+Expected: PASS with zero failures.</p>
+<ul>
+<li>[ ] <strong>Step 2: Run editable install and CLI smoke checks</strong></li>
+</ul>
+<p>Run: <code>python -m pip install -e .</code>
+Expected: editable install succeeds.</p>
+<p>Run: <code>repo-context-hooks platforms</code>
+Expected: lists <code>claude</code>, <code>cursor</code>, and <code>codex</code> with tiers.</p>
+<p>Run: <code>repo-context-hooks doctor --platform claude --repo-root .</code>
+Expected: prints a validation report.</p>
+<ul>
+<li>[ ] <strong>Step 3: Review git status and confirm no user-owned untracked files were modified</strong></li>
+</ul>
+<p>Run: <code>git status --short</code>
+Expected: only intended tracked changes plus pre-existing <code>UBIQUITOUS_LANGUAGE.md</code> and <code>specs/</code> remain untouched.</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit final integration pass</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>README.md<span class="w"> </span>docs<span class="w"> </span>repo_context_hooks<span class="w"> </span>tests<span class="w"> </span>assets
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: ship phase1 platform foundation&quot;</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 5: Push branch and update the existing PR</strong></li>
+</ul>
+<p>Run: <code>git push -u origin feat/repo-context-hooks</code>
+Expected: branch updates the existing pull request with the new platform foundation work.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tabs", "search.suggest"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

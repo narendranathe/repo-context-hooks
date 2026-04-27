@@ -1,0 +1,1722 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Hook-based repo context continuity for coding agents">
+      
+      
+      
+        <link rel="canonical" href="https://narendranathe.github.io/repo-context-hooks/superpowers/plans/2026-04-17-repo-context-hooks-implementation/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Repo Context Hooks Implementation Plan - repo-context-hooks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#repo-context-hooks-implementation-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="repo-context-hooks" class="md-header__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            repo-context-hooks
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Repo Context Hooks Implementation Plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../platforms/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platforms
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../platform-playbooks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platform Playbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../telemetry-policy/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Telemetry Policy
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../monitoring/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../competitive-analysis/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Competitive Analysis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="repo-context-hooks" class="md-nav__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    repo-context-hooks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../platform-playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../telemetry-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../competitive-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#file-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Map
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="File Map">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delete
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-1-create-an-isolated-implementation-worktree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1: Create An Isolated Implementation Worktree
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-2-rename-the-python-module-and-make-repo-context-hooks-the-primary-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2: Rename The Python Module And Make repo-context-hooks The Primary CLI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-3-protect-bundle-and-cli-behavior-with-focused-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 3: Protect Bundle And CLI Behavior With Focused Tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-4-rewrite-the-public-readme-and-core-product-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4: Rewrite The Public README And Core Product Docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-install-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What install Does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repo-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repo Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-this-helps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who This Helps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        License
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-5-add-architecture-docs-and-real-example-layouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 5: Add Architecture Docs And Real Example Layouts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-6-add-launch-assets-for-linkedin-and-substack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 6: Add Launch Assets For LinkedIn And Substack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-7-validate-the-renamed-package-end-to-end-and-publish-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 7: Validate The Renamed Package End-To-End And Publish It
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-Review
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Self-Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spec-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spec Coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#placeholder-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Placeholder Scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-consistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type Consistency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="repo-context-hooks-implementation-plan">Repo Context Hooks Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Rename <code>repohandoff</code> into <code>repo-context-hooks</code>, preserve legacy CLI aliases, publish a community-ready GitHub repo, and add launch assets that explain the product honestly and clearly.</p>
+<p><strong>Architecture:</strong> Keep the installer and bundle behavior stable while moving the Python package from <code>graphify</code> to <code>repo_context_hooks</code>. Add a primary <code>repo-context-hooks</code> CLI, keep <code>repohandoff</code> and <code>graphify</code> as compatibility aliases, then rewrite the README/docs/examples around repo-local context continuity instead of generic memory claims.</p>
+<p><strong>Tech Stack:</strong> Python 3.9+, setuptools, argparse, pytest, git, GitHub CLI</p>
+<hr />
+<h2 id="file-map">File Map</h2>
+<h3 id="modify">Modify</h3>
+<ul>
+<li><code>pyproject.toml</code>
+  Purpose: rename the published package, switch console scripts to the new module, and update setuptools package discovery.</li>
+<li><code>README.md</code>
+  Purpose: turn the repo landing page into a public, community-shareable product page.</li>
+<li><code>docs/competitive-analysis.md</code>
+  Purpose: explain adjacent tools honestly and sharpen the differentiation.</li>
+<li><code>docs/positioning.md</code>
+  Purpose: define the one-line pitch, longer pitch, and category language for reuse.</li>
+<li><code>tests/test_installer.py</code>
+  Purpose: update imports and keep existing installer behavior locked during the rename.</li>
+</ul>
+<h3 id="create">Create</h3>
+<ul>
+<li><code>repo_context_hooks/__init__.py</code>
+  Purpose: package version export under the new module name.</li>
+<li><code>repo_context_hooks/__main__.py</code>
+  Purpose: module entry point for <code>python -m repo_context_hooks</code>.</li>
+<li><code>repo_context_hooks/cli.py</code>
+  Purpose: new public CLI implementation with <code>repo-context-hooks</code> as the primary help/program name.</li>
+<li><code>repo_context_hooks/installer.py</code>
+  Purpose: installer logic under the new module path.</li>
+<li><code>tests/test_cli.py</code>
+  Purpose: lock CLI naming and non-git repo behavior.</li>
+<li><code>tests/test_bundle_integrity.py</code>
+  Purpose: verify bundle assets remain complete after the module move.</li>
+<li><code>docs/architecture.md</code>
+  Purpose: explain hook flow, repo contract, and installation model.</li>
+<li><code>examples/minimal-repo/README.md</code>
+  Purpose: example user-facing README for a minimal repo using the package.</li>
+<li><code>examples/minimal-repo/specs/README.md</code>
+  Purpose: example engineering-memory file that shows the expected contract.</li>
+<li><code>examples/multi-project/README.md</code>
+  Purpose: example layout for teams managing several repos or workstreams.</li>
+<li><code>docs/launch/linkedin.md</code>
+  Purpose: launch-ready LinkedIn copy.</li>
+<li><code>docs/launch/substack.md</code>
+  Purpose: launch-ready Substack draft with the full builder story.</li>
+</ul>
+<h3 id="delete">Delete</h3>
+<ul>
+<li><code>graphify/__init__.py</code></li>
+<li><code>graphify/__main__.py</code></li>
+<li><code>graphify/cli.py</code></li>
+<li><code>graphify/installer.py</code></li>
+</ul>
+<p>The <code>graphify/bundle/</code> contents should move into <code>repo_context_hooks/bundle/</code> rather than being deleted.</p>
+<h2 id="task-1-create-an-isolated-implementation-worktree">Task 1: Create An Isolated Implementation Worktree</h2>
+<p><strong>Files:</strong>
+- Modify: none
+- Create: none
+- Test: working tree sanity only</p>
+<ul>
+<li>[ ] <strong>Step 1: Create the implementation worktree</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>worktree<span class="w"> </span>add<span class="w"> </span>..<span class="se">\r</span>epo-context-hooks-impl<span class="w"> </span>-b<span class="w"> </span>feat/repo-context-hooks
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Switch into the worktree and verify the branch</strong></li>
+</ul>
+<p>Run: <code>Set-Location ..\repo-context-hooks-impl; git branch --show-current</code>
+Expected: <code>feat/repo-context-hooks</code></p>
+<ul>
+<li>[ ] <strong>Step 3: Run the baseline test suite before touching code</strong></li>
+</ul>
+<p>Run: <code>python -m pytest -q --basetemp .pytest-tmp</code>
+Expected: <code>3 passed</code></p>
+<ul>
+<li>[ ] <strong>Step 4: Verify the branch starts clean</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>status<span class="w"> </span>--short
+</code></pre></div>
+<p>Expected: no output</p>
+<h2 id="task-2-rename-the-python-module-and-make-repo-context-hooks-the-primary-cli">Task 2: Rename The Python Module And Make <code>repo-context-hooks</code> The Primary CLI</h2>
+<p><strong>Files:</strong>
+- Modify: <code>pyproject.toml</code>
+- Create: <code>repo_context_hooks/__init__.py</code>, <code>repo_context_hooks/__main__.py</code>, <code>repo_context_hooks/cli.py</code>, <code>repo_context_hooks/installer.py</code>
+- Delete: <code>graphify/__init__.py</code>, <code>graphify/__main__.py</code>, <code>graphify/cli.py</code>, <code>graphify/installer.py</code>
+- Test: <code>tests/test_installer.py</code>, <code>tests/test_cli.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing CLI test for the new public module</strong></li>
+</ul>
+<p>Create <code>tests/test_cli.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">argparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">Namespace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">_install</span><span class="p">,</span> <span class="n">build_parser</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_build_parser_uses_public_name</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">build_parser</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">parser</span><span class="o">.</span><span class="n">prog</span> <span class="o">==</span> <span class="s2">&quot;repo-context-hooks&quot;</span>
+    <span class="k">assert</span> <span class="s2">&quot;repo context continuity&quot;</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_install_skips_repo_hooks_outside_git_repo</span><span class="p">(</span>
+    <span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">monkeypatch</span><span class="p">,</span>
+    <span class="n">capsys</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fake_install_skills</span><span class="p">(</span><span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;context-handoff-hooks&quot;</span><span class="p">:</span> <span class="s2">&quot;installed&quot;</span><span class="p">}</span>
+
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span>
+        <span class="s2">&quot;repo_context_hooks.cli.install_skills&quot;</span><span class="p">,</span>
+        <span class="n">fake_install_skills</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">Namespace</span><span class="p">(</span>
+        <span class="n">platform</span><span class="o">=</span><span class="s2">&quot;codex&quot;</span><span class="p">,</span>
+        <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">skip_repo_hooks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">repo_root</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">_install</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">capsys</span><span class="o">.</span><span class="n">readouterr</span><span class="p">()</span><span class="o">.</span><span class="n">out</span>
+    <span class="k">assert</span> <span class="s2">&quot;Installed platform skills to:&quot;</span> <span class="ow">in</span> <span class="n">out</span>
+    <span class="k">assert</span> <span class="s2">&quot;Repo hooks skipped: target is not a git repository.&quot;</span> <span class="ow">in</span> <span class="n">out</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Run the new test to confirm the rename has not been implemented yet</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_cli.py -q</code>
+Expected: FAIL with <code>ModuleNotFoundError: No module named 'repo_context_hooks'</code></p>
+<ul>
+<li>[ ] <strong>Step 3: Move the package directory to the new module name</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>mv<span class="w"> </span>graphify<span class="w"> </span>repo_context_hooks
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Replace package metadata and entry points</strong></li>
+</ul>
+<p>Update <code>pyproject.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[build-system]</span>
+<span class="n">requires</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;setuptools&gt;=68&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;wheel&quot;</span><span class="p">]</span>
+<span class="n">build-backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;setuptools.build_meta&quot;</span>
+
+<span class="k">[project]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;repo-context-hooks&quot;</span>
+<span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;0.1.0&quot;</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hook-based repo context continuity for coding agents.&quot;</span>
+<span class="n">readme</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;README.md&quot;</span>
+<span class="n">requires-python</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&gt;=3.9&quot;</span>
+<span class="n">license</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;MIT&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">authors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;Narendranath Edara&quot;</span><span class="w"> </span><span class="p">}]</span>
+<span class="n">dependencies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+
+<span class="k">[project.scripts]</span>
+<span class="n">repo-context-hooks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;repo_context_hooks.cli:main&quot;</span>
+<span class="n">repohandoff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;repo_context_hooks.cli:main&quot;</span>
+<span class="n">graphify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;repo_context_hooks.cli:main&quot;</span>
+
+<span class="k">[tool.setuptools]</span>
+<span class="n">include-package-data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[tool.setuptools.packages.find]</span>
+<span class="n">where</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.&quot;</span><span class="p">]</span>
+<span class="n">include</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;repo_context_hooks*&quot;</span><span class="p">]</span>
+
+<span class="k">[tool.setuptools.package-data]</span>
+<span class="n">repo_context_hooks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;bundle/**/*&quot;</span><span class="p">]</span>
+
+<span class="k">[tool.pytest.ini_options]</span>
+<span class="n">testpaths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tests&quot;</span><span class="p">]</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 5: Replace the CLI module with the new public wording</strong></li>
+</ul>
+<p>Update <code>repo_context_hooks/cli.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.installer</span><span class="w"> </span><span class="kn">import</span> <span class="n">PLATFORMS</span><span class="p">,</span> <span class="n">install_repo_hooks</span><span class="p">,</span> <span class="n">install_skills</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_parser</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">prog</span><span class="o">=</span><span class="s2">&quot;repo-context-hooks&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Install repo context continuity skills and lifecycle hooks.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">subparsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">install</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s2">&quot;install&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Install skills for a platform and optionally configure repo hooks.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">install</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--platform&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="n">PLATFORMS</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Target platform for skill installation.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">install</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--repo-root&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Repository root for hook setup (default: current directory).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">install</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--skip-repo-hooks&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Install platform skills only.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">install</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--force&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Overwrite existing installed skills.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_install</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="n">target</span><span class="p">,</span> <span class="n">statuses</span> <span class="o">=</span> <span class="n">install_skills</span><span class="p">(</span><span class="n">platform</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">platform</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">force</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Installed platform skills to: </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">skill</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">statuses</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- </span><span class="si">{</span><span class="n">skill</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">skip_repo_hooks</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Skipped repo hook installation (--skip-repo-hooks).&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">repo_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">repo_root</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">git_dir</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="s2">&quot;.git&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">git_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;Repo hooks skipped: target is not a git repository. &quot;</span>
+            <span class="s2">&quot;Use --repo-root on a repo or omit --skip-repo-hooks in a repo directory.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">installed</span> <span class="o">=</span> <span class="n">install_repo_hooks</span><span class="p">(</span><span class="n">repo_root</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Installed repo hooks:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">installed</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">build_parser</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;install&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_install</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unknown command&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">2</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 6: Restore package boilerplate and keep installer behavior unchanged</strong></li>
+</ul>
+<p>Update <code>repo_context_hooks/__init__.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;__version__&quot;</span><span class="p">]</span>
+
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.1.0&quot;</span>
+</code></pre></div>
+<p>Update <code>repo_context_hooks/__main__.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">main</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</code></pre></div>
+<p>Keep <code>repo_context_hooks/installer.py</code> byte-for-byte identical to the moved <code>graphify/installer.py</code> so this task only changes naming, not installer behavior.</p>
+<ul>
+<li>[ ] <strong>Step 7: Update the installer test imports</strong></li>
+</ul>
+<p>Update <code>tests/test_installer.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks.installer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">install_repo_hooks</span><span class="p">,</span>
+    <span class="n">install_skills</span><span class="p">,</span>
+    <span class="n">platform_skill_dir</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_platform_skill_dir</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">home</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;/tmp/demo-home&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">platform_skill_dir</span><span class="p">(</span><span class="s2">&quot;codex&quot;</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="o">==</span> <span class="n">home</span> <span class="o">/</span> <span class="s2">&quot;.codex&quot;</span> <span class="o">/</span> <span class="s2">&quot;skills&quot;</span>
+    <span class="k">assert</span> <span class="n">platform_skill_dir</span><span class="p">(</span><span class="s2">&quot;claude&quot;</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="o">==</span> <span class="n">home</span> <span class="o">/</span> <span class="s2">&quot;.claude&quot;</span> <span class="o">/</span> <span class="s2">&quot;skills&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_install_skills_idempotent</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">target</span><span class="p">,</span> <span class="n">first</span> <span class="o">=</span> <span class="n">install_skills</span><span class="p">(</span><span class="s2">&quot;codex&quot;</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">first</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="s2">&quot;installed&quot;</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">first</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="n">install_skills</span><span class="p">(</span><span class="s2">&quot;codex&quot;</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="s2">&quot;skipped&quot;</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">second</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">third</span> <span class="o">=</span> <span class="n">install_skills</span><span class="p">(</span><span class="s2">&quot;codex&quot;</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="s2">&quot;installed&quot;</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">third</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_install_repo_hooks_merges_existing</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;repo&quot;</span>
+    <span class="n">repo</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;.git&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+    <span class="n">settings_path</span> <span class="o">=</span> <span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;.claude&quot;</span> <span class="o">/</span> <span class="s2">&quot;settings.json&quot;</span>
+    <span class="n">settings_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">settings_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;permissions&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;allow&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Bash(git:*)&quot;</span><span class="p">]},</span>
+                <span class="s2">&quot;hooks&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;PreToolUse&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;matcher&quot;</span><span class="p">:</span> <span class="s2">&quot;Bash&quot;</span><span class="p">,</span> <span class="s2">&quot;hooks&quot;</span><span class="p">:</span> <span class="p">[]}]},</span>
+            <span class="p">}</span>
+        <span class="p">),</span>
+        <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">installed</span> <span class="o">=</span> <span class="n">install_repo_hooks</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="s2">&quot;repo_specs_memory.py&quot;</span> <span class="ow">in</span> <span class="n">installed</span>
+    <span class="k">assert</span> <span class="s2">&quot;session_context.py&quot;</span> <span class="ow">in</span> <span class="n">installed</span>
+
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">settings_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="s2">&quot;hooks&quot;</span> <span class="ow">in</span> <span class="n">settings</span>
+    <span class="k">assert</span> <span class="s2">&quot;PreToolUse&quot;</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;hooks&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">&quot;SessionStart&quot;</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">[</span><span class="s2">&quot;hooks&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;.claude&quot;</span> <span class="o">/</span> <span class="s2">&quot;scripts&quot;</span> <span class="o">/</span> <span class="s2">&quot;repo_specs_memory.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;.claude&quot;</span> <span class="o">/</span> <span class="s2">&quot;scripts&quot;</span> <span class="o">/</span> <span class="s2">&quot;session_context.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 8: Run the targeted tests to verify the rename</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_cli.py tests/test_installer.py -q --basetemp .pytest-tmp</code>
+Expected: <code>5 passed</code></p>
+<ul>
+<li>[ ] <strong>Step 9: Commit the package rename</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>pyproject.toml<span class="w"> </span>repo_context_hooks<span class="w"> </span>tests/test_cli.py<span class="w"> </span>tests/test_installer.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;refactor: rename package to repo-context-hooks&quot;</span>
+</code></pre></div>
+<h2 id="task-3-protect-bundle-and-cli-behavior-with-focused-tests">Task 3: Protect Bundle And CLI Behavior With Focused Tests</h2>
+<p><strong>Files:</strong>
+- Modify: none
+- Create: <code>tests/test_bundle_integrity.py</code>
+- Test: <code>tests/test_bundle_integrity.py</code>, <code>tests/test_cli.py</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Add a bundle integrity test</strong></li>
+</ul>
+<p>Create <code>tests/test_bundle_integrity.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks.installer</span><span class="w"> </span><span class="kn">import</span> <span class="n">bundle_root</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_bundle_contains_expected_assets</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">bundle_root</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;hooks.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;scripts&quot;</span> <span class="o">/</span> <span class="s2">&quot;repo_specs_memory.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;scripts&quot;</span> <span class="o">/</span> <span class="s2">&quot;session_context.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+    <span class="n">skills</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;skills&quot;</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">skills</span> <span class="o">/</span> <span class="s2">&quot;context-handoff-hooks&quot;</span> <span class="o">/</span> <span class="s2">&quot;SKILL.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">skills</span> <span class="o">/</span> <span class="s2">&quot;session-start-context-loader&quot;</span> <span class="o">/</span> <span class="s2">&quot;SKILL.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">skills</span> <span class="o">/</span> <span class="s2">&quot;precompact-checkpoint&quot;</span> <span class="o">/</span> <span class="s2">&quot;SKILL.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">skills</span> <span class="o">/</span> <span class="s2">&quot;postcompact-context-reload&quot;</span> <span class="o">/</span> <span class="s2">&quot;SKILL.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Add a CLI skip-path test for <code>--skip-repo-hooks</code></strong></li>
+</ul>
+<p>Append to <code>tests/test_cli.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">test_install_respects_skip_repo_hooks</span><span class="p">(</span>
+    <span class="n">tmp_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">monkeypatch</span><span class="p">,</span>
+    <span class="n">capsys</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fake_install_skills</span><span class="p">(</span><span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;context-handoff-hooks&quot;</span><span class="p">:</span> <span class="s2">&quot;installed&quot;</span><span class="p">}</span>
+
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span>
+        <span class="s2">&quot;repo_context_hooks.cli.install_skills&quot;</span><span class="p">,</span>
+        <span class="n">fake_install_skills</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">Namespace</span><span class="p">(</span>
+        <span class="n">platform</span><span class="o">=</span><span class="s2">&quot;claude&quot;</span><span class="p">,</span>
+        <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">skip_repo_hooks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">repo_root</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">_install</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">capsys</span><span class="o">.</span><span class="n">readouterr</span><span class="p">()</span><span class="o">.</span><span class="n">out</span>
+    <span class="k">assert</span> <span class="s2">&quot;Skipped repo hook installation&quot;</span> <span class="ow">in</span> <span class="n">out</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 3: Run the focused behavior tests</strong></li>
+</ul>
+<p>Run: <code>python -m pytest tests/test_cli.py tests/test_bundle_integrity.py -q --basetemp .pytest-tmp</code>
+Expected: <code>4 passed</code></p>
+<ul>
+<li>[ ] <strong>Step 4: Commit the protective tests</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>tests/test_cli.py<span class="w"> </span>tests/test_bundle_integrity.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;test: protect cli and bundle behavior&quot;</span>
+</code></pre></div>
+<h2 id="task-4-rewrite-the-public-readme-and-core-product-docs">Task 4: Rewrite The Public README And Core Product Docs</h2>
+<p><strong>Files:</strong>
+- Modify: <code>README.md</code>, <code>docs/positioning.md</code>, <code>docs/competitive-analysis.md</code>
+- Create: none
+- Test: copy validation via <code>rg</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Replace the README with a community-facing landing page</strong></li>
+</ul>
+<p>Update <code>README.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># repo-context-hooks</span>
+
+Hook-based repo context continuity for coding agents.
+
+<span class="sb">`repo-context-hooks`</span> preserves repository context across session start, compaction, and handoff using repo-local hooks, specs memory, and installable skills.
+
+It is built for teams and solo developers who want agents to continue work from the repo&#39;s actual state instead of relying on fragile chat memory.
+
+<span class="gu">## Why This Exists</span>
+
+Agent sessions usually fail in predictable ways:
+
+<span class="k">-</span><span class="w"> </span>a new session re-discovers the repo from scratch
+<span class="k">-</span><span class="w"> </span>auto-compact drops tactical decisions
+<span class="k">-</span><span class="w"> </span>next-work context goes stale
+<span class="k">-</span><span class="w"> </span>issue context disappears between sessions
+
+Claude Code&#39;s hooks model points to the right primitives. This package turns that pattern into a reusable, repo-local workflow.
+
+<span class="gu">## What This Is</span>
+
+<span class="k">-</span><span class="w"> </span>lifecycle hooks for session start, compact, and session end
+<span class="k">-</span><span class="w"> </span>a dual-document contract: <span class="sb">`README.md`</span> for users, <span class="sb">`specs/README.md`</span> for engineering memory
+<span class="k">-</span><span class="w"> </span>bundled skills for loading context and checkpointing work
+<span class="k">-</span><span class="w"> </span>zero external database or hosted service requirement
+
+<span class="gu">## What This Is Not</span>
+
+<span class="k">-</span><span class="w"> </span>not a vector memory layer
+<span class="k">-</span><span class="w"> </span>not a hosted memory service
+<span class="k">-</span><span class="w"> </span>not a knowledge graph database
+<span class="k">-</span><span class="w"> </span>not Claude-only, even if Claude Code inspired the first version
+
+<span class="gu">## Install</span>
+
+```bash
+python -m pip install -e .
+repo-context-hooks install --platform codex
+</code></pre></div>
+<p>Compatibility aliases:</p>
+<div class="highlight"><pre><span></span><code>repohandoff<span class="w"> </span>install<span class="w"> </span>--platform<span class="w"> </span>codex
+graphify<span class="w"> </span>install<span class="w"> </span>--platform<span class="w"> </span>codex
+</code></pre></div>
+<h2 id="what-install-does">What <code>install</code> Does</h2>
+<ol>
+<li>Installs bundled skills into the target agent home directory</li>
+<li>Copies helper scripts into <code>.claude/scripts</code></li>
+<li>Merges lifecycle hook entries into <code>.claude/settings.json</code></li>
+<li>Bootstraps <code>specs/README.md</code> continuity for the current repo</li>
+</ol>
+<h2 id="repo-contract">Repo Contract</h2>
+<ul>
+<li><code>README.md</code>: user-facing project explanation and contribution guide</li>
+<li><code>specs/README.md</code>: engineering memory, decisions, constraints, failures, and next work</li>
+</ul>
+<h2 id="who-this-helps">Who This Helps</h2>
+<ul>
+<li>developers using Claude Code or Codex in long-running repos</li>
+<li>teams onboarding new agents into partially complete projects</li>
+<li>engineers who want deterministic continuity without extra infrastructure</li>
+</ul>
+<h2 id="development">Development</h2>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>--basetemp<span class="w"> </span>.pytest-tmp
+</code></pre></div>
+<h2 id="license">License</h2>
+<p>MIT
+<div class="highlight"><pre><span></span><code>- [ ] **Step 2: Rewrite the positioning doc around the new public language**
+
+Update `docs/positioning.md`:
+
+```markdown
+# repo-context-hooks Positioning
+
+## One-Line Pitch
+
+Hook-based repo context continuity for coding agents.
+
+## Problem
+
+Agent sessions degrade at the edges:
+
+- startup lacks project state
+- compaction drops tactical context
+- handoffs lose next-work clarity
+
+## Thesis
+
+Repository context should be durable, reviewable, and operational.
+
+## Product Claim
+
+`repo-context-hooks` turns repo context into infrastructure using hooks, repo docs, and deterministic checkpoints.
+
+## Core Value
+
+- lifecycle hooks at the right moments
+- repo-local engineering memory
+- startup context loading
+- no external memory backend
+
+## Messaging Guardrails
+
+- Do say: &quot;repo-local continuity&quot;
+- Do say: &quot;hook-based context handoff&quot;
+- Do not say: &quot;solves AI memory&quot;
+- Do not say: &quot;knowledge graph platform&quot;
+</code></pre></div></p>
+<ul>
+<li>[ ] <strong>Step 3: Rewrite the competitive analysis with an honest comparison</strong></li>
+</ul>
+<p>Update <code>docs/competitive-analysis.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># Competitive Analysis</span>
+
+<span class="gu">## Adjacent Projects</span>
+
+<span class="gu">### `thedotmack/claude-mem`</span>
+
+<span class="k">-</span><span class="w"> </span>Focus: session capture, compression, and retrieval
+<span class="k">-</span><span class="w"> </span>Difference: stronger on memory archive behavior than repo-operating workflow
+
+<span class="gu">### `mem0ai/mem0` and OpenMemory</span>
+
+<span class="k">-</span><span class="w"> </span>Focus: long-term memory infrastructure
+<span class="k">-</span><span class="w"> </span>Difference: stronger on cross-session memory systems than repo-local hook workflows
+
+<span class="gu">### Claude Code Hooks</span>
+
+<span class="k">-</span><span class="w"> </span>Focus: lifecycle primitives provided by the platform
+<span class="k">-</span><span class="w"> </span>Difference: capability only, not a packaged workflow
+
+<span class="gu">## Honest Take</span>
+
+This project is not novel because hooks exist or because memory tools exist.
+
+Its value is packaging the workflow many teams actually need:
+
+<span class="k">-</span><span class="w"> </span>load project state on session start
+<span class="k">-</span><span class="w"> </span>checkpoint tactical context before compact
+<span class="k">-</span><span class="w"> </span>restore continuity after compact
+<span class="k">-</span><span class="w"> </span>keep the source of truth in the repo
+
+<span class="gu">## Positioning Rule</span>
+
+Describe <span class="sb">`repo-context-hooks`</span> as a deterministic repo workflow, not as a universal memory solution.
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Validate the copy no longer leads with the old product name</strong></li>
+</ul>
+<p>Run: <code>rg -n "RepoHandoff|^# RepoHandoff" README.md docs/positioning.md docs/competitive-analysis.md</code>
+Expected: no matches</p>
+<ul>
+<li>[ ] <strong>Step 5: Commit the docs rewrite</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>README.md<span class="w"> </span>docs/positioning.md<span class="w"> </span>docs/competitive-analysis.md
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;docs: rewrite public positioning for repo-context-hooks&quot;</span>
+</code></pre></div>
+<h2 id="task-5-add-architecture-docs-and-real-example-layouts">Task 5: Add Architecture Docs And Real Example Layouts</h2>
+<p><strong>Files:</strong>
+- Create: <code>docs/architecture.md</code>, <code>examples/minimal-repo/README.md</code>, <code>examples/minimal-repo/specs/README.md</code>, <code>examples/multi-project/README.md</code>
+- Modify: none
+- Test: content validation via <code>rg</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Add an architecture explainer</strong></li>
+</ul>
+<p>Create <code>docs/architecture.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># Architecture</span>
+
+<span class="gu">## Core Flow</span>
+
+<span class="k">1.</span> <span class="sb">`SessionStart`</span> loads project memory and next-work context
+<span class="k">2.</span> <span class="sb">`PreCompact`</span> checkpoints the latest tactical state into <span class="sb">`specs/README.md`</span>
+<span class="k">3.</span> <span class="sb">`PostCompact`</span> reloads the condensed project context
+<span class="k">4.</span> <span class="sb">`SessionEnd`</span> captures a final continuity note
+
+<span class="gu">## Source Of Truth</span>
+
+The repo owns the context:
+
+<span class="k">-</span><span class="w"> </span>user-facing intent lives in <span class="sb">`README.md`</span>
+<span class="k">-</span><span class="w"> </span>engineering memory lives in <span class="sb">`specs/README.md`</span>
+<span class="k">-</span><span class="w"> </span>hook automation keeps those files current enough for the next agent
+
+<span class="gu">## Why This Works</span>
+
+The system avoids hidden state. A new agent can inspect the repo and understand:
+
+<span class="k">-</span><span class="w"> </span>what the product is
+<span class="k">-</span><span class="w"> </span>what constraints matter
+<span class="k">-</span><span class="w"> </span>what changed recently
+<span class="k">-</span><span class="w"> </span>what should happen next
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Add a minimal example repo contract</strong></li>
+</ul>
+<p>Create <code>examples/minimal-repo/README.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># Example Project</span>
+
+This is a user-facing README.
+
+<span class="gu">## What It Does</span>
+
+This example project shows the smallest useful repo shape for <span class="sb">`repo-context-hooks`</span>.
+
+<span class="gu">## Contributing</span>
+
+<span class="k">-</span><span class="w"> </span>read <span class="sb">`specs/README.md`</span> before making architectural changes
+<span class="k">-</span><span class="w"> </span>update this README when the user-facing behavior changes
+</code></pre></div>
+<p>Create <code>examples/minimal-repo/specs/README.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># Engineering Memory</span>
+
+<span class="gu">## Constraints</span>
+
+<span class="k">-</span><span class="w"> </span>keep the project simple
+<span class="k">-</span><span class="w"> </span>prefer repo-local automation
+
+<span class="gu">## Decisions</span>
+
+<span class="k">-</span><span class="w"> </span>use hooks to load and checkpoint context
+<span class="k">-</span><span class="w"> </span>keep tactical continuity in markdown instead of hidden state
+
+<span class="gu">## Current State</span>
+
+<span class="k">-</span><span class="w"> </span>starter example is complete
+
+<span class="gu">## Next Work</span>
+
+<span class="k">-</span><span class="w"> </span>add issue sync if the team wants startup triage
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 3: Add a multi-project example</strong></li>
+</ul>
+<p>Create <code>examples/multi-project/README.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># Multi-Project Example</span>
+
+Use this layout when one developer or team maintains several agent-enabled repos.
+
+<span class="gu">## Pattern</span>
+
+<span class="k">-</span><span class="w"> </span>each repo keeps its own <span class="sb">`README.md`</span>
+<span class="k">-</span><span class="w"> </span>each repo keeps its own <span class="sb">`specs/README.md`</span>
+<span class="k">-</span><span class="w"> </span>a shared portfolio or wiki can index the repos, but operational context stays local
+
+<span class="gu">## Why</span>
+
+This keeps handoff quality high and prevents one giant memory file from becoming the bottleneck.
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 4: Validate the example contract is present</strong></li>
+</ul>
+<p>Run: <code>rg -n "Engineering Memory|What It Does|Multi-Project Example" docs examples</code>
+Expected: one or more matches in the newly created files</p>
+<ul>
+<li>[ ] <strong>Step 5: Commit the architecture and examples</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>docs/architecture.md<span class="w"> </span>examples
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;docs: add architecture and example repo contracts&quot;</span>
+</code></pre></div>
+<h2 id="task-6-add-launch-assets-for-linkedin-and-substack">Task 6: Add Launch Assets For LinkedIn And Substack</h2>
+<p><strong>Files:</strong>
+- Create: <code>docs/launch/linkedin.md</code>, <code>docs/launch/substack.md</code>
+- Modify: none
+- Test: copy validation via <code>rg</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Write the LinkedIn launch post</strong></li>
+</ul>
+<p>Create <code>docs/launch/linkedin.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># LinkedIn Launch Post</span>
+
+I’ve been spending a lot of time working with coding agents lately, and one problem kept showing up in real repos: context gets fragile fast.
+
+Claude Code made that pain especially visible for me. But when I spent more time with the docs, it was also clear that the building blocks were already there: session lifecycle hooks, compact boundaries, startup hooks, and repo-local workflows.
+
+So I built something for my own projects and packaged it into something other developers can use too:
+
+<span class="sb">`repo-context-hooks`</span>
+
+What it does:
+
+<span class="k">-</span><span class="w"> </span>loads useful project context when a new session starts
+<span class="k">-</span><span class="w"> </span>checkpoints tactical state before compact
+<span class="k">-</span><span class="w"> </span>restores continuity after compact
+<span class="k">-</span><span class="w"> </span>keeps the source of truth inside the repo
+
+It is not a memory database or hosted platform. It is a practical repo workflow built around hooks, <span class="sb">`README.md`</span>, and <span class="sb">`specs/README.md`</span>.
+
+I took inspiration from Claude Code&#39;s hook model and from several memory/plugin projects out there, but narrowed the problem to the thing I actually needed in daily work: repo context continuity.
+
+If you’re building with agents and want a cleaner handoff story, check it out:
+
+<span class="sb">`https://github.com/narendranathe/repo-context-hooks`</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Write the Substack launch draft</strong></li>
+</ul>
+<p>Create <code>docs/launch/substack.md</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="gh"># Repo Context Hooks: Turning Repo Context Into Infrastructure</span>
+
+I have been spending a lot of time with coding agents recently, and one failure mode kept repeating: the more real the project became, the more fragile the agent&#39;s working context felt.
+
+Claude Code made that especially obvious for me. It is easy to say &quot;the model forgot,&quot; but that framing is incomplete. When I went back to the documentation, the more interesting takeaway was that the product already hinted at a better pattern. Claude Code exposes lifecycle hooks around session start, compaction, and session end. That means the right question is not &quot;how do I make the model remember everything?&quot; It is &quot;how do I make project continuity deterministic?&quot;
+
+That shift led me to build <span class="sb">`repo-context-hooks`</span>.
+
+It is not a memory database. It is not a hosted knowledge layer. It is not an attempt to solve agent memory in the abstract.
+
+It is a smaller and more useful thing:
+
+<span class="k">-</span><span class="w"> </span>load repo context at session start
+<span class="k">-</span><span class="w"> </span>checkpoint tactical state before compact
+<span class="k">-</span><span class="w"> </span>restore working continuity after compact
+<span class="k">-</span><span class="w"> </span>keep the durable state inside the repository
+
+The project also reflects something I think we will need more of in the broader agent ecosystem: tools that operationalize workflow patterns instead of promising magical memory.
+
+I took inspiration from Claude Code&#39;s documentation and from adjacent projects in the memory/plugin space, but I wanted something more honest and more operational. The result is a package that treats context as repo infrastructure: hooks, docs, and clear handoff points.
+
+If you want to try it or adapt the workflow for your own repos, the project is here:
+
+<span class="sb">`https://github.com/narendranathe/repo-context-hooks`</span>
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 3: Validate the launch copy includes the origin story and the repo URL</strong></li>
+</ul>
+<p>Run: <code>rg -n "Claude Code|repo-context-hooks|github.com/narendranathe/repo-context-hooks" docs/launch</code>
+Expected: matches in both launch files</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit the launch assets</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>docs/launch
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;docs: add launch posts for repo-context-hooks&quot;</span>
+</code></pre></div>
+<h2 id="task-7-validate-the-renamed-package-end-to-end-and-publish-it">Task 7: Validate The Renamed Package End-To-End And Publish It</h2>
+<p><strong>Files:</strong>
+- Modify: git metadata and remote configuration only
+- Create: none
+- Test: full suite plus installed CLI smoke tests</p>
+<ul>
+<li>[ ] <strong>Step 1: Run the full test suite</strong></li>
+</ul>
+<p>Run: <code>python -m pytest -q --basetemp .pytest-tmp</code>
+Expected: all tests pass</p>
+<ul>
+<li>[ ] <strong>Step 2: Install the package in editable mode</strong></li>
+</ul>
+<p>Run: <code>python -m pip install -e .</code>
+Expected: pip reports <code>Successfully installed repo-context-hooks-0.1.0</code> or <code>Successfully installed repo-context-hooks</code></p>
+<ul>
+<li>[ ] <strong>Step 3: Smoke-test the primary and compatibility CLIs</strong></li>
+</ul>
+<p>Run: <code>repo-context-hooks --help</code>
+Expected: help text starts with <code>usage: repo-context-hooks</code></p>
+<p>Run: <code>repohandoff --help</code>
+Expected: help text starts with <code>usage: repo-context-hooks</code></p>
+<p>Run: <code>graphify --help</code>
+Expected: help text starts with <code>usage: repo-context-hooks</code></p>
+<ul>
+<li>[ ] <strong>Step 4: Rename or create the GitHub repository</strong></li>
+</ul>
+<p>If the current remote is still <code>narendranathe/repohandoff</code>, run:</p>
+<div class="highlight"><pre><span></span><code>gh<span class="w"> </span>api<span class="w"> </span>-X<span class="w"> </span>PATCH<span class="w"> </span>repos/narendranathe/repohandoff<span class="w"> </span>-f<span class="w"> </span><span class="nv">name</span><span class="o">=</span><span class="s1">&#39;repo-context-hooks&#39;</span>
+git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://github.com/narendranathe/repo-context-hooks.git
+</code></pre></div>
+<p>If the repo was never published, run instead:</p>
+<div class="highlight"><pre><span></span><code>gh<span class="w"> </span>repo<span class="w"> </span>create<span class="w"> </span>narendranathe/repo-context-hooks<span class="w"> </span>--public<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--remote<span class="w"> </span>origin<span class="w"> </span>--push
+</code></pre></div>
+<ul>
+<li>[ ] <strong>Step 5: Verify the worktree is clean before publish</strong></li>
+</ul>
+<p>Run: <code>git status --short</code>
+Expected: no output</p>
+<ul>
+<li>[ ] <strong>Step 6: Push the implementation branch</strong></li>
+</ul>
+<p>Run: <code>git push -u origin feat/repo-context-hooks</code>
+Expected: branch pushed successfully</p>
+<ul>
+<li>[ ] <strong>Step 7: Open the pull request</strong></li>
+</ul>
+<p>Run: <code>gh pr create --fill --base main --head feat/repo-context-hooks</code>
+Expected: GitHub CLI prints the PR URL</p>
+<ul>
+<li>[ ] <strong>Step 8: Merge the pull request once checks pass</strong></li>
+</ul>
+<p>Run: <code>gh pr merge --squash --delete-branch --auto</code>
+Expected: GitHub CLI confirms auto-merge or immediate merge</p>
+<h2 id="self-review">Self-Review</h2>
+<h3 id="spec-coverage">Spec Coverage</h3>
+<ul>
+<li>rename and public identity: Task 2</li>
+<li>compatibility aliases: Task 2 and Task 7</li>
+<li>public GitHub-ready README/docs: Task 4 and Task 5</li>
+<li>honest differentiation and self-critique: Task 4</li>
+<li>launch assets: Task 6</li>
+<li>clean publish flow: Task 7</li>
+</ul>
+<h3 id="placeholder-scan">Placeholder Scan</h3>
+<ul>
+<li>no <code>TODO</code></li>
+<li>no <code>TBD</code></li>
+<li>all file paths are explicit</li>
+<li>all code-bearing steps include code blocks</li>
+</ul>
+<h3 id="type-consistency">Type Consistency</h3>
+<ul>
+<li>package/module name is consistently <code>repo_context_hooks</code></li>
+<li>public CLI name is consistently <code>repo-context-hooks</code></li>
+<li>compatibility aliases remain <code>repohandoff</code> and <code>graphify</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tabs", "search.suggest"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

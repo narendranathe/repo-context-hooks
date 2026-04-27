@@ -1,0 +1,1311 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Hook-based repo context continuity for coding agents">
+      
+      
+      
+        <link rel="canonical" href="https://narendranathe.github.io/repo-context-hooks/superpowers/specs/2026-04-20-readme-visual-polish-design/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Repo Context Hooks README And Visual Polish Design - repo-context-hooks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#repo-context-hooks-readme-and-visual-polish-design" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="repo-context-hooks" class="md-header__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            repo-context-hooks
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Repo Context Hooks README And Visual Polish Design
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../platforms/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platforms
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../platform-playbooks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platform Playbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../telemetry-policy/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Telemetry Policy
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../monitoring/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../competitive-analysis/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Competitive Analysis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="repo-context-hooks" class="md-nav__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    repo-context-hooks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../platform-playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../telemetry-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../competitive-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chosen-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chosen Approach
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chosen Approach">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#readme-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        README Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visual-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#readme-information-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        README Information Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#readme-section-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        README Section Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="README Section Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-hero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Hero
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-why-this-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Why This Exists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. How It Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-repo-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Repo Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-before-after" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Before / After
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-what-install-actually-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. What install Actually Does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-technical-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Technical Details
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-honest-critique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Honest Critique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visual-asset-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Asset Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visual Asset Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#svg-1-lifecycle-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SVG 1: Lifecycle Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#svg-2-repo-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SVG 2: Repo Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#svg-3-before-after-continuity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SVG 3: Before / After Continuity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#animation-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Animation Policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-depth-to-surface-inline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technical Depth To Surface Inline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tone-and-writing-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tone And Writing Guidance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-critique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-Critique
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Self-Critique">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#risk-1-the-readme-can-become-too-long" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk 1: The README can become too long
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-2-the-visuals-can-oversimplify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk 2: The visuals can oversimplify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-3-the-critique-section-can-scare-away-casual-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk 3: The critique section can scare away casual users
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-4-static-svgs-are-less-immediately-flashy-than-gifs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk 4: Static SVGs are less immediately flashy than GIFs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acceptance Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="repo-context-hooks-readme-and-visual-polish-design">Repo Context Hooks README And Visual Polish Design</h1>
+<p>Date: 2026-04-20
+Status: Proposed
+Author: Narendranath Edara</p>
+<h2 id="summary">Summary</h2>
+<p>This spec defines the public-facing README and visual-polish pass for <code>repo-context-hooks</code>.</p>
+<p>The goal is to turn the repository from a technically correct package into a stronger community-facing artifact that developers can trust quickly, understand deeply, and share easily. The README should support fast adoption without feeling shallow, and the visual layer should explain the lifecycle and repo contract without depending on fragile GitHub-unfriendly animation.</p>
+<p>The approved direction is:</p>
+<ul>
+<li>a balanced README</li>
+<li>static SVG diagrams as the primary visual medium</li>
+<li>stronger inline technical detail</li>
+<li>an explicit self-critique section</li>
+</ul>
+<h2 id="problem">Problem</h2>
+<p>The current repository is functional, but the landing experience is still too narrow:</p>
+<ul>
+<li>it explains the product at a high level, but not with enough mechanical clarity</li>
+<li>it does not visually explain how the lifecycle hooks work</li>
+<li>it does not surface enough implementation detail for skeptical developers</li>
+<li>it does not yet demonstrate self-awareness about tradeoffs and limitations</li>
+</ul>
+<p>For a community-facing open-source repo, that creates risk:</p>
+<ul>
+<li>interested users may not install because the mechanism still feels abstract</li>
+<li>experienced engineers may not trust the claims without technical specifics</li>
+<li>the repo misses an opportunity to become a portfolio-quality artifact with strong explanatory depth</li>
+</ul>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Restructure <code>README.md</code> into a clearer GitHub landing page.</li>
+<li>Add static SVG diagrams that explain the lifecycle, repo contract, and before/after operational value.</li>
+<li>Surface more technical detail directly in the README instead of burying everything in secondary docs.</li>
+<li>Add explicit, credible self-critique to reduce overclaiming.</li>
+<li>Keep the README GitHub-safe, lightweight, and maintainable.</li>
+<li>Preserve the existing docs/examples as supporting depth rather than forcing the README to carry everything alone.</li>
+</ul>
+<h2 id="non-goals">Non-Goals</h2>
+<ul>
+<li>Build a marketing-heavy animated landing page inside GitHub.</li>
+<li>Introduce fragile README dependencies on GIFs, video, or client-side interactivity.</li>
+<li>Claim that this project solves general agent memory.</li>
+<li>Replace the architecture/examples docs with long README duplication.</li>
+</ul>
+<h2 id="chosen-approach">Chosen Approach</h2>
+<h3 id="readme-strategy">README Strategy</h3>
+<p>Use a balanced technical README with inline SVG diagrams.</p>
+<p>This approach was chosen because it best satisfies two competing needs:</p>
+<ul>
+<li>a new user should be able to understand the product and try it quickly</li>
+<li>an experienced developer should be able to inspect the mechanism and trust that the project is intellectually honest</li>
+</ul>
+<h3 id="visual-strategy">Visual Strategy</h3>
+<p>Use static SVG diagrams as the primary repo visuals.</p>
+<p>This approach was chosen because SVGs are:</p>
+<ul>
+<li>lightweight</li>
+<li>sharp on GitHub</li>
+<li>versionable in git</li>
+<li>reusable across README, docs, and social assets</li>
+<li>maintainable as technical artifacts instead of throwaway media</li>
+</ul>
+<h2 id="readme-information-architecture">README Information Architecture</h2>
+<p>The README should be rewritten into this exact sequence:</p>
+<ol>
+<li>Hero</li>
+<li>Why This Exists</li>
+<li>How It Works</li>
+<li>Repo Contract</li>
+<li>Before / After</li>
+<li>What <code>install</code> Actually Does</li>
+<li>Technical Details</li>
+<li>Honest Critique</li>
+<li>Examples</li>
+<li>Development</li>
+<li>License</li>
+</ol>
+<h2 id="readme-section-design">README Section Design</h2>
+<h3 id="1-hero">1. Hero</h3>
+<p>The hero should include:</p>
+<ul>
+<li>project name</li>
+<li>one-line pitch</li>
+<li>a short explanation paragraph</li>
+<li>primary install command</li>
+<li>compatibility alias commands</li>
+</ul>
+<p>The hero should optimize for immediate comprehension, not brand theater.</p>
+<h3 id="2-why-this-exists">2. Why This Exists</h3>
+<p>This section should explain the concrete failure modes:</p>
+<ul>
+<li>session re-discovery</li>
+<li>tactical context loss during compaction</li>
+<li>next-work drift</li>
+<li>issue/context decay across handoffs</li>
+</ul>
+<p>The tone should frame this as a continuity problem, not a vague "LLMs forget things" complaint.</p>
+<h3 id="3-how-it-works">3. How It Works</h3>
+<p>This section should summarize the lifecycle model and embed <code>lifecycle-flow.svg</code>.</p>
+<p>It should explain:</p>
+<ul>
+<li>what each hook phase does</li>
+<li>why those phases are enough to preserve useful continuity</li>
+<li>how the repo remains the source of truth</li>
+</ul>
+<h3 id="4-repo-contract">4. Repo Contract</h3>
+<p>This section should embed <code>repo-contract.svg</code> and explain:</p>
+<ul>
+<li><code>README.md</code> as user-facing product intent</li>
+<li><code>specs/README.md</code> as engineering memory and next-work state</li>
+<li>hooks and skills as the mechanism connecting those layers</li>
+</ul>
+<h3 id="5-before-after">5. Before / After</h3>
+<p>This section should embed <code>before-after-continuity.svg</code>.</p>
+<p>Its purpose is to help readers understand the operational shift:</p>
+<ul>
+<li>before: rediscovery and context drift</li>
+<li>after: deterministic startup context and clearer handoffs</li>
+</ul>
+<h3 id="6-what-install-actually-does">6. What <code>install</code> Actually Does</h3>
+<p>This section should be more exact than the current version.</p>
+<p>It should explicitly describe:</p>
+<ul>
+<li>what skill directories receive installed content</li>
+<li>what scripts are copied into <code>.claude/scripts</code></li>
+<li>how <code>.claude/settings.json</code> is merged</li>
+<li>what repo-local expectations exist for the contract to be useful</li>
+</ul>
+<h3 id="7-technical-details">7. Technical Details</h3>
+<p>This section should include:</p>
+<ul>
+<li>supported platforms</li>
+<li>primary CLI and compatibility aliases</li>
+<li>expected repo layout</li>
+<li>links to architecture and example docs</li>
+</ul>
+<p>It should be concise, but specific enough that skeptical developers do not need to guess.</p>
+<h3 id="8-honest-critique">8. Honest Critique</h3>
+<p>This section is mandatory.</p>
+<p>It should explicitly state:</p>
+<ul>
+<li>this is not a vector memory layer</li>
+<li>this is not a hosted platform</li>
+<li>this does not replace repo discipline</li>
+<li>poor <code>specs/README.md</code> hygiene reduces the value quickly</li>
+<li>teams needing cross-repo semantic memory may still want another tool alongside this one</li>
+</ul>
+<h3 id="9-examples">9. Examples</h3>
+<p>This section should point readers toward:</p>
+<ul>
+<li><code>examples/minimal-repo/</code></li>
+<li><code>examples/multi-project/</code></li>
+<li><code>docs/architecture.md</code></li>
+</ul>
+<p>The README should link outward here rather than duplicating example detail in full.</p>
+<h3 id="10-development">10. Development</h3>
+<p>This section should keep the current editable-install and test commands, but add a slightly clearer invitation for contributors.</p>
+<h2 id="visual-asset-plan">Visual Asset Plan</h2>
+<p>The repo should add these SVG assets:</p>
+<ul>
+<li><code>assets/diagrams/lifecycle-flow.svg</code></li>
+<li><code>assets/diagrams/repo-contract.svg</code></li>
+<li><code>assets/diagrams/before-after-continuity.svg</code></li>
+</ul>
+<h3 id="svg-1-lifecycle-flow">SVG 1: Lifecycle Flow</h3>
+<p>Purpose:</p>
+<ul>
+<li>explain the lifecycle model quickly</li>
+<li>make the hook phases memorable</li>
+</ul>
+<p>Content:</p>
+<ul>
+<li><code>SessionStart</code></li>
+<li><code>PreCompact</code></li>
+<li><code>PostCompact</code></li>
+<li><code>SessionEnd</code></li>
+<li>a short caption beneath each phase</li>
+</ul>
+<h3 id="svg-2-repo-contract">SVG 2: Repo Contract</h3>
+<p>Purpose:</p>
+<ul>
+<li>explain the core operating model</li>
+</ul>
+<p>Content:</p>
+<ul>
+<li><code>README.md</code></li>
+<li><code>specs/README.md</code></li>
+<li>hooks/skills connecting those files</li>
+</ul>
+<h3 id="svg-3-before-after-continuity">SVG 3: Before / After Continuity</h3>
+<p>Purpose:</p>
+<ul>
+<li>communicate value quickly for readers and social sharing</li>
+</ul>
+<p>Content:</p>
+<ul>
+<li>"before" state: rediscovery, drift, unclear next work</li>
+<li>"after" state: loaded context, checkpoints, deterministic handoff</li>
+</ul>
+<h2 id="animation-policy">Animation Policy</h2>
+<p>The README should remain static-SVG-first.</p>
+<p>If animation is added later, it should follow these constraints:</p>
+<ul>
+<li>derive from the same SVG source assets</li>
+<li>live in docs/demo assets rather than becoming a README dependency</li>
+<li>clarify flow rather than merely decorate</li>
+<li>avoid implying capabilities the project does not actually automate</li>
+</ul>
+<p>The repo may later add:</p>
+<ul>
+<li><code>docs/demo/animation-plan.md</code></li>
+</ul>
+<p>That document can describe how short motion assets would be generated from the SVG source for launch posts and demos.</p>
+<h2 id="technical-depth-to-surface-inline">Technical Depth To Surface Inline</h2>
+<p>The README should not stop at pitch-level language.</p>
+<p>It should explicitly answer these developer questions:</p>
+<ul>
+<li>what files does install write?</li>
+<li>where do the skills go?</li>
+<li>how does settings merge work?</li>
+<li>what exact repo contract does this tool assume?</li>
+<li>where does this stop helping?</li>
+</ul>
+<p>The answer should not be exhaustive implementation documentation, but it should remove ambiguity.</p>
+<h2 id="tone-and-writing-guidance">Tone And Writing Guidance</h2>
+<p>The README should sound:</p>
+<ul>
+<li>precise</li>
+<li>direct</li>
+<li>technically respectful</li>
+<li>honest about scope</li>
+</ul>
+<p>It should avoid:</p>
+<ul>
+<li>inflated AI-product language</li>
+<li>vague claims about memory</li>
+<li>overly abstract theory before installation</li>
+</ul>
+<h2 id="self-critique">Self-Critique</h2>
+<p>This README/visual pass has its own risks:</p>
+<h3 id="risk-1-the-readme-can-become-too-long">Risk 1: The README can become too long</h3>
+<p>A stronger README is useful, but if too much documentation is pulled upward from <code>docs/</code>, the landing page becomes heavy and harder to scan. The fix is to keep deeper material linked, not duplicated.</p>
+<h3 id="risk-2-the-visuals-can-oversimplify">Risk 2: The visuals can oversimplify</h3>
+<p>The SVGs should clarify the model without pretending the project is more automatic or more intelligent than it is. They should visualize the actual mechanism, not a fantasy workflow.</p>
+<h3 id="risk-3-the-critique-section-can-scare-away-casual-users">Risk 3: The critique section can scare away casual users</h3>
+<p>That is acceptable. The project should optimize for credibility over hype. A smaller number of better-fit adopters is preferable to shallow interest followed by disappointment.</p>
+<h3 id="risk-4-static-svgs-are-less-immediately-flashy-than-gifs">Risk 4: Static SVGs are less immediately flashy than GIFs</h3>
+<p>This is an intentional tradeoff. The repo should prioritize clarity, performance, and maintainability over novelty.</p>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<ul>
+<li>A new visitor can understand the product from the README without opening secondary docs.</li>
+<li>The README includes all three SVG diagrams inline.</li>
+<li>The README explains installation side effects and repo expectations with more specificity than today.</li>
+<li>The README includes an explicit honest-critique section.</li>
+<li>The visual layer is static-SVG-first and GitHub-safe.</li>
+<li>The repo remains credible to experienced engineers while still being approachable to first-time users.</li>
+</ul>
+<h2 id="open-questions">Open Questions</h2>
+<p>No blocking product questions remain for the README/visual pass.</p>
+<p>The remaining implementation judgment calls are editorial:</p>
+<ul>
+<li>how much technical detail belongs directly in <code>README.md</code> versus linked docs</li>
+<li>how much whitespace and sectioning is needed to keep the README scannable</li>
+<li>whether to add optional badges or keep the top matter minimal</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tabs", "search.suggest"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

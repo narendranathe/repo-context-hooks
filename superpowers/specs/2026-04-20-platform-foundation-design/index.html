@@ -1,0 +1,1313 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Hook-based repo context continuity for coding agents">
+      
+      
+      
+        <link rel="canonical" href="https://narendranathe.github.io/repo-context-hooks/superpowers/specs/2026-04-20-platform-foundation-design/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Repo Context Hooks Platform Foundation Design - repo-context-hooks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#repo-context-hooks-platform-foundation-design" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="repo-context-hooks" class="md-header__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            repo-context-hooks
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Repo Context Hooks Platform Foundation Design
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../platforms/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platforms
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../platform-playbooks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platform Playbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../telemetry-policy/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Telemetry Policy
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../monitoring/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../competitive-analysis/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Competitive Analysis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="repo-context-hooks" class="md-nav__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    repo-context-hooks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../platform-playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../telemetry-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../competitive-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chosen-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chosen Approach
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chosen Approach">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#product-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#platform-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platform Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-positioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product Positioning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#platform-adapter-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platform Adapter Boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#core-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#support-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Support Tiers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-platform-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1 Platform Scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1 Platform Scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#claude" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cursor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cursor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#codex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Codex
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repo-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repo Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-and-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI And Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Documentation Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-readme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public README
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supporting-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supporting Docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visual-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-driven-development-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product-Driven Development Backlog
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deliverables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deliverables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mitigations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#success-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="repo-context-hooks-platform-foundation-design">Repo Context Hooks Platform Foundation Design</h1>
+<p>Date: 2026-04-20
+Status: Proposed
+Author: Narendranath Edara</p>
+<h2 id="summary">Summary</h2>
+<p>This spec defines Phase 1 of the <code>repo-context-hooks</code> product expansion: a real platform-adapter foundation with strong first-wave support for Claude, Cursor, and Codex.</p>
+<p>The goal of this phase is to make the product structurally honest, extensible, and genuinely useful across more than one agent ecosystem without pretending all platforms support the same lifecycle model.</p>
+<p>The approved direction is:</p>
+<ul>
+<li>build a narrow adapter architecture</li>
+<li>implement Claude as the flagship native experience</li>
+<li>implement Cursor and Codex as real first-wave integrations with explicit support tiers</li>
+<li>create GitHub issues for planned platforms that cannot be implemented credibly in this phase</li>
+<li>tighten the public product story around repo-native continuity rather than vague "AI memory"</li>
+</ul>
+<h2 id="problem">Problem</h2>
+<p>The current repository has a promising core idea, but the product surface is ahead of the implementation:</p>
+<ul>
+<li>the code only truly supports <code>claude</code> and <code>codex</code></li>
+<li>the current install path is hard-coded rather than adapter-driven</li>
+<li>Claude is the only platform with a real runtime lifecycle path</li>
+<li>Codex support is repo-contract-oriented, not parity-level runtime support</li>
+<li>the public README currently explains internal mechanisms better than it explains user value</li>
+<li>the current diagrams explain the workflow, but do not yet show a memorable interrupted-task or handoff scenario</li>
+</ul>
+<p>This creates a trust gap:</p>
+<ul>
+<li>the product idea feels broader than the implemented reality</li>
+<li>expanding support platform-by-platform will get messy without an adapter boundary</li>
+<li>the README risks overpromising if the runtime model remains Claude-shaped underneath</li>
+</ul>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Introduce a platform-adapter architecture that can support multiple agent ecosystems honestly.</li>
+<li>Implement Phase 1 support for Claude, Cursor, and Codex.</li>
+<li>Define machine-readable support tiers so docs, tests, and CLI share one source of truth.</li>
+<li>Add validation and platform discovery so installation claims are testable.</li>
+<li>Create a product-ready backlog for additional platforms using GitHub issues.</li>
+<li>Reposition the public story toward repo-native continuity, compaction-safe handoff, and reviewable team memory.</li>
+<li>Upgrade visuals and examples enough that the repo demonstrates a memorable use case rather than only abstract mechanics.</li>
+</ul>
+<h2 id="non-goals">Non-Goals</h2>
+<ul>
+<li>Claim universal support for all coding agents in Phase 1.</li>
+<li>Force Claude-style lifecycle parity onto platforms that do not expose equivalent primitives.</li>
+<li>Build hosted sync, vector memory, or cross-repo semantic search.</li>
+<li>Expand into platform-specific features that do not directly improve repo-context continuity.</li>
+<li>Ship low-confidence adapters simply to grow the support matrix.</li>
+</ul>
+<h2 id="chosen-approach">Chosen Approach</h2>
+<h3 id="product-strategy">Product Strategy</h3>
+<p>Phase 1 will be a strong foundation with three implemented platforms, not a shallow compatibility list.</p>
+<p>This approach was chosen because it reduces the largest product risk: a gap between the public promise and the runtime truth. A narrower but real platform story is stronger than a broad but fragile one.</p>
+<h3 id="platform-strategy">Platform Strategy</h3>
+<p>The first-wave platforms are:</p>
+<ul>
+<li>Claude</li>
+<li>Cursor</li>
+<li>Codex</li>
+</ul>
+<p>These were chosen because they represent the strongest available mix of:</p>
+<ul>
+<li>lifecycle automation</li>
+<li>repo-context surfaces</li>
+<li>existing momentum in the current codebase</li>
+<li>community relevance for agent-enabled development workflows</li>
+</ul>
+<p>Additional platforms such as Replit, Lovable, Ollama, OpenClaw, and Kimi will be tracked as planned work through GitHub issues created during this phase.</p>
+<h2 id="product-positioning">Product Positioning</h2>
+<p>The core product claim for this phase is:</p>
+<p><code>repo-context-hooks</code> is the repo-native continuity layer for coding agents.</p>
+<p>The public story should emphasize three ideas:</p>
+<ul>
+<li>the repo is the memory boundary</li>
+<li>useful context survives session transitions and compaction</li>
+<li>teams can review and improve the continuity contract in git</li>
+</ul>
+<p>The public story should not claim:</p>
+<ul>
+<li>universal agent support</li>
+<li>lifecycle parity across all platforms</li>
+<li>a replacement for general memory systems</li>
+</ul>
+<h2 id="architecture">Architecture</h2>
+<h3 id="platform-adapter-boundary">Platform Adapter Boundary</h3>
+<p>The product should stop branching on platform strings inside the installer and instead use explicit platform adapters.</p>
+<p>Each adapter should describe:</p>
+<ul>
+<li>its platform id</li>
+<li>display name</li>
+<li>support tier</li>
+<li>installable surfaces</li>
+<li>validation behavior</li>
+<li>lifecycle capabilities</li>
+<li>manual setup requirements, if any</li>
+</ul>
+<p>This boundary should be narrow. Phase 1 should only add capabilities required by Claude, Cursor, and Codex.</p>
+<h3 id="core-types">Core Types</h3>
+<p>The architecture should introduce:</p>
+<ul>
+<li><code>PlatformAdapter</code></li>
+<li><code>InstallPlan</code></li>
+<li><code>PlatformRegistry</code></li>
+<li><code>SupportTier</code></li>
+</ul>
+<p><code>PlatformAdapter</code> owns platform-specific behavior.</p>
+<p><code>InstallPlan</code> is the platform-neutral description of what will be written, merged, skipped, or left as manual guidance.</p>
+<p><code>PlatformRegistry</code> resolves adapters for CLI commands and support-matrix generation.</p>
+<p><code>SupportTier</code> defines the honesty boundary for docs, CLI output, and tests.</p>
+<h3 id="support-tiers">Support Tiers</h3>
+<p>The support tiers are:</p>
+<ul>
+<li><code>native</code></li>
+<li><code>partial</code></li>
+<li><code>planned</code></li>
+</ul>
+<p>Definitions:</p>
+<ul>
+<li><code>native</code></li>
+<li>automated install</li>
+<li>validated by tests</li>
+<li>meaningful runtime or lifecycle integration</li>
+<li>can be described as first-class support in public docs</li>
+<li><code>partial</code></li>
+<li>automated install for some but not all useful surfaces</li>
+<li>validated core behavior</li>
+<li>explicit limits documented</li>
+<li>cannot be described as parity with <code>native</code></li>
+<li><code>planned</code></li>
+<li>issue exists</li>
+<li>intended integration shape documented</li>
+<li>not publicly claimed as supported</li>
+</ul>
+<h2 id="phase-1-platform-scope">Phase 1 Platform Scope</h2>
+<h3 id="claude">Claude</h3>
+<p>Tier: <code>native</code></p>
+<p>Claude remains the flagship implementation in Phase 1.</p>
+<p>Claude support must include:</p>
+<ul>
+<li>skill installation into <code>~/.claude/skills</code></li>
+<li>repo-local script installation into <code>.claude/scripts</code></li>
+<li>settings merge for lifecycle hooks in <code>.claude/settings.json</code></li>
+<li>validation of repo contract and Claude-specific runtime surfaces</li>
+<li>continuity support across <code>SessionStart</code>, <code>PreCompact</code>, <code>PostCompact</code>, and <code>SessionEnd</code></li>
+</ul>
+<p>Claude is the reference implementation for the adapter architecture, but it must not distort the abstraction to the point that other platforms become awkward.</p>
+<h3 id="cursor">Cursor</h3>
+<p>Tier: <code>partial</code></p>
+<p>Cursor support must be real, useful, and explicitly narrower than Claude.</p>
+<p>Cursor support should include:</p>
+<ul>
+<li>generation or installation of <code>.cursor/rules/*.mdc</code> artifacts that encode repo continuity expectations</li>
+<li>support for <code>AGENTS.md</code> as part of the repo contract</li>
+<li>validation of Cursor-facing rule and repo-context files</li>
+<li>optional background-agent guidance only if the resulting experience is concrete and testable</li>
+</ul>
+<p>Cursor support must not claim:</p>
+<ul>
+<li>Claude hook parity</li>
+<li>equivalent compaction lifecycle semantics unless implemented and validated</li>
+</ul>
+<h3 id="codex">Codex</h3>
+<p>Tier: <code>partial</code></p>
+<p>Codex support should formalize the repo-contract workflow already implied by the current package.</p>
+<p>Codex support should include:</p>
+<ul>
+<li><code>AGENTS.md</code> integration as part of the repo contract</li>
+<li>validation of required repo context files</li>
+<li>clear documentation of what continuity Codex users get, what remains manual, and what they do not get in Phase 1</li>
+</ul>
+<p>Codex support in Phase 1 does not require bundled lifecycle skills or a Codex-specific hook surface.</p>
+<p>Codex support must not claim native lifecycle hook parity unless a real mechanism exists and is tested.</p>
+<h2 id="repo-contract">Repo Contract</h2>
+<p>The repo contract in Phase 1 is:</p>
+<ul>
+<li><code>README.md</code></li>
+<li><code>specs/README.md</code></li>
+<li><code>AGENTS.md</code></li>
+</ul>
+<p>Responsibilities:</p>
+<ul>
+<li><code>README.md</code></li>
+<li>user-facing product and contribution intent</li>
+<li><code>specs/README.md</code></li>
+<li>engineering memory, constraints, decisions, failures, next work</li>
+<li><code>AGENTS.md</code></li>
+<li>agent operating instructions and repo-context loading expectations</li>
+</ul>
+<p>The contract is universal.</p>
+<p>What changes per platform is how that contract is surfaced, installed, validated, and reinforced.</p>
+<h2 id="cli-and-validation">CLI And Validation</h2>
+<p>Phase 1 should add or formalize these CLI surfaces:</p>
+<ul>
+<li><code>repo-context-hooks install --platform &lt;id&gt;</code></li>
+<li><code>repo-context-hooks platforms</code></li>
+<li><code>repo-context-hooks doctor</code></li>
+</ul>
+<p><code>install</code> should resolve the selected adapter, execute its install plan, and print a clear summary of:</p>
+<ul>
+<li>what was installed</li>
+<li>what was validated</li>
+<li>what remains manual</li>
+</ul>
+<p><code>platforms</code> should list:</p>
+<ul>
+<li>platform id</li>
+<li>display name</li>
+<li>support tier</li>
+<li>short description of installed surfaces</li>
+</ul>
+<p>The support-matrix output should be generated from the same adapter metadata used by the installer and validator. Public docs must not maintain a separate hand-written support table that can drift away from the code.</p>
+<p><code>doctor</code> should validate:</p>
+<ul>
+<li>repo contract files</li>
+<li>platform-specific install surfaces</li>
+<li>obvious missing or inconsistent state</li>
+</ul>
+<p>The CLI should become the public truth source for support claims.</p>
+<h2 id="documentation-strategy">Documentation Strategy</h2>
+<p>Phase 1 documentation should separate public product messaging from operator detail.</p>
+<h3 id="public-readme">Public README</h3>
+<p>The public README should:</p>
+<ul>
+<li>lead with outcome-first positioning</li>
+<li>describe the repo-native continuity value clearly</li>
+<li>show concrete interrupted-task and handoff examples</li>
+<li>publish a support matrix based on support tiers</li>
+<li>explicitly say that Phase 1 is currently tested around Claude, Cursor, and Codex</li>
+<li>avoid surfacing internal critique as a primary section</li>
+</ul>
+<p>The README should not remain an operator manual.</p>
+<h3 id="supporting-docs">Supporting Docs</h3>
+<p>Operator detail should move into focused docs such as:</p>
+<ul>
+<li>install details</li>
+<li>platform matrix</li>
+<li>architecture notes</li>
+<li>limitations and comparisons</li>
+</ul>
+<h2 id="visual-strategy">Visual Strategy</h2>
+<p>The current diagrams should be upgraded from abstract concept diagrams to concrete operational stories.</p>
+<p>The three key visuals should answer different questions:</p>
+<ul>
+<li>what happens during an interrupted session and resume</li>
+<li>where state lives in the repo and platform surfaces</li>
+<li>why outcomes differ before and after the continuity layer</li>
+</ul>
+<p>Preferred examples:</p>
+<ul>
+<li>a bugfix interrupted by compaction</li>
+<li>a new agent resuming from repo state</li>
+<li>a handoff grounded in repo artifacts instead of chat history</li>
+</ul>
+<h2 id="testing-strategy">Testing Strategy</h2>
+<p>Phase 1 should follow test-driven development.</p>
+<p>Tests should cover:</p>
+<ul>
+<li>adapter registry and lookup</li>
+<li>install plan generation per platform</li>
+<li>support tier metadata</li>
+<li>platform-specific install behavior</li>
+<li><code>platforms</code> CLI output</li>
+<li><code>doctor</code> validation output</li>
+<li>README/support-matrix consistency where appropriate</li>
+</ul>
+<p>Tests must prevent support-tier drift. A platform cannot be documented more strongly than the code and tests justify.</p>
+<h2 id="product-driven-development-backlog">Product-Driven Development Backlog</h2>
+<p>Platforms that are not implemented in Phase 1 should get GitHub issues during this phase.</p>
+<p>At minimum, create issues for:</p>
+<ul>
+<li>Replit adapter</li>
+<li>Lovable adapter</li>
+<li>Ollama adapter strategy</li>
+<li>OpenClaw adapter strategy</li>
+<li>Kimi adapter strategy</li>
+</ul>
+<p>Each issue should define:</p>
+<ul>
+<li>proposed support tier</li>
+<li>likely integration surface</li>
+<li>what would count as a credible implementation</li>
+<li>open questions or blockers</li>
+</ul>
+<p>The issue set should also establish labels or a naming convention that makes the roadmap readable from the GitHub issue list alone, such as <code>platform</code>, <code>planned</code>, and the specific platform name.</p>
+<h2 id="deliverables">Deliverables</h2>
+<p>Phase 1 should produce:</p>
+<ul>
+<li>adapter architecture in code</li>
+<li>Claude adapter at <code>native</code></li>
+<li>Cursor adapter at <code>partial</code></li>
+<li>Codex adapter at <code>partial</code></li>
+<li>CLI support for install, platforms, and doctor</li>
+<li>updated tests for adapter-driven behavior</li>
+<li>public README repositioned around repo-native continuity</li>
+<li>upgraded visuals that show concrete continuity scenarios</li>
+<li>GitHub issues for planned platforms</li>
+</ul>
+<h2 id="risks">Risks</h2>
+<ul>
+<li>The adapter layer could become over-engineered if it is designed for hypothetical platforms instead of real Phase 1 needs.</li>
+<li>Cursor and Codex support could be described too generously if the support tier bar is not enforced in tests.</li>
+<li>README polish could get ahead of runtime reality if the public copy is rewritten before the support matrix is grounded in code.</li>
+<li>The visual refresh could stay too abstract if it avoids showing a real interrupted work scenario.</li>
+</ul>
+<h2 id="mitigations">Mitigations</h2>
+<ul>
+<li>Keep the adapter interface narrow and justified by current platforms only.</li>
+<li>Tie support-matrix output to machine-readable tier metadata.</li>
+<li>Validate support claims in tests.</li>
+<li>Prefer one concrete workflow example over three abstract diagrams.</li>
+<li>Create issues for anything not credibly shippable in this phase instead of inflating support.</li>
+</ul>
+<h2 id="success-criteria">Success Criteria</h2>
+<p>Phase 1 is successful if:</p>
+<ul>
+<li>the codebase no longer hard-codes platform behavior in one tuple-based installer path</li>
+<li>Claude, Cursor, and Codex have explicit adapter implementations</li>
+<li>the CLI can list and validate supported platforms</li>
+<li>public docs clearly distinguish <code>native</code>, <code>partial</code>, and <code>planned</code></li>
+<li>no public documentation claims support beyond what code and tests validate</li>
+<li>additional platform work is captured as GitHub issues rather than implied promises</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tabs", "search.suggest"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
