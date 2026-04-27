@@ -17,8 +17,7 @@ def test_readme_has_public_facing_sections_in_order() -> None:
         "# repo-context-hooks",
         "## Why Agent-Level, Not Repo-Level",
         "## How It Works",
-        "## Supported Today",
-        "## Platform Support",
+        "## Supported Platforms",
         "## Prove Impact",
         "## Telemetry Visibility",
         "## Concrete Stories",
@@ -38,25 +37,15 @@ def test_readme_has_public_facing_sections_in_order() -> None:
 def test_readme_mentions_current_platforms_honestly() -> None:
     text = readme_text()
     expected_snippets = [
-        "currently supported",
-        "Claude",
-        "Cursor",
-        "Codex",
-        "Replit",
-        "Windsurf",
-        "Lovable",
-        "OpenClaw",
-        "Ollama",
-        "Kimi",
-        "Claude (`native`)",
-        "Cursor (`partial`)",
-        "Codex (`partial`)",
-        "Replit (`partial`)",
-        "Windsurf (`partial`)",
-        "Lovable (`partial`)",
-        "OpenClaw (`partial`)",
-        "Ollama (`partial`)",
-        "Kimi (`partial`)",
+        "| Claude | `native`",
+        "| Cursor | `partial`",
+        "| Codex | `partial`",
+        "| Replit | `partial`",
+        "| Windsurf | `partial`",
+        "| Lovable | `partial`",
+        "| OpenClaw | `partial`",
+        "| Ollama | `partial`",
+        "| Kimi | `partial`",
     ]
     for snippet in expected_snippets:
         assert snippet in text, f"missing README platform snippet: {snippet}"
@@ -96,8 +85,7 @@ def test_readme_promotes_agent_first_onboarding_sequence() -> None:
 
 def test_readme_separates_platform_install_commands() -> None:
     text = readme_text()
-    assert "## Pick Your Platform" in text
-    assert "Run one platform install command" in text
+    assert "## Other Platforms" in text
     for platform in (
         "claude",
         "cursor",

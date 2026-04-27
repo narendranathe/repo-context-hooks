@@ -15,6 +15,7 @@ from repo_context_hooks.telemetry import (
     is_sampled,
     record_event,
     session_id,
+    _session_state_dir,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,7 +44,7 @@ def test_session_id_generates_uuid_and_persists_to_file(monkeypatch) -> None:
     assert first == second, "same session must return same ID"
     assert len(first) > 8, "session ID must be non-trivial"
 
-    session_file = tmp / ".repo-context-hooks" / "current-session-id"
+    session_file = _session_state_dir(tmp) / "current-session-id"
     assert session_file.exists(), "session ID must be persisted to file"
     assert session_file.read_text(encoding="utf-8").strip() == first
 
@@ -61,8 +62,7 @@ def test_session_id_reads_existing_file_on_subsequent_call(monkeypatch) -> None:
     tmp = _tmp_dir()
     monkeypatch.delenv("REPO_CONTEXT_HOOKS_SESSION_ID", raising=False)
 
-    session_dir = tmp / ".repo-context-hooks"
-    session_dir.mkdir(parents=True, exist_ok=True)
+    session_dir = _session_state_dir(tmp)
     (session_dir / "current-session-id").write_text("persisted-id-xyz\n", encoding="utf-8")
 
     result = session_id(tmp)
@@ -121,12 +121,16 @@ def test_is_sampled_rate_1_always_returns_true(monkeypatch) -> None:
     assert result is True
 
 
-def test_is_sampled_rate_0_always_returns_false(monkeypatch) -> None:
-    tmp = _tmp_dir()
+def test_is_sampled_rate_0_always_returns_false(monkeypatch, tmp_path) -> None:
+    # Use tmp_path (outside the git repo) so _canonical_repo_root doesn't
+    # map this to the shared repo state dir, which could have a cached decision.
+    repo = tmp_path / "non-git-repo"
+    repo.mkdir()
     monkeypatch.setenv("REPO_CONTEXT_HOOKS_SAMPLE_RATE", "0.0")
     monkeypatch.delenv("REPO_CONTEXT_HOOKS_SESSION_ID", raising=False)
+    monkeypatch.delenv("REPO_CONTEXT_HOOKS_TELEMETRY", raising=False)
 
-    result = is_sampled(tmp)
+    result = is_sampled(repo)
 
     assert result is False
 
@@ -135,21 +139,22 @@ def test_is_sampled_persists_decision_for_session(monkeypatch) -> None:
     tmp = _tmp_dir()
     monkeypatch.delenv("REPO_CONTEXT_HOOKS_SAMPLE_RATE", raising=False)
     monkeypatch.delenv("REPO_CONTEXT_HOOKS_SESSION_ID", raising=False)
+    monkeypatch.delenv("REPO_CONTEXT_HOOKS_TELEMETRY", raising=False)
 
     first = is_sampled(tmp)
     second = is_sampled(tmp)
 
     assert first == second, "sampling decision must be stable within a session"
 
-    sampled_file = tmp / ".repo-context-hooks" / "current-session-sampled"
+    sampled_file = _session_state_dir(tmp) / "current-session-sampled"
     assert sampled_file.exists(), "sampling decision must be persisted to file"
 
 
 def test_is_sampled_reads_existing_decision_file(monkeypatch) -> None:
     tmp = _tmp_dir()
     monkeypatch.delenv("REPO_CONTEXT_HOOKS_SAMPLE_RATE", raising=False)
-    session_dir = tmp / ".repo-context-hooks"
-    session_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.delenv("REPO_CONTEXT_HOOKS_TELEMETRY", raising=False)
+    session_dir = _session_state_dir(tmp)
     (session_dir / "current-session-sampled").write_text("true", encoding="utf-8")
 
     result = is_sampled(tmp)
@@ -160,8 +165,8 @@ def test_is_sampled_reads_existing_decision_file(monkeypatch) -> None:
 def test_is_sampled_false_decision_file_returns_false(monkeypatch) -> None:
     tmp = _tmp_dir()
     monkeypatch.delenv("REPO_CONTEXT_HOOKS_SAMPLE_RATE", raising=False)
-    session_dir = tmp / ".repo-context-hooks"
-    session_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.delenv("REPO_CONTEXT_HOOKS_TELEMETRY", raising=False)
+    session_dir = _session_state_dir(tmp)
     (session_dir / "current-session-sampled").write_text("false", encoding="utf-8")
 
     result = is_sampled(tmp)
@@ -204,11 +209,11 @@ def test_hook_script_skips_telemetry_when_not_sampled() -> None:
     repo = _make_git_repo(tmp / "repo")
     telemetry_dir = tmp / "telemetry"
 
-    env = {
-        **os.environ,
+    env = {k: v for k, v in os.environ.items() if k != "REPO_CONTEXT_HOOKS_TELEMETRY"}
+    env.update({
         "REPO_CONTEXT_HOOKS_SAMPLE_RATE": "0.0",
         "REPO_CONTEXT_HOOKS_TELEMETRY_DIR": str(telemetry_dir),
-    }
+    })
     result = subprocess.run(
         [sys.executable, str(HOOK_SCRIPT), "session-start"],
         cwd=repo,
@@ -258,8 +263,7 @@ def test_hook_script_writes_telemetry_when_sampled() -> None:
 
 def test_clear_session_state_removes_session_files() -> None:
     tmp = _tmp_dir()
-    session_dir = tmp / ".repo-context-hooks"
-    session_dir.mkdir(parents=True)
+    session_dir = _session_state_dir(tmp)
     (session_dir / "current-session-id").write_text("abc", encoding="utf-8")
     (session_dir / "current-session-sampled").write_text("true", encoding="utf-8")
 

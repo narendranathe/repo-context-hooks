@@ -14,7 +14,7 @@ This file is the persistent project context for agents and maintainers.
 
 ### Repo Summary
 
-- Agent-level continuity skill for coding agents. `repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. It runs at the agent runtime level - installed once to `~/.claude/skills/`, `~/.codex/skills/`, or equivalent agent home - and uses repository workspace contracts as its durable persistence layer.
+- Agent-level continuity skill for coding agents. `repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. Install once to agent home — every workspace you open picks it up automatically.
 <!-- AUTO:REPO_CONTEXT_END -->
 
 ## Architecture and Design Constraints
@@ -55,16 +55,7 @@ This file is the persistent project context for agents and maintainers.
   - `v0.2.0`: platform polish and consolidation
   - `v0.2.1`: canonical repo memory contract plus repo-first onboarding
   - `v0.2.4`: continuity impact monitoring, public telemetry snapshots, and README brand/visibility polish
-- Current active branch adds the next layer:
-  - `doctor --all-platforms`
-  - `recommend`
-- Current monitoring branch adds local impact evidence:
-  - `measure`
-  - `measure --snapshot-dir docs/monitoring`
-  - local JSONL hook/skill events
-  - estimated current-vs-baseline continuity uplift
-  - committed Claude repo hooks so the evidence loop is automatic for this repo
-  - documented consent-first remote telemetry as a future product path, not part of the MVP
+  - `v0.3.0`: agent-level skill runtime, session metrics sampling, CI/CD matrix, PyPI OIDC publish
 
 ## Delivery Timeline
 
@@ -119,6 +110,20 @@ This file is the persistent project context for agents and maintainers.
 - This phase reduces guesswork after onboarding by showing support-wide readiness and transparent next-step recommendations.
 - The implementation is complete in the active feature branch and verified locally.
 
+### Phase 8: Agent-Level Skill Runtime
+
+- We promoted the install model from per-repo hooks to agent-home hooks:
+  - hooks write to `~/.claude/settings.json` once; active in every workspace automatically
+  - `--also-repo-hooks` flag for per-repo opt-in alongside the global skill
+- We added session metrics infrastructure:
+  - `session_id` in every telemetry event
+  - `is_sampled()` probabilistic gate (10% default, `REPO_CONTEXT_HOOKS_SAMPLE_RATE` env var)
+  - `auto_commit_snapshot()` on session end
+- We added graceful degradation for non-git and no-contract workspaces.
+- We shipped Codex global hooks parity via `install_global_hooks()`.
+- We added GitHub Actions CI matrix (Python 3.9-3.12, ubuntu + windows) and OIDC PyPI publish.
+- Released as `v0.3.0` — live on PyPI.
+
 ## Design Decisions
 
 - Position the product as repo-native continuity, not as a generic AI memory database.
@@ -162,35 +167,28 @@ This file is the persistent project context for agents and maintainers.
 
 ## Releases, PRs, and Current State
 
-- `main` currently includes:
-  - platform foundation
-  - platform polish
-  - canonical repo memory contract
-  - repo-first onboarding
-  - release `v0.2.1`
-- Active feature branch:
-  - `feat/platform-readiness`
-- Active PR:
-  - adds `doctor --all-platforms`
-  - adds `recommend`
-  - updates docs to explain readiness vs recommendations
-- Active follow-up issue:
-  - Windows editable launcher behavior discovered during verification and tracked separately from feature logic
-- Expected path from here:
-  - update memory
-  - merge readiness PR
-  - cut next release
-  - start the next product phase from fresh `origin/main`
+- `main` currently includes all shipped work through `v0.3.0`:
+  - platform foundation and polish
+  - canonical repo memory contract and repo-first onboarding
+  - continuity impact monitoring and local evidence loop
+  - agent-level skill runtime, session metrics, CI/CD matrix
+- Latest release: `v0.3.0` — live on PyPI (`pip install repo-context-hooks`)
+- PR #50 merged: agent-level skill runtime feature
+- CI: 174 tests, 6 matrix jobs (ubuntu + windows, Python 3.9/3.11/3.12) — all green
+- Next phase starts from fresh `main`
 
 ## Open Issues and Next Work
 
-- Keep the repo memory contract canonical and low-noise so future worktrees stop accumulating untracked bootstrap files.
+Priority backlog for the next phase:
+
+- **#43** - Auto-detect platform (`--platform` flag should be optional): biggest DX win
+- **#42** - `uninstall` command: developers need a clean exit
+- **#45** - First-run "what just happened" output: reduces churn on first install
+- **#47** - GitHub Pages docs site: needed before any public launch
+
+Ongoing:
+- Keep the repo memory contract canonical and low-noise.
 - Continue raising platform quality through real support surfaces, not expanded marketing copy.
-- Improve launch assets and public examples only when they stay faithful to the implementation boundary.
-- Merge the platform-readiness branch after final review.
-- Cut the next release so readiness and recommendation commands become part of the published package.
-- Resolve the Windows editable-launcher issue separately, because it affects verification confidence on Windows even though feature logic is passing.
-- Start the next product phase from fresh `main` rather than stacking more work on an aging branch.
 
 ## How To Work in This Repo
 
@@ -288,123 +286,53 @@ This file is the persistent project context for agents and maintainers.
 
 ### Current Checkpoint
 
-- This file captures the project history through the platform-readiness phase and the public README/JSON-output release.
-- Active branch:
-  - `release/v0.2.4`
-- Release completed:
-  - `v0.2.4`
-- What shipped:
-  - continuity impact monitoring and local evidence loop
-  - public monitoring snapshot export
-  - telemetry policy and README visualization guidance
-  - README brand mark and telemetry visibility facelift
-- Verification completed:
-  - full suite passing locally
-  - release package version bumped to `0.2.4`
-- Branch policy:
-  - merged branches are preserved for future review and revert workflows
+- v0.3.0 shipped to PyPI on 2026-04-26.
+- Branch: `feat/agent-level-skill-runtime` merged to `main` via PR #50.
+- 174 tests passing. CI matrix green (ubuntu + windows, Python 3.9/3.11/3.12).
+- Next phase: issues #43 (auto-detect platform), #42 (uninstall), #45 (first-run UX), #47 (GitHub Pages docs).
+- Start next phase from fresh `main`.
 
-### 2026-04-24 11:16 - post-compact
+### 2026-04-27 13:55 - pre-compact
 
-- Branch: `feat/evidence-monitoring`
-- Working changes: repo_context_hooks/telemetry.py, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+- Branch: `feat/telemetry-reliability`
+- Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/platforms/runtime.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_readme_contract.py, tests/test_session_metrics.py, tests/test_telemetry_sampling_regression.py
 
-### 2026-04-24 11:16 - session-end
+### 2026-04-27 13:55 - pre-compact
 
-- Branch: `feat/evidence-monitoring`
-- Working changes: repo_context_hooks/telemetry.py, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+- Branch: `feat/telemetry-reliability`
+- Last commit: `chore: bump version to 0.5.0, update CHANGELOG`
+- Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/platforms/runtime.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_readme_contract.py, tests/test_session_metrics.py, tests/test_telemetry_sampling_regression.py
 
-### 2026-04-24 11:16 - session-end
+### 2026-04-27 13:58 - pre-compact
 
-- Branch: `feat/evidence-monitoring`
-- Working changes: repo_context_hooks/telemetry.py, specs/README.md, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+- Branch: `feat/telemetry-reliability`
+- Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/doctor.py, repo_context_hooks/platforms/runtime.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_doctor.py, tests/test_readme_contract.py, tests/test_session_metrics.py
 
-### 2026-04-26 17:59 - pre-compact
+### 2026-04-27 13:58 - pre-compact
 
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+- Branch: `feat/telemetry-reliability`
+- Last commit: `chore: bump version to 0.5.0, update CHANGELOG`
+- Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/doctor.py, repo_context_hooks/platforms/runtime.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_doctor.py, tests/test_readme_contract.py, tests/test_session_metrics.py
 
-### 2026-04-26 17:59 - pre-compact
+### 2026-04-27 13:59 - pre-compact
 
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+- Branch: `feat/telemetry-reliability`
+- Last commit: `chore: bump version to 0.5.0, update CHANGELOG`
+- Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/doctor.py, repo_context_hooks/platforms/runtime.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_doctor.py, tests/test_readme_contract.py, tests/test_session_metrics.py
 
-### 2026-04-26 18:01 - pre-compact
+### 2026-04-27 13:59 - pre-compact
 
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+- Branch: `feat/telemetry-reliability`
+- Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, specs/README.md, tests/test_readme_contract.py, tests/test_session_metrics.py, tests/test_telemetry_sampling_regression.py
 
-### 2026-04-26 18:02 - pre-compact
+### 2026-04-27 13:59 - pre-compact
 
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+- Branch: `feat/telemetry-reliability`
+- Last commit: `feat(doctor): detect duplicate hook entries in settings.json â€” closes #62`
+- Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, specs/README.md, tests/test_readme_contract.py, tests/test_session_metrics.py, tests/test_telemetry_sampling_regression.py
 
-### 2026-04-26 18:02 - pre-compact
+### 2026-04-27 14:00 - pre-compact
 
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:02 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:02 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:02 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:02 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:03 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:03 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:03 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:03 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:03 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:04 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:05 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:05 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
-
-### 2026-04-26 18:06 - pre-compact
-
-- Branch: `feat/agent-level-skill-runtime`
-- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
+- Branch: `feat/telemetry-reliability`
+- Last commit: `feat(doctor): detect duplicate hook entries in settings.json â€” closes #62`
+- Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, specs/README.md, tests/test_readme_contract.py, tests/test_session_metrics.py, tests/test_telemetry_sampling_regression.py
