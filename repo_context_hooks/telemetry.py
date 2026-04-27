@@ -18,6 +18,7 @@ from typing import Any
 EVENTS_FILE = "events.jsonl"
 _SESSION_ID_FILE = "current-session-id"
 _SESSION_SAMPLED_FILE = "current-session-sampled"
+_SESSION_START_TS_FILE = "current-session-start-ts"
 _SESSION_STATE_DIR = ".repo-context-hooks"
 
 
@@ -162,9 +163,31 @@ def is_sampled(repo_root: Path, rate: float = 1.0) -> bool:
     return decision
 
 
+def record_session_start_time(repo_root: Path) -> None:
+    """Write an ISO timestamp to state dir so session-end can compute duration."""
+    ts = dt.datetime.now(dt.timezone.utc).isoformat()
+    (_session_state_dir(repo_root) / _SESSION_START_TS_FILE).write_text(ts, encoding="utf-8")
+
+
+def read_session_duration_minutes(repo_root: Path) -> int | None:
+    """Return elapsed minutes since session-start, or None if no start timestamp found."""
+    ts_file = _session_state_dir(repo_root) / _SESSION_START_TS_FILE
+    if not ts_file.exists():
+        return None
+    try:
+        raw = ts_file.read_text(encoding="utf-8").strip()
+        start = dt.datetime.fromisoformat(raw)
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=dt.timezone.utc)
+        delta = dt.datetime.now(dt.timezone.utc) - start
+        return max(0, round(delta.total_seconds() / 60))
+    except Exception:
+        return None
+
+
 def clear_session_state(repo_root: Path) -> None:
     state_dir = _session_state_dir(repo_root)
-    for name in (_SESSION_ID_FILE, _SESSION_SAMPLED_FILE):
+    for name in (_SESSION_ID_FILE, _SESSION_SAMPLED_FILE, _SESSION_START_TS_FILE):
         f = state_dir / name
         if f.exists():
             try:
@@ -259,11 +282,12 @@ def record_event(
     telemetry_base: Path | None = None,
     details: dict[str, Any] | None = None,
     skip_dashboard: bool = False,
+    duration_minutes: int | None = None,
 ) -> Path:
     repo_root = repo_root.resolve()
     signals = contract_signals(repo_root)
     sid = session_id(repo_root)
-    event = {
+    event: dict[str, Any] = {
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
         "event_name": event_name,
         "session_id": sid,
@@ -275,6 +299,8 @@ def record_event(
         "estimated_baseline_score": signals["estimated_baseline_score"],
         "details": details or {},
     }
+    if duration_minutes is not None:
+        event["duration_minutes"] = duration_minutes
     path = telemetry_events_path(repo_root, base=telemetry_base)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, sort_keys=True) + "\n")
@@ -333,6 +359,8 @@ class UsabilityMetrics:
     session_end_events: int
     lifecycle_coverage: int
     readiness_minutes_since_last_event: int | None
+    avg_session_duration_minutes: int | None
+    max_session_duration_minutes: int | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -343,6 +371,8 @@ class UsabilityMetrics:
             "session_end_events": self.session_end_events,
             "lifecycle_coverage": self.lifecycle_coverage,
             "readiness_minutes_since_last_event": self.readiness_minutes_since_last_event,
+            "avg_session_duration_minutes": self.avg_session_duration_minutes,
+            "max_session_duration_minutes": self.max_session_duration_minutes,
         }
 
 
@@ -380,6 +410,10 @@ class ImpactReport:
             lines.append(f"Historical score delta: {self.history.score_delta:+d}")
             lines.append(f"Lifecycle coverage: {self.usability.lifecycle_coverage}%")
             lines.append(f"Active days: {self.usability.active_days}")
+            if self.usability.avg_session_duration_minutes is not None:
+                lines.append(f"Avg session duration: {self.usability.avg_session_duration_minutes} min")
+            if self.usability.max_session_duration_minutes is not None:
+                lines.append(f"Max session duration: {self.usability.max_session_duration_minutes} min")
         if self.event_counts:
             lines.append("Event counts:")
             lines.extend(
@@ -519,6 +553,14 @@ def _build_usability(events: list[dict[str, Any]], history: ImpactHistory) -> Us
             ),
         )
 
+    durations = [
+        int(e["duration_minutes"])
+        for e in events
+        if _event_name(e) == "session-end" and isinstance(e.get("duration_minutes"), (int, float))
+    ]
+    avg_dur = round(sum(durations) / len(durations)) if durations else None
+    max_dur = max(durations) if durations else None
+
     return UsabilityMetrics(
         active_days=len(history.daily_event_counts),
         resume_events=sum(1 for name in names if "session-start" in name),
@@ -529,6 +571,8 @@ def _build_usability(events: list[dict[str, Any]], history: ImpactHistory) -> Us
         session_end_events=sum(1 for name in names if name == "session-end"),
         lifecycle_coverage=round(len(unique_lifecycle) / 4 * 100),
         readiness_minutes_since_last_event=minutes_since_last,
+        avg_session_duration_minutes=avg_dur,
+        max_session_duration_minutes=max_dur,
     )
 
 

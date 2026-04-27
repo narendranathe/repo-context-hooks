@@ -205,10 +205,21 @@ def record_telemetry(repo_root: Path, specs_readme: Path, ul_path: Path) -> None
                 sys.path.insert(0, str(parent))
                 break
 
-        from repo_context_hooks.telemetry import auto_commit_snapshot, is_sampled, record_event
+        from repo_context_hooks.telemetry import (
+            auto_commit_snapshot,
+            is_sampled,
+            read_session_duration_minutes,
+            record_event,
+            record_session_start_time,
+        )
 
         if not is_sampled(repo_root):
             return
+
+        if EVENT == "session-start":
+            record_session_start_time(repo_root)
+
+        duration_minutes = read_session_duration_minutes(repo_root) if EVENT == "session-end" else None
 
         event_path = record_event(
             repo_root,
@@ -216,6 +227,7 @@ def record_telemetry(repo_root: Path, specs_readme: Path, ul_path: Path) -> None
             source="repo_specs_memory",
             details={"specs_readme": str(specs_readme), "glossary": str(ul_path)},
             skip_dashboard=True,
+            duration_minutes=duration_minutes,
         )
         print(f"- Telemetry: `{event_path}`")
 

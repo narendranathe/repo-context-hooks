@@ -13,7 +13,9 @@ from repo_context_hooks.telemetry import (
     auto_commit_snapshot,
     clear_session_state,
     is_sampled,
+    read_session_duration_minutes,
     record_event,
+    record_session_start_time,
     session_id,
     _session_state_dir,
 )
@@ -318,3 +320,64 @@ def test_auto_commit_snapshot_commits_when_history_changes() -> None:
         cwd=repo, check=True, capture_output=True, text=True,
     ).stdout
     assert "monitoring snapshot" in log
+
+
+def test_session_duration_round_trip(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("REPO_CONTEXT_HOOKS_TELEMETRY", "1")
+    monkeypatch.setenv("REPO_CONTEXT_HOOKS_SESSION_ID", str(uuid4()))
+
+    record_session_start_time(tmp_path)
+    duration = read_session_duration_minutes(tmp_path)
+
+    assert duration is not None
+    assert duration >= 0
+
+
+def test_session_duration_missing_start_returns_none(tmp_path) -> None:
+    result = read_session_duration_minutes(tmp_path)
+    assert result is None
+
+
+def test_clear_session_state_removes_duration_file(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("REPO_CONTEXT_HOOKS_TELEMETRY", "1")
+    monkeypatch.setenv("REPO_CONTEXT_HOOKS_SESSION_ID", str(uuid4()))
+
+    record_session_start_time(tmp_path)
+    ts_file = _session_state_dir(tmp_path) / "current-session-start-ts"
+    assert ts_file.exists()
+
+    clear_session_state(tmp_path)
+    assert not ts_file.exists()
+
+
+def test_record_event_includes_duration_minutes(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("REPO_CONTEXT_HOOKS_TELEMETRY", "1")
+    monkeypatch.setenv("REPO_CONTEXT_HOOKS_SESSION_ID", str(uuid4()))
+    telemetry_dir = tmp_path / "telemetry"
+    telemetry_dir.mkdir()
+
+    event_path = record_event(
+        tmp_path, "session-end",
+        telemetry_base=telemetry_dir,
+        skip_dashboard=True,
+        duration_minutes=42,
+    )
+
+    events = [json.loads(line) for line in event_path.read_text().splitlines() if line.strip()]
+    assert events[-1]["duration_minutes"] == 42
+
+
+def test_record_event_without_duration_omits_field(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("REPO_CONTEXT_HOOKS_TELEMETRY", "1")
+    monkeypatch.setenv("REPO_CONTEXT_HOOKS_SESSION_ID", str(uuid4()))
+    telemetry_dir = tmp_path / "telemetry"
+    telemetry_dir.mkdir()
+
+    event_path = record_event(
+        tmp_path, "session-start",
+        telemetry_base=telemetry_dir,
+        skip_dashboard=True,
+    )
+
+    events = [json.loads(line) for line in event_path.read_text().splitlines() if line.strip()]
+    assert "duration_minutes" not in events[-1]
