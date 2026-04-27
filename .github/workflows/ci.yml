@@ -49,35 +49,103 @@ jobs:
       - name: Install from wheel
         run: pip install --find-links=dist repo-context-hooks
 
-      - name: Run install (Claude, temp home)
+      - name: Set up temp dirs (Linux)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           AGENT_HOME=$(mktemp -d)
           REPO_ROOT=$(mktemp -d)
           git init "$REPO_ROOT"
-          python -c "
-          from pathlib import Path
-          from repo_context_hooks.installer import install_platform
-          result = install_platform('claude', repo_root=Path('$REPO_ROOT'), home=Path('$AGENT_HOME'))
-          print(result)
-          settings = Path('$AGENT_HOME') / '.claude' / 'settings.json'
-          assert settings.exists(), f'settings.json missing at {settings}'
-          print('settings.json written OK')
-          "
+          echo "AGENT_HOME=$AGENT_HOME" >> "$GITHUB_ENV"
+          echo "REPO_ROOT=$REPO_ROOT" >> "$GITHUB_ENV"
 
-      - name: Verify settings content
-        shell: bash
-        run: |
-          echo "smoke test passed"
-
-      - name: Verify no backslash paths in settings.json (Windows only)
+      - name: Set up temp dirs (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $f = Get-ChildItem -Recurse -Filter "settings.json" | Select-Object -First 1
-          $content = Get-Content $f.FullName -Raw
-          if ($content -match '\\\\') {
-            Write-Error "Backslash paths found in settings.json — Windows path bug"
+          $AGENT_HOME = New-Item -ItemType Directory -Path ([System.IO.Path]::Combine($env:TEMP, [System.IO.Path]::GetRandomFileName())) | Select-Object -ExpandProperty FullName
+          $REPO_ROOT = New-Item -ItemType Directory -Path ([System.IO.Path]::Combine($env:TEMP, [System.IO.Path]::GetRandomFileName())) | Select-Object -ExpandProperty FullName
+          git init "$REPO_ROOT"
+          # Store Windows-native paths so Python and bash both resolve correctly.
+          Add-Content -Path $env:GITHUB_ENV -Value "AGENT_HOME=$AGENT_HOME"
+          Add-Content -Path $env:GITHUB_ENV -Value "REPO_ROOT=$REPO_ROOT"
+
+      - name: Run install via CLI (Claude, temp home) - Linux
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          # HOME is used by Python's Path.home() on Linux/Mac.
+          export HOME="$AGENT_HOME"
+          repo-context-hooks install --platform claude
+          echo "CLI install completed"
+
+      - name: Run install via CLI (Claude, temp home) - Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # USERPROFILE is used by Python's Path.home() on Windows.
+          $env:USERPROFILE = $env:AGENT_HOME
+          $env:HOMEDRIVE = Split-Path $env:AGENT_HOME -Qualifier
+          $env:HOMEPATH = (Split-Path $env:AGENT_HOME -NoQualifier)
+          repo-context-hooks install --platform claude
+          Write-Host "CLI install completed"
+
+      - name: Run doctor via CLI and assert exit 0 - Linux
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          export HOME="$AGENT_HOME"
+          repo-context-hooks doctor --platform claude --repo-root "$REPO_ROOT"
+          echo "doctor exited 0 - OK"
+
+      - name: Run doctor via CLI and assert exit 0 - Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:USERPROFILE = $env:AGENT_HOME
+          $env:HOMEDRIVE = Split-Path $env:AGENT_HOME -Qualifier
+          $env:HOMEPATH = (Split-Path $env:AGENT_HOME -NoQualifier)
+          repo-context-hooks doctor --platform claude --repo-root $env:REPO_ROOT
+          Write-Host "doctor exited 0 - OK"
+
+      - name: Verify settings.json contains hook entries - Linux
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          SETTINGS="$AGENT_HOME/.claude/settings.json"
+          if [ ! -f "$SETTINGS" ]; then
+            echo "FAIL: settings.json missing at $SETTINGS"
+            exit 1
+          fi
+          echo "--- settings.json contents ---"
+          cat "$SETTINGS"
+          echo "--- end ---"
+          if ! grep -q '"command"' "$SETTINGS"; then
+            echo "FAIL: settings.json has no hook entries with 'command' key"
+            exit 1
+          fi
+          echo "settings.json contains hook entries with 'command' - OK"
+
+      - name: Verify settings.json contains hook entries - Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $SETTINGS = Join-Path $env:AGENT_HOME ".claude\settings.json"
+          if (-not (Test-Path $SETTINGS)) {
+            Write-Error "FAIL: settings.json missing at $SETTINGS"
             exit 1
           }
-          Write-Host "No backslash paths — OK"
+          $content = Get-Content $SETTINGS -Raw
+          Write-Host "--- settings.json contents ---"
+          Write-Host $content
+          Write-Host "--- end ---"
+          if ($content -notmatch '"command"') {
+            Write-Error "FAIL: settings.json has no hook entries with 'command' key"
+            exit 1
+          }
+          Write-Host "settings.json contains hook entries with 'command' - OK"
+          if ($content -match '\\\\') {
+            Write-Error "Backslash paths found in settings.json - Windows path bug"
+            exit 1
+          }
+          Write-Host "No backslash paths - OK"
