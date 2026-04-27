@@ -23,8 +23,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install package
-        run: pip install -e ".[dev]" || pip install -e .
+      - name: Install package and test deps
+        run: pip install -e ".[dev]"
 
       - name: Run tests
         run: python -m pytest tests/ -q --tb=short
@@ -52,19 +52,23 @@ jobs:
       - name: Run install (Claude, temp home)
         shell: bash
         run: |
-          export HOME_OVERRIDE=$(mktemp -d)
+          AGENT_HOME=$(mktemp -d)
+          REPO_ROOT=$(mktemp -d)
+          git init "$REPO_ROOT"
           python -c "
           from pathlib import Path
           from repo_context_hooks.installer import install_platform
-          result = install_platform('claude', home=Path('$HOME_OVERRIDE'))
+          result = install_platform('claude', repo_root=Path('$REPO_ROOT'), home=Path('$AGENT_HOME'))
           print(result)
-          assert (Path('$HOME_OVERRIDE') / '.claude' / 'settings.json').exists()
+          settings = Path('$AGENT_HOME') / '.claude' / 'settings.json'
+          assert settings.exists(), f'settings.json missing at {settings}'
+          print('settings.json written OK')
           "
 
-      - name: Run doctor (temp home)
+      - name: Verify settings content
         shell: bash
         run: |
-          echo "smoke test passed — settings.json written"
+          echo "smoke test passed"
 
       - name: Verify no backslash paths in settings.json (Windows only)
         if: runner.os == 'Windows'
