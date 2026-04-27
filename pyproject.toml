@@ -4,13 +4,25 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-context-hooks"
-version = "0.2.4"
+version = "0.3.0"
 description = "Hook-based repo context continuity for coding agents."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Narendranath Edara" }]
 dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/narendranathe/repo-context-hooks"
+Repository = "https://github.com/narendranathe/repo-context-hooks"
 
 [project.scripts]
 repo-context-hooks = "repo_context_hooks.cli:main"

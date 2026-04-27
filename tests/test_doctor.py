@@ -103,7 +103,7 @@ def test_all_platforms_doctor_fails_on_invalid_platform_state() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("replit", repo_root=repo, home=tmp_path / "home")
+    install_platform("replit", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     (repo / "replit.md").write_text("placeholder\n", encoding="utf-8")
 
     report = diagnose_all_platforms(repo, home=tmp_path / "home")
@@ -163,7 +163,7 @@ def test_doctor_reports_installed_codex_contract() -> None:
     _write_repo_contract(repo)
 
     home = tmp_path / "home"
-    install_platform("codex", repo_root=repo, home=home)
+    install_platform("codex", repo_root=repo, home=home, install_repo_context=True)
 
     report = diagnose_platform("codex", repo_root=repo, home=home)
 
@@ -180,7 +180,7 @@ def test_doctor_rejects_placeholder_codex_agents_file() -> None:
     _write_repo_contract(repo)
 
     home = tmp_path / "home"
-    install_platform("codex", repo_root=repo, home=home)
+    install_platform("codex", repo_root=repo, home=home, install_repo_context=True)
     (repo / "AGENTS.md").write_text("placeholder\n", encoding="utf-8")
 
     report = diagnose_platform("codex", repo_root=repo, home=home)
@@ -197,7 +197,7 @@ def test_doctor_does_not_require_codex_skill_directories() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("codex", repo_root=repo, home=tmp_path / "home")
+    install_platform("codex", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     report = diagnose_platform("codex", repo_root=repo, home=tmp_path / "home")
 
@@ -225,7 +225,7 @@ def test_doctor_reports_installed_replit_contract() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("replit", repo_root=repo, home=tmp_path / "home")
+    install_platform("replit", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     report = diagnose_platform("replit", repo_root=repo, home=tmp_path / "home")
 
     assert report.ok is True
@@ -240,7 +240,7 @@ def test_doctor_rejects_placeholder_replit_md() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("replit", repo_root=repo, home=tmp_path / "home")
+    install_platform("replit", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     (repo / "replit.md").write_text("placeholder\n", encoding="utf-8")
 
     report = diagnose_platform("replit", repo_root=repo, home=tmp_path / "home")
@@ -273,7 +273,7 @@ def test_doctor_reports_installed_windsurf_contract() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+    install_platform("windsurf", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     report = diagnose_platform("windsurf", repo_root=repo, home=tmp_path / "home")
 
     assert report.ok is True
@@ -291,7 +291,7 @@ def test_doctor_rejects_placeholder_windsurf_rule() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+    install_platform("windsurf", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     (repo / ".windsurf" / "rules" / "repo-context-continuity.md").write_text(
         "placeholder\n",
         encoding="utf-8",
@@ -328,7 +328,7 @@ def test_doctor_reports_installed_lovable_exports() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("lovable", repo_root=repo, home=tmp_path / "home")
+    install_platform("lovable", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     report = diagnose_platform("lovable", repo_root=repo, home=tmp_path / "home")
 
     assert report.ok is True
@@ -344,7 +344,7 @@ def test_doctor_rejects_placeholder_lovable_project_knowledge() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("lovable", repo_root=repo, home=tmp_path / "home")
+    install_platform("lovable", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     (repo / ".lovable" / "project-knowledge.md").write_text(
         "placeholder\n",
         encoding="utf-8",
@@ -379,7 +379,7 @@ def test_doctor_reports_installed_openclaw_workspace_files() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+    install_platform("openclaw", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     report = diagnose_platform("openclaw", repo_root=repo, home=tmp_path / "home")
 
     assert report.ok is True
@@ -396,7 +396,7 @@ def test_doctor_rejects_placeholder_openclaw_soul_file() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+    install_platform("openclaw", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     (repo / "SOUL.md").write_text("placeholder\n", encoding="utf-8")
 
     report = diagnose_platform("openclaw", repo_root=repo, home=tmp_path / "home")
@@ -426,7 +426,7 @@ def test_doctor_reports_installed_ollama_modelfile() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("ollama", repo_root=repo, home=tmp_path / "home")
+    install_platform("ollama", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     report = diagnose_platform("ollama", repo_root=repo, home=tmp_path / "home")
 
     assert report.ok is True
@@ -441,7 +441,7 @@ def test_doctor_rejects_placeholder_ollama_modelfile() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("ollama", repo_root=repo, home=tmp_path / "home")
+    install_platform("ollama", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     (repo / "Modelfile.repo-context").write_text("placeholder\n", encoding="utf-8")
 
     report = diagnose_platform("ollama", repo_root=repo, home=tmp_path / "home")
@@ -471,7 +471,7 @@ def test_doctor_reports_installed_kimi_agents_file() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("kimi", repo_root=repo, home=tmp_path / "home")
+    install_platform("kimi", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     report = diagnose_platform("kimi", repo_root=repo, home=tmp_path / "home")
 
     assert report.ok is True
@@ -485,7 +485,7 @@ def test_doctor_rejects_placeholder_kimi_agents_file() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract(repo)
 
-    install_platform("kimi", repo_root=repo, home=tmp_path / "home")
+    install_platform("kimi", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
     (repo / "AGENTS.md").write_text("placeholder\n", encoding="utf-8")
 
     report = diagnose_platform("kimi", repo_root=repo, home=tmp_path / "home")

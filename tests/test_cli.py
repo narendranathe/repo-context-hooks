@@ -93,9 +93,10 @@ def test_install_skips_repo_context_outside_git_repo(
         repo_root,
         force: bool = False,
         home=None,
-        install_repo_context: bool = True,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
     ):
-        calls.append(install_repo_context)
+        calls.append(also_repo_hooks)
         return SimpleNamespace(
             summary="Codex partial support installed.",
             home_target=None,
@@ -114,6 +115,7 @@ def test_install_skips_repo_context_outside_git_repo(
         platform="codex",
         force=False,
         skip_repo_hooks=False,
+        also_repo_hooks=True,
         repo_root=str(tmp_path),
     )
 
@@ -136,9 +138,10 @@ def test_install_respects_skip_repo_hooks(
         repo_root,
         force: bool = False,
         home=None,
-        install_repo_context: bool = True,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
     ):
-        calls.append(install_repo_context)
+        calls.append(also_repo_hooks)
         return SimpleNamespace(
             summary="Claude native support installed.",
             home_target=None,
@@ -157,12 +160,14 @@ def test_install_respects_skip_repo_hooks(
         platform="claude",
         force=False,
         skip_repo_hooks=True,
+        also_repo_hooks=False,
         repo_root=str(tmp_path),
     )
 
     assert _install(args) == 0
     out = capsys.readouterr().out
-    assert "Skipped repo context installation" in out
+    # --skip-repo-hooks is now a no-op; agent-level section always shown
+    assert "=== Agent skill install ===" in out
     assert calls == [False]
 
 
@@ -429,3 +434,103 @@ def test_recommend_prints_json(
     assert _recommend(args) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["recommendations"][0]["platform_id"] == "claude"
+
+
+def test_parser_install_accepts_also_repo_hooks_flag() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["install", "--platform", "claude", "--also-repo-hooks"])
+    assert args.also_repo_hooks is True
+    assert args.skip_repo_hooks is False
+
+
+def test_parser_install_also_repo_hooks_defaults_false() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["install", "--platform", "claude"])
+    assert args.also_repo_hooks is False
+
+
+def test_install_prints_two_section_output_with_also_repo_hooks(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+    (tmp_path / ".git").mkdir()
+
+    def fake_install_platform(
+        platform: str,
+        repo_root,
+        force: bool = False,
+        home=None,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
+    ):
+        return SimpleNamespace(
+            summary="Claude native support installed.",
+            home_target=tmp_path / "home" / ".claude" / "skills",
+            home_statuses={"context-handoff-hooks": "installed", "settings.json": "installed"},
+            repo_statuses={"repo_specs_memory.py": "installed", "session_context.py": "installed"},
+            warnings=(),
+            manual_steps=(),
+        )
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.install_platform",
+        fake_install_platform,
+    )
+
+    args = Namespace(
+        platform="claude",
+        force=False,
+        skip_repo_hooks=False,
+        also_repo_hooks=True,
+        repo_root=str(tmp_path),
+    )
+
+    assert _install(args) == 0
+    out = capsys.readouterr().out
+    assert "=== Agent skill install ===" in out
+    assert "=== Workspace artifacts ===" in out
+    assert "Claude native support installed." in out
+    assert "repo_specs_memory.py: installed" in out
+
+
+def test_install_omits_workspace_section_without_also_repo_hooks(
+    monkeypatch,
+    capsys,
+) -> None:
+    tmp_path = _tmp_dir()
+
+    def fake_install_platform(
+        platform: str,
+        repo_root,
+        force: bool = False,
+        home=None,
+        install_repo_context: bool = False,
+        also_repo_hooks: bool = False,
+    ):
+        return SimpleNamespace(
+            summary="Claude native support installed.",
+            home_target=tmp_path / "home" / ".claude" / "skills",
+            home_statuses={"settings.json": "installed"},
+            repo_statuses={},
+            warnings=(),
+            manual_steps=(),
+        )
+
+    monkeypatch.setattr(
+        "repo_context_hooks.cli.install_platform",
+        fake_install_platform,
+    )
+
+    args = Namespace(
+        platform="claude",
+        force=False,
+        skip_repo_hooks=False,
+        also_repo_hooks=False,
+        repo_root=str(tmp_path),
+    )
+
+    assert _install(args) == 0
+    out = capsys.readouterr().out
+    assert "=== Agent skill install ===" in out
+    assert "=== Workspace artifacts ===" not in out

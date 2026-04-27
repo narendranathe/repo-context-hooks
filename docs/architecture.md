@@ -1,10 +1,10 @@
 # Architecture
 
-`repo-context-hooks` is a repo-native continuity layer for coding agents.
+`repo-context-hooks` is an agent-level continuity skill. It runs at the agent runtime level - installed once to agent home - and uses the repository workspace contract as its durable persistence layer.
 
 ## Core Model
 
-The repository is the memory boundary. Instead of treating continuity as hidden session state, the project stores the useful parts of the work where the next session can inspect them:
+The agent runtime is the primary boundary. The repository is the persistence medium. Instead of treating continuity as hidden session state or a per-repo hook, the skill installs once and operates across every workspace the agent opens:
 
 - `README.md` carries the public product story
 - `specs/README.md` carries engineering memory, active constraints, and next-step context
@@ -18,9 +18,11 @@ The repository is the memory boundary. Instead of treating continuity as hidden 
 
 That is also the onboarding model:
 
-1. run `repo-context-hooks init`
-2. run `repo-context-hooks doctor`
-3. install a platform adapter only after the repo contract exists
+1. install the skill to agent home: `repo-context-hooks install --platform claude`
+2. optionally scaffold the workspace contract: `repo-context-hooks init`
+3. verify: `repo-context-hooks doctor`
+
+Agent skill install comes first. Workspace contract setup is optional scaffolding for workspaces that do not already have `specs/README.md`.
 
 ## Current Continuity Surfaces
 
@@ -32,13 +34,14 @@ That distinction is important. The architecture is not trying to flatten every p
 
 ## Interrupt And Resume Flow
 
-The continuity loop follows a practical task story:
+The continuity loop is agent-driven:
 
-1. an agent starts work from checked-in repo context
-2. the session is interrupted by compact, handoff, or context loss
-3. useful tactical state is written back into `specs/README.md` or a platform-root file such as `replit.md`
-4. the next session resumes from repo state instead of replaying the entire task from memory
+1. agent skill activates at `SessionStart` and reads workspace contract from the repo
+2. session is interrupted by compact, handoff, or context loss
+3. `PreCompact` hook writes useful tactical state back into `specs/README.md`
+4. next session's `SessionStart` reloads from repo state - not from fragile session memory
+5. `SessionEnd` writes a final handoff summary for the next agent session
 
 ## Why The Repo Contract Matters
 
-A continuity system is only trustworthy if teammates can inspect it. By keeping the continuity contract in git, teams can review what the agent is carrying forward, refine what belongs in public docs versus engineering memory, and recover from bad assumptions without depending on opaque memory infrastructure.
+A continuity system is only trustworthy if teammates can inspect it. By keeping state in git-tracked workspace files, teams can review what the agent is carrying forward, refine what belongs in public docs versus engineering memory, and recover from bad assumptions without depending on opaque external memory infrastructure.

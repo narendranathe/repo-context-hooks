@@ -116,7 +116,17 @@ def record_telemetry(
                 sys.path.insert(0, str(parent))
                 break
 
-        from repo_context_hooks.telemetry import record_event
+        from repo_context_hooks.telemetry import (
+            auto_commit_snapshot,
+            clear_session_state,
+            is_sampled,
+            record_event,
+        )
+
+        if not is_sampled(repo_root):
+            if EVENT == "session-end":
+                clear_session_state(repo_root)
+            return
 
         record_event(
             repo_root,
@@ -128,6 +138,9 @@ def record_telemetry(
                 "open_issues": len(issues),
             },
         )
+        if EVENT == "session-end":
+            auto_commit_snapshot(repo_root)
+            clear_session_state(repo_root)
     except Exception:
         pass
 
@@ -135,9 +148,15 @@ def record_telemetry(
 def main() -> int:
     repo_root_raw = git_output("rev-parse", "--show-toplevel")
     if not repo_root_raw:
+        print("no git repo detected — skipping workspace context")
         return 0
 
     repo_root = Path(repo_root_raw)
+
+    if not (repo_root / "specs" / "README.md").exists():
+        print("no workspace contract found — run `repo-context-hooks init` to set one up")
+        return 0
+
     repo_name = repo_root.name
     branch = git_output("branch", "--show-current") or "unknown"
 

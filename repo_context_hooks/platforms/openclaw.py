@@ -58,6 +58,7 @@ class OpenClawAdapter:
         force: bool = False,
         home: Path | None = None,
         install_repo_context: bool = True,
+        also_repo_hooks: bool = False,
     ) -> InstallResult:
         del home
         repo_statuses: dict[str, str] = {}

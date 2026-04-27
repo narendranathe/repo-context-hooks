@@ -30,7 +30,7 @@ def test_install_cursor_writes_rule_and_agents() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract_basics(repo)
 
-    result = install_platform("cursor", repo_root=repo, home=tmp_path / "home")
+    result = install_platform("cursor", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     rule_path = repo / ".cursor" / "rules" / "repo-context-continuity.mdc"
     agents_path = repo / "AGENTS.md"
@@ -66,7 +66,7 @@ def test_install_replit_writes_replit_md_and_agents() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract_basics(repo)
 
-    result = install_platform("replit", repo_root=repo, home=tmp_path / "home")
+    result = install_platform("replit", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     replit_path = repo / "replit.md"
     agents_path = repo / "AGENTS.md"
@@ -89,7 +89,7 @@ def test_install_windsurf_writes_rule_and_agents() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract_basics(repo)
 
-    result = install_platform("windsurf", repo_root=repo, home=tmp_path / "home")
+    result = install_platform("windsurf", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     rule_path = repo / ".windsurf" / "rules" / "repo-context-continuity.md"
     agents_path = repo / "AGENTS.md"
@@ -111,7 +111,7 @@ def test_install_lovable_writes_knowledge_exports_and_agents() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract_basics(repo)
 
-    result = install_platform("lovable", repo_root=repo, home=tmp_path / "home")
+    result = install_platform("lovable", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     project_knowledge = repo / ".lovable" / "project-knowledge.md"
     workspace_knowledge = repo / ".lovable" / "workspace-knowledge.md"
@@ -134,7 +134,7 @@ def test_install_openclaw_writes_workspace_files_and_agents() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract_basics(repo)
 
-    result = install_platform("openclaw", repo_root=repo, home=tmp_path / "home")
+    result = install_platform("openclaw", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     agents_path = repo / "AGENTS.md"
     soul_path = repo / "SOUL.md"
@@ -159,7 +159,7 @@ def test_install_ollama_writes_modelfile_and_agents() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract_basics(repo)
 
-    result = install_platform("ollama", repo_root=repo, home=tmp_path / "home")
+    result = install_platform("ollama", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     agents_path = repo / "AGENTS.md"
     modelfile_path = repo / "Modelfile.repo-context"
@@ -183,7 +183,7 @@ def test_install_kimi_writes_agents_only() -> None:
     (repo / ".git").mkdir()
     _write_repo_contract_basics(repo)
 
-    result = install_platform("kimi", repo_root=repo, home=tmp_path / "home")
+    result = install_platform("kimi", repo_root=repo, home=tmp_path / "home", install_repo_context=True)
 
     agents_path = repo / "AGENTS.md"
 

@@ -1,4 +1,4 @@
-﻿# Engineering Memory
+# Engineering Memory
 
 This file is the persistent project context for agents and maintainers.
 
@@ -14,7 +14,7 @@ This file is the persistent project context for agents and maintainers.
 
 ### Repo Summary
 
-- Repo-native continuity for coding agents. `repo-context-hooks` keeps interrupted work, next-step context, and handoff notes in the repository instead of leaving them trapped in chat history. The goal is simple: a new session should be able to reopen the repo, understand the work in progress, and continue without rediscovering everything from scratch.
+- Agent-level continuity skill for coding agents. `repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. It runs at the agent runtime level - installed once to `~/.claude/skills/`, `~/.codex/skills/`, or equivalent agent home - and uses repository workspace contracts as its durable persistence layer.
 <!-- AUTO:REPO_CONTEXT_END -->
 
 ## Architecture and Design Constraints
@@ -318,3 +318,93 @@ This file is the persistent project context for agents and maintainers.
 
 - Branch: `feat/evidence-monitoring`
 - Working changes: repo_context_hooks/telemetry.py, specs/README.md, tests/test_readme_contract.py, tests/test_telemetry.py, tests/test_visual_contract.py, tests/test_monitoring_surface.py
+
+### 2026-04-26 17:59 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 17:59 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:01 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:02 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:02 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:02 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:02 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:02 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:02 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:03 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:03 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:03 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:03 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:03 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:04 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:05 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:05 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
+
+### 2026-04-26 18:06 - pre-compact
+
+- Branch: `feat/agent-level-skill-runtime`
+- Working changes: docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/session_context.py, specs/README.md, tests/test_session_metrics.py, docs/prd-session-metrics.md, tests/test_script_degradation.py
