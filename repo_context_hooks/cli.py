@@ -167,6 +167,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show a 30-day activity projection based on current daily rate.",
     )
     measure.add_argument(
+        "--branches",
+        action="store_true",
+        help="Show per-branch score and session count, sorted by last seen.",
+    )
+    measure.add_argument(
         "--clean-ghosts",
         action="store_true",
         help="Remove test-run ghost repos from the telemetry store (dry-run by default).",
@@ -386,6 +391,21 @@ def _measure(args: argparse.Namespace) -> int:
             _print_json(forecast.to_dict())
         else:
             print(forecast.render())
+        return 0
+
+    if getattr(args, "branches", False):
+        from .telemetry import branch_scores
+        stats = branch_scores(repo_root)
+        if getattr(args, "json", False):
+            _print_json([s.to_dict() for s in stats])
+        else:
+            if not stats:
+                print("No branch data found.")
+            else:
+                print(f"{'Branch':<30} {'Sessions':>8} {'Avg Score':>9} {'Last Seen'}")
+                print("-" * 65)
+                for s in stats:
+                    print(f"{s.branch:<30} {s.session_count:>8} {s.avg_score:>9} {s.last_seen[:10]}")
         return 0
 
     report = measure_impact(repo_root=repo_root)

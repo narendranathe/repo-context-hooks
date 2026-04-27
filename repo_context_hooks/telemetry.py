@@ -1097,6 +1097,61 @@ def forecast_activity(
     )
 
 
+@dataclass(frozen=True)
+class BranchStat:
+    branch: str
+    session_count: int
+    avg_score: int
+    last_seen: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "branch": self.branch,
+            "session_count": self.session_count,
+            "avg_score": self.avg_score,
+            "last_seen": self.last_seen,
+        }
+
+
+def branch_scores(
+    repo_root: Path,
+    telemetry_base: Path | None = None,
+) -> list[BranchStat]:
+    """Return per-branch stats sorted by last_seen descending."""
+    path = telemetry_events_path(repo_root, base=telemetry_base)
+    events = _read_events(path)
+
+    branch_data: dict[str, dict[str, Any]] = {}
+    for event in events:
+        branch = str(event.get("branch") or "unknown")
+        score = event.get("repo_contract_score")
+        ts = event.get("timestamp", "")
+        sid = event.get("session_id", "")
+
+        if branch not in branch_data:
+            branch_data[branch] = {"scores": [], "sessions": set(), "last_seen": ""}
+        if isinstance(score, (int, float)):
+            branch_data[branch]["scores"].append(int(score))
+        if sid:
+            branch_data[branch]["sessions"].add(sid)
+        if ts > branch_data[branch]["last_seen"]:
+            branch_data[branch]["last_seen"] = ts
+
+    stats = []
+    for branch, data in branch_data.items():
+        scores = data["scores"]
+        avg = round(sum(scores) / len(scores)) if scores else 0
+        stats.append(BranchStat(
+            branch=branch,
+            session_count=len(data["sessions"]),
+            avg_score=avg,
+            last_seen=data["last_seen"],
+        ))
+
+    stats.sort(key=lambda s: s.last_seen, reverse=True)
+    return stats
+
+
 _GHOST_REPO_NAMES: frozenset[str] = frozenset({"repo", "tmp", "temp", "test"})
 
 

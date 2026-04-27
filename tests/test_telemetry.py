@@ -256,3 +256,52 @@ def test_forecast_to_dict_has_required_keys(tmp_path):
     f = forecast_activity(tmp_path, telemetry_base=tmp_path / "telem")
     d = f.to_dict()
     assert set(d) >= {"daily_rate", "projected_events", "projected_active_days", "confidence", "week_series"}
+
+
+# --- branch_scores tests ---
+
+def test_branch_scores_groups_by_branch(tmp_path):
+    import json
+    from repo_context_hooks.telemetry import branch_scores, EVENTS_FILE, telemetry_events_path
+
+    telem_base = tmp_path / "telem"
+    events_file = telemetry_events_path(tmp_path, base=telem_base)
+    events = [
+        {"branch": "main", "session_id": "s1", "repo_contract_score": 80, "timestamp": "2026-01-01T00:00:00+00:00"},
+        {"branch": "main", "session_id": "s2", "repo_contract_score": 90, "timestamp": "2026-01-02T00:00:00+00:00"},
+        {"branch": "feature", "session_id": "s3", "repo_contract_score": 70, "timestamp": "2026-01-03T00:00:00+00:00"},
+    ]
+    events_file.write_text("\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
+
+    stats = branch_scores(tmp_path, telemetry_base=telem_base)
+    by_branch = {s.branch: s for s in stats}
+
+    assert "main" in by_branch
+    assert "feature" in by_branch
+    assert by_branch["main"].session_count == 2
+    assert by_branch["main"].avg_score == 85
+    assert by_branch["feature"].session_count == 1
+    assert by_branch["feature"].avg_score == 70
+
+
+def test_branch_scores_sorted_by_last_seen(tmp_path):
+    import json
+    from repo_context_hooks.telemetry import branch_scores, telemetry_events_path
+
+    telem_base = tmp_path / "telem"
+    events_file = telemetry_events_path(tmp_path, base=telem_base)
+    events = [
+        {"branch": "older", "session_id": "s1", "repo_contract_score": 90, "timestamp": "2026-01-01T00:00:00+00:00"},
+        {"branch": "newer", "session_id": "s2", "repo_contract_score": 90, "timestamp": "2026-01-10T00:00:00+00:00"},
+    ]
+    events_file.write_text("\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
+
+    stats = branch_scores(tmp_path, telemetry_base=telem_base)
+    assert stats[0].branch == "newer"
+    assert stats[1].branch == "older"
+
+
+def test_branch_scores_empty_returns_empty_list(tmp_path):
+    from repo_context_hooks.telemetry import branch_scores
+    stats = branch_scores(tmp_path, telemetry_base=tmp_path / "telem")
+    assert stats == []
