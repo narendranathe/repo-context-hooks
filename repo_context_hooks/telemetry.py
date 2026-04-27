@@ -373,6 +373,8 @@ class UsabilityMetrics:
     readiness_minutes_since_last_event: int | None
     avg_session_duration_minutes: int | None
     max_session_duration_minutes: int | None
+    cold_start_time_saved_minutes: int
+    score_week1_uplift: int | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -385,6 +387,8 @@ class UsabilityMetrics:
             "readiness_minutes_since_last_event": self.readiness_minutes_since_last_event,
             "avg_session_duration_minutes": self.avg_session_duration_minutes,
             "max_session_duration_minutes": self.max_session_duration_minutes,
+            "cold_start_time_saved_minutes": self.cold_start_time_saved_minutes,
+            "score_week1_uplift": self.score_week1_uplift,
         }
 
 
@@ -573,6 +577,24 @@ def _build_usability(events: list[dict[str, Any]], history: ImpactHistory) -> Us
     avg_dur = round(sum(durations) / len(durations)) if durations else None
     max_dur = max(durations) if durations else None
 
+    # cold start time saved: each post-compact reload prevents ~5 min cold re-orientation
+    cold_start_saved = sum(1 for name in names if "post-compact" in name) * 5
+
+    # week-1 score uplift: score at day 7 minus score at day 0 (None if no day-7 data)
+    score_week1_uplift: int | None = None
+    if len(history.score_series) >= 2:
+        sorted_scores = sorted(history.score_series, key=lambda x: x["date"])
+        day0_date = sorted_scores[0]["date"]
+        day0_score = sorted_scores[0]["score"]
+        try:
+            day0 = dt.date.fromisoformat(day0_date)
+            target = (day0 + dt.timedelta(days=7)).isoformat()
+            candidates = [s for s in sorted_scores if s["date"] >= target]
+            if candidates:
+                score_week1_uplift = candidates[0]["score"] - day0_score
+        except (ValueError, KeyError):
+            pass
+
     return UsabilityMetrics(
         active_days=len(history.daily_event_counts),
         resume_events=sum(1 for name in names if "session-start" in name),
@@ -585,6 +607,8 @@ def _build_usability(events: list[dict[str, Any]], history: ImpactHistory) -> Us
         readiness_minutes_since_last_event=minutes_since_last,
         avg_session_duration_minutes=avg_dur,
         max_session_duration_minutes=max_dur,
+        cold_start_time_saved_minutes=cold_start_saved,
+        score_week1_uplift=score_week1_uplift,
     )
 
 
