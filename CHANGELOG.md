@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-04-27
+
+### Added
+- `uninstall` command: removes skills bundle and surgically cleans hook entries from settings.json (user hooks preserved, idempotent)
+- Auto-detect platform: `install` with no `--platform` detects installed agents via `~/.{platform_id}/` and installs to all in one command
+- `--no-telemetry` install flag: bakes `REPO_CONTEXT_HOOKS_TELEMETRY=0` into hook command strings for permanent local opt-out
+- `TELEMETRY.md`: documents what is collected (local only), where it lives, and all three opt-out paths
+- First-run guidance: install prints "What happens next" block (init/doctor/measure)
+- Telemetry sampling fix: env var hard bypass, default rate 1.0, 8-hour staleness, session state in OS temp dir for worktree isolation
+
+### Fixed
+- CI smoke test uses real CLI (`install` + `doctor`) and verifies settings.json content on both Linux and Windows
+- `is_sampled()` now reads env var before any file I/O
+
+### Tests
+- 199 tests (from 177 in 0.3.0)
+
 ## [0.3.0] - 2026-04-26
 
 ### Added
