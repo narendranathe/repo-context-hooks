@@ -11,7 +11,9 @@ from repo_context_hooks.installer import (
     install_skills,
     platform_skill_dir,
     supported_platform_ids,
+    uninstall_platform,
 )
+from repo_context_hooks.platforms.runtime import uninstall_global_hooks
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -394,3 +396,111 @@ def test_install_platform_codex_install_global_hooks_preserves_existing_settings
     data = json.loads(settings_path.read_text(encoding="utf-8"))
     assert data["existing_key"] == "existing_value", "existing settings must be preserved"
     assert data["_repo_context_hooks_installed"] is True
+
+
+# ---------------------------------------------------------------------------
+# Uninstall tests
+# ---------------------------------------------------------------------------
+
+
+def test_uninstall_removes_skills_dir() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    # Install first so there is something to remove.
+    install_global_hooks(agent_home)
+    install_skills("claude", home=agent_home, force=False)
+
+    skills_dir = agent_home / ".claude" / "skills" / "context-handoff-hooks"
+    assert skills_dir.exists(), "skills dir must exist after install"
+
+    result = uninstall_platform("claude", home=agent_home)
+
+    assert not skills_dir.exists(), "skills dir must be gone after uninstall"
+    assert result["context-handoff-hooks"] == "removed"
+
+
+def test_uninstall_cleans_settings_json() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    install_global_hooks(agent_home)
+
+    settings_path = agent_home / ".claude" / "settings.json"
+    before = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert "SessionStart" in before["hooks"], "hooks must be present before uninstall"
+
+    result = uninstall_platform("claude", home=agent_home)
+
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    lifecycle_events = {"SessionStart", "PreCompact", "PostCompact", "SessionEnd"}
+    remaining = lifecycle_events & set(after.get("hooks", {}).keys())
+    assert remaining == set(), f"lifecycle hooks must be removed; still present: {remaining}"
+    assert result["settings.json"] == "cleaned"
+
+
+def test_uninstall_preserves_user_hooks() -> None:
+    """Only hooks added by this tool are removed; adjacent user hooks survive."""
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+    settings_path = agent_home / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+
+    # Pre-populate with a user hook on SessionStart alongside our future hooks.
+    settings_path.write_text(
+        json.dumps({
+            "permissions": {"allow": ["Bash(git:*)"]},
+            "hooks": {
+                "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "echo user-pretool"}]}],
+                "SessionStart": [{"matcher": "", "hooks": [{"type": "command", "command": "echo user-session"}]}],
+            },
+        }),
+        encoding="utf-8",
+    )
+
+    install_global_hooks(agent_home)
+
+    # Confirm our hooks were merged in.
+    mid = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert len(mid["hooks"]["SessionStart"]) == 2, "user group + our group must both be present"
+
+    uninstall_platform("claude", home=agent_home)
+
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    # User hooks must survive.
+    assert after["permissions"]["allow"] == ["Bash(git:*)"], "permissions must be preserved"
+    assert "PreToolUse" in after["hooks"], "PreToolUse user hook must survive"
+    # The user's SessionStart group must survive; our group must be gone.
+    session_start_groups = after["hooks"].get("SessionStart", [])
+    assert len(session_start_groups) == 1, "only the user's SessionStart group must remain"
+    user_cmds = [h["command"] for h in session_start_groups[0]["hooks"]]
+    assert user_cmds == ["echo user-session"], "user hook command must be intact"
+
+
+def test_uninstall_idempotent() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    install_global_hooks(agent_home)
+    install_skills("claude", home=agent_home, force=False)
+
+    first = uninstall_platform("claude", home=agent_home)
+    second = uninstall_platform("claude", home=agent_home)
+
+    assert first["context-handoff-hooks"] == "removed"
+    assert second["context-handoff-hooks"] == "not found", "second run must be a no-op"
+    assert second["settings.json"] in ("no changes", "not found"), (
+        f"second run settings.json status must indicate no-op, got: {second['settings.json']}"
+    )
+
+
+def test_uninstall_no_op_when_nothing_installed() -> None:
+    """Uninstall on a fresh home directory must not raise and must return graceful statuses."""
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    # Nothing was ever installed — no .claude directory at all.
+    result = uninstall_global_hooks(agent_home)
+
+    assert result["context-handoff-hooks"] == "not found"
+    assert result["settings.json"] == "not found"

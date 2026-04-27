@@ -287,5 +287,81 @@ def install_repo_hooks(repo_root: Path, force: bool = False) -> Dict[str, str]:
     return copied
 
 
+def uninstall_global_hooks(
+    agent_home: Path,
+    skill_name: str = "context-handoff-hooks",
+) -> Dict[str, str]:
+    """Remove the skills bundle directory and hook entries added by this tool.
+
+    Only removes hook entries whose command string contains the skill scripts
+    path (``/skills/{skill_name}/scripts/``).  Adjacent user-defined hooks are
+    left untouched.  Missing directories and settings files are handled
+    gracefully so the operation is idempotent.
+    """
+    result: Dict[str, str] = {}
+
+    # --- Remove the skills bundle directory ---
+    skills_dir = agent_home / ".claude" / "skills" / skill_name
+    if skills_dir.exists():
+        shutil.rmtree(skills_dir)
+        result[skill_name] = "removed"
+    else:
+        result[skill_name] = "not found"
+
+    # --- Clean matching hook entries from settings.json ---
+    settings_path = agent_home / ".claude" / "settings.json"
+    settings = _load_json(settings_path)
+    existing_hooks = settings.get("hooks", {})
+    if not isinstance(existing_hooks, dict) or not existing_hooks:
+        result["settings.json"] = "not found"
+        return result
+
+    # The marker string present in every command we installed.
+    marker = f"/skills/{skill_name}/scripts/"
+
+    changed = False
+    cleaned_hooks: dict = {}
+    for event, groups in existing_hooks.items():
+        if not isinstance(groups, list):
+            cleaned_hooks[event] = groups
+            continue
+
+        new_groups = []
+        for group in groups:
+            if not isinstance(group, dict):
+                new_groups.append(group)
+                continue
+            hooks_in_group = group.get("hooks", [])
+            filtered = [
+                h for h in hooks_in_group
+                if not (isinstance(h, dict) and marker in h.get("command", ""))
+            ]
+            if len(filtered) == len(hooks_in_group):
+                # Nothing removed from this group — keep it as-is.
+                new_groups.append(group)
+            elif filtered:
+                # Some hooks removed, but the group still has entries.
+                changed = True
+                new_groups.append({**group, "hooks": filtered})
+            else:
+                # All hooks in this group were ours — drop the whole group.
+                changed = True
+
+        if new_groups:
+            cleaned_hooks[event] = new_groups
+        else:
+            # The entire event list is now empty — drop the key.
+            changed = True
+
+    if changed:
+        settings["hooks"] = cleaned_hooks
+        _save_json(settings_path, settings)
+        result["settings.json"] = "cleaned"
+    else:
+        result["settings.json"] = "no changes"
+
+    return result
+
+
 def posix_paths(paths: Iterable[Path]) -> Tuple[str, ...]:
     return tuple(path.as_posix() for path in paths)

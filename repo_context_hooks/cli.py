@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from .doctor import diagnose_all_platforms, diagnose_platform
-from .installer import install_platform, supported_platform_ids
+from .installer import install_platform, supported_platform_ids, uninstall_platform
 from .platforms import get_registry
 from .recommend import recommend_setup
 from .repo_contract import init_repo_contract
@@ -150,6 +150,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print machine-readable JSON output.",
     )
+
+    uninstall = subparsers.add_parser(
+        "uninstall",
+        help="Remove installed skills and hook entries for a platform.",
+    )
+    uninstall.add_argument(
+        "--platform",
+        required=True,
+        choices=supported_platform_ids(),
+        help="Platform to uninstall.",
+    )
+
     return parser
 
 
@@ -264,6 +276,13 @@ def _recommend(args: argparse.Namespace) -> int:
     return 0
 
 
+def _uninstall(args: argparse.Namespace) -> int:
+    result = uninstall_platform(args.platform)
+    for name, status in result.items():
+        print(f"- {name}: {status}")
+    return 0
+
+
 def _measure(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
     report = measure_impact(repo_root=repo_root)
@@ -305,5 +324,7 @@ def main() -> int:
         return _recommend(args)
     if args.command == "measure":
         return _measure(args)
+    if args.command == "uninstall":
+        return _uninstall(args)
     parser.error("Unknown command")
     return 2

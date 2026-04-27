@@ -10,6 +10,7 @@ from .platforms.runtime import (
     install_repo_hooks,
     install_skills_bundle,
     platform_skill_dir,
+    uninstall_global_hooks,
 )
 
 
@@ -23,6 +24,22 @@ def install_skills(
     home: Path | None = None,
 ) -> Tuple[Path, Dict[str, str]]:
     return install_skills_bundle(platform, force=force, home=home)
+
+
+def uninstall_platform(
+    platform: str,
+    home: Path | None = None,
+) -> dict:
+    """Remove the skills bundle and global hook entries for *platform*.
+
+    Returns a status dict such as ``{"context-handoff-hooks": "removed",
+    "settings.json": "cleaned"}``.  The operation is idempotent: running it
+    when nothing is installed returns ``"not found"`` / ``"no changes"``
+    statuses without raising.
+    """
+    # Validate the platform exists in the registry (raises if unknown).
+    get_registry().get(platform)
+    return uninstall_global_hooks(agent_home=home or Path.home())
 
 
 def install_platform(
