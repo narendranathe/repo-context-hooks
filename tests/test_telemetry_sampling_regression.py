@@ -112,6 +112,10 @@ def test_worktree_isolation_independent_sampling_decisions(tmp_path, monkeypatch
 
     If worktrees ever share a state dir accidentally, one worktree's sampled=false
     could suppress another worktree's events.
+
+    Uses rate=0.5 (a non-deterministic rate that reads the file cache) to exercise the
+    isolation property. rate=1.0 and rate=0.0 bypass the cache by design — see
+    test_rate_1_ignores_stale_false_cache / test_rate_0_ignores_stale_true_cache.
     """
     monkeypatch.delenv("REPO_CONTEXT_HOOKS_TELEMETRY", raising=False)
     monkeypatch.delenv("REPO_CONTEXT_HOOKS_SAMPLE_RATE", raising=False)
@@ -131,8 +135,29 @@ def test_worktree_isolation_independent_sampling_decisions(tmp_path, monkeypatch
     (state_a / "current-session-sampled").write_text("true", encoding="utf-8")
     (state_b / "current-session-sampled").write_text("false", encoding="utf-8")
 
-    assert is_sampled(repo_a) is True, "repo_a must be sampled"
-    assert is_sampled(repo_b) is False, "repo_b must not be sampled"
+    # Use rate=0.5 so the cache file is consulted (deterministic rates bypass it)
+    assert is_sampled(repo_a, rate=0.5) is True, "repo_a must be sampled"
+    assert is_sampled(repo_b, rate=0.5) is False, "repo_b must not be sampled"
 
     # repo_a's is_sampled call must not mutate repo_b's state
     assert (state_b / "current-session-sampled").read_text(encoding="utf-8").strip() == "false"
+
+
+def test_rate_1_ignores_stale_false_cache(tmp_path):
+    """rate=1.0 must always return True even if the cache file contains 'false'."""
+    from repo_context_hooks.telemetry import is_sampled, _session_state_dir, _SESSION_SAMPLED_FILE
+    state_dir = _session_state_dir(tmp_path)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    (state_dir / _SESSION_SAMPLED_FILE).write_text("false", encoding="utf-8")
+    for _ in range(100):
+        assert is_sampled(tmp_path, rate=1.0) is True
+
+
+def test_rate_0_ignores_stale_true_cache(tmp_path):
+    """rate=0.0 must always return False even if the cache file contains 'true'."""
+    from repo_context_hooks.telemetry import is_sampled, _session_state_dir, _SESSION_SAMPLED_FILE
+    state_dir = _session_state_dir(tmp_path)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    (state_dir / _SESSION_SAMPLED_FILE).write_text("true", encoding="utf-8")
+    for _ in range(100):
+        assert is_sampled(tmp_path, rate=0.0) is False

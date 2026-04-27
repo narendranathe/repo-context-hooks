@@ -138,8 +138,27 @@ def is_sampled(repo_root: Path, rate: float = 1.0) -> bool:
     if explicit is not None:
         return explicit.lower() in ("1", "true", "yes")
 
+    # Apply REPO_CONTEXT_HOOKS_SAMPLE_RATE env var before deterministic shortcuts so
+    # the env-var rate is honoured even when no explicit rate= argument is passed.
+    rate_str = os.environ.get("REPO_CONTEXT_HOOKS_SAMPLE_RATE")
+    if rate_str is not None:
+        try:
+            rate = float(rate_str)
+        except ValueError:
+            pass
+
+    # Deterministic rates bypass the file cache to avoid stale-false poisoning the
+    # session.  We still write the canonical value so clear_session_state() and
+    # duration tracking keep working, but we never *read* an old cached value.
     state_dir = _session_state_dir(repo_root)
     sampled_file = state_dir / _SESSION_SAMPLED_FILE
+
+    if rate >= 1.0:
+        sampled_file.write_text("true", encoding="utf-8")
+        return True
+    if rate <= 0.0:
+        sampled_file.write_text("false", encoding="utf-8")
+        return False
 
     if sampled_file.exists():
         age = time.time() - sampled_file.stat().st_mtime
@@ -149,13 +168,6 @@ def is_sampled(repo_root: Path, rate: float = 1.0) -> bool:
         try:
             sampled_file.unlink()
         except OSError:
-            pass
-
-    rate_str = os.environ.get("REPO_CONTEXT_HOOKS_SAMPLE_RATE")
-    if rate_str is not None:
-        try:
-            rate = float(rate_str)
-        except ValueError:
             pass
 
     decision = random.random() < rate

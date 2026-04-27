@@ -159,7 +159,8 @@ def test_is_sampled_reads_existing_decision_file(monkeypatch) -> None:
     session_dir = _session_state_dir(tmp)
     (session_dir / "current-session-sampled").write_text("true", encoding="utf-8")
 
-    result = is_sampled(tmp)
+    # Use rate=0.5 so the cache file is consulted (deterministic rates bypass it)
+    result = is_sampled(tmp, rate=0.5)
 
     assert result is True
 
@@ -171,7 +172,10 @@ def test_is_sampled_false_decision_file_returns_false(monkeypatch) -> None:
     session_dir = _session_state_dir(tmp)
     (session_dir / "current-session-sampled").write_text("false", encoding="utf-8")
 
-    result = is_sampled(tmp)
+    # Use rate=0.5 so the cache file is consulted (deterministic rates bypass it).
+    # NOTE: rate=1.0 intentionally ignores a cached "false" — that was the bug that
+    # caused 25% lifecycle coverage.  See test_rate_1_ignores_stale_false_cache.
+    result = is_sampled(tmp, rate=0.5)
 
     assert result is False
 
