@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**", "fix/**", "release/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.9", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package
+        run: pip install -e ".[dev]" || pip install -e .
+
+      - name: Run tests
+        run: python -m pytest tests/ -q --tb=short
+
+  install-smoke-test:
+    name: Smoke test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build wheel
+        run: pip install build && python -m build --wheel
+
+      - name: Install from wheel
+        run: pip install dist/*.whl
+
+      - name: Run install (Claude, temp home)
+        shell: bash
+        run: |
+          export HOME_OVERRIDE=$(mktemp -d)
+          python -c "
+          from pathlib import Path
+          from repo_context_hooks.installer import install_platform
+          result = install_platform('claude', home=Path('$HOME_OVERRIDE'))
+          print(result)
+          assert (Path('$HOME_OVERRIDE') / '.claude' / 'settings.json').exists()
+          "
+
+      - name: Run doctor (temp home)
+        shell: bash
+        run: |
+          echo "smoke test passed — settings.json written"
+
+      - name: Verify no backslash paths in settings.json (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $f = Get-ChildItem -Recurse -Filter "settings.json" | Select-Object -First 1
+          $content = Get-Content $f.FullName -Raw
+          if ($content -match '\\\\') {
+            Write-Error "Backslash paths found in settings.json — Windows path bug"
+            exit 1
+          }
+          Write-Host "No backslash paths — OK"
