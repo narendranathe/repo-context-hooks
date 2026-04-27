@@ -210,19 +210,25 @@ def test_install_platform_claude_writes_to_agent_home_not_repo() -> None:
     assert result.home_statuses.get("settings.json") == "installed"
 
 
-def test_install_platform_codex_summary_mentions_skills_only_when_repo_context_skipped() -> None:
+def test_install_platform_codex_writes_global_settings_marker() -> None:
     tmp_path = _tmp_dir()
     repo = tmp_path / "repo"
     repo.mkdir()
+    agent_home = tmp_path / "home"
 
     result = install_platform(
         "codex",
         repo_root=repo,
-        home=tmp_path / "home",
+        home=agent_home,
         install_repo_context=False,
     )
 
-    assert "support checked" in result.summary.lower()
+    codex_settings = agent_home / ".codex" / "settings.json"
+    assert codex_settings.exists(), "install_global_hooks must write ~/.codex/settings.json"
+    import json
+    data = json.loads(codex_settings.read_text(encoding="utf-8"))
+    assert data.get("_repo_context_hooks_installed") is True
+    assert result.home_statuses.get("settings.json") == "installed"
 
 
 def test_install_skills_rejects_codex_platform() -> None:
@@ -334,3 +340,57 @@ def test_install_platform_kimi_reports_manual_init_steps() -> None:
     assert result.home_target is None
     assert any("/init" in step for step in result.manual_steps)
     assert any("Kimi Code CLI" in warning for warning in result.warnings)
+
+
+def test_install_platform_claude_also_repo_hooks_writes_repo_settings() -> None:
+    tmp_path = _tmp_dir()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+
+    result = install_platform(
+        "claude",
+        repo_root=repo,
+        home=tmp_path / "home",
+        also_repo_hooks=True,
+    )
+
+    repo_settings = repo / ".claude" / "settings.json"
+    assert repo_settings.exists(), "--also-repo-hooks must write per-repo .claude/settings.json"
+    assert result.repo_statuses, "repo_statuses must be non-empty when --also-repo-hooks is set"
+
+
+def test_install_platform_codex_install_global_hooks_idempotent() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+
+    from repo_context_hooks.platforms.codex import install_global_hooks as codex_global_hooks
+
+    first = codex_global_hooks(agent_home)
+    second = codex_global_hooks(agent_home)
+
+    assert first["settings.json"] == "installed"
+    assert second["settings.json"] == "skipped"
+
+    settings_path = agent_home / ".codex" / "settings.json"
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert data["_repo_context_hooks_installed"] is True
+
+
+def test_install_platform_codex_install_global_hooks_preserves_existing_settings() -> None:
+    tmp_path = _tmp_dir()
+    agent_home = tmp_path / "home"
+    settings_path = agent_home / ".codex" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+    settings_path.write_text(
+        json.dumps({"existing_key": "existing_value"}),
+        encoding="utf-8",
+    )
+
+    from repo_context_hooks.platforms.codex import install_global_hooks as codex_global_hooks
+
+    codex_global_hooks(agent_home)
+
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert data["existing_key"] == "existing_value", "existing settings must be preserved"
+    assert data["_repo_context_hooks_installed"] is True

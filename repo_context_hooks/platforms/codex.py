@@ -1,13 +1,33 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Dict
 
 from .base import InstallPlan, InstallResult, PlatformMetadata, SupportTier
 from .runtime import (
+    _load_json,
+    _save_json,
     posix_paths,
     render_template,
     write_text_file,
 )
+
+
+def install_global_hooks(
+    agent_home: Path,
+) -> Dict[str, str]:
+    """Write a minimal settings marker to ~/.codex/settings.json.
+
+    Codex does not expose lifecycle hooks, so this records the install
+    in the agent home for doctor/parity checks rather than wiring actual hooks.
+    """
+    settings_path = agent_home / ".codex" / "settings.json"
+    settings = _load_json(settings_path)
+    if settings.get("_repo_context_hooks_installed"):
+        return {"settings.json": "skipped"}
+    settings["_repo_context_hooks_installed"] = True
+    _save_json(settings_path, settings)
+    return {"settings.json": "installed"}
 
 
 class CodexAdapter:
@@ -51,8 +71,12 @@ class CodexAdapter:
         force: bool = False,
         home: Path | None = None,
         install_repo_context: bool = True,
+        also_repo_hooks: bool = False,
     ) -> InstallResult:
-        del home
+        h = home or Path.home()
+        home_statuses = install_global_hooks(h)
+        home_target = h / ".codex" / "settings.json"
+
         repo_statuses: dict[str, str] = {}
         if install_repo_context:
             repo_statuses["AGENTS.md"] = write_text_file(
@@ -64,8 +88,8 @@ class CodexAdapter:
             platform_id=self.id,
             display_name=self.metadata.display_name,
             support_tier=self.metadata.support_tier,
-            home_target=None,
-            home_statuses={},
+            home_target=home_target,
+            home_statuses=home_statuses,
             repo_statuses=repo_statuses,
             warnings=(
                 "Codex does not expose native lifecycle hooks; support remains partial.",

@@ -31,6 +31,7 @@ def install_platform(
     force: bool = False,
     home: Path | None = None,
     install_repo_context: bool = False,
+    also_repo_hooks: bool = False,
 ) -> InstallResult:
     adapter = get_registry().get(platform)
     return adapter.install(
@@ -38,4 +39,5 @@ def install_platform(
         force=force,
         home=home,
         install_repo_context=install_repo_context,
+        also_repo_hooks=also_repo_hooks,
     )

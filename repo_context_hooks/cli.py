@@ -36,9 +36,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Repository root for repo context setup (default: current directory).",
     )
     install.add_argument(
+        "--also-repo-hooks",
+        action="store_true",
+        help=(
+            "Also install per-repo hooks into .claude/settings.json in the current repo. "
+            "Agent-level install is the default; pass this flag to additionally write workspace artifacts."
+        ),
+    )
+    install.add_argument(
         "--skip-repo-hooks",
         action="store_true",
-        help="Install platform skills only.",
+        help=(
+            "Agent-level install is now the default; this flag is a no-op unless "
+            "--also-repo-hooks is passed."
+        ),
     )
     install.add_argument(
         "--force",
@@ -175,34 +186,42 @@ def _platforms(args: argparse.Namespace | None = None) -> int:
 
 def _install(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
-    install_repo_context = not args.skip_repo_hooks
+    also_repo_hooks = getattr(args, "also_repo_hooks", False)
 
-    if install_repo_context and not (repo_root / ".git").exists():
+    if also_repo_hooks and not (repo_root / ".git").exists():
         print("Repo context skipped: target is not a git repository.")
-        install_repo_context = False
+        also_repo_hooks = False
 
     result = install_platform(
         platform=args.platform,
         repo_root=repo_root,
         force=args.force,
-        install_repo_context=install_repo_context,
+        install_repo_context=False,
+        also_repo_hooks=also_repo_hooks,
     )
+
+    # --- Agent skill install (always shown) ---
+    print("=== Agent skill install ===")
     print(result.summary)
     if result.home_target is not None:
         print(f"Installed platform skills to: {result.home_target}")
     if result.home_statuses:
         for name, status in result.home_statuses.items():
             print(f"- {name}: {status}")
-    if result.repo_statuses:
-        print("Installed repo artifacts:")
-        for name, status in result.repo_statuses.items():
-            print(f"- {name}: {status}")
-    elif args.skip_repo_hooks:
-        print("Skipped repo context installation (--skip-repo-hooks).")
     for warning in result.warnings:
         print(f"Warning: {warning}")
     for step in result.manual_steps:
         print(f"Manual: {step}")
+
+    # --- Workspace artifacts (only shown when --also-repo-hooks is passed) ---
+    if also_repo_hooks:
+        print("=== Workspace artifacts ===")
+        if result.repo_statuses:
+            for name, status in result.repo_statuses.items():
+                print(f"- {name}: {status}")
+        else:
+            print("No workspace artifacts installed.")
+
     return 0
 
 
