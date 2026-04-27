@@ -2,6 +2,8 @@
 
 Agent-level continuity skill for coding agents.
 
+![context score](docs/badge.svg)
+
 <p align="center">
   <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">
 </p>
@@ -109,6 +111,28 @@ repo-context-hooks measure --json
 repo-context-hooks measure
 repo-context-hooks measure --snapshot-dir docs/monitoring
 ```
+
+### Badge
+
+Print an SVG badge of the current contract score to stdout:
+
+```bash
+repo-context-hooks measure --badge
+```
+
+Write the badge to a file (for example, to embed in your README):
+
+```bash
+repo-context-hooks measure --badge-out docs/badge.svg
+```
+
+Then embed it in your README:
+
+```markdown
+![context score](docs/badge.svg)
+```
+
+The badge uses shields.io flat style and is entirely self-contained - no external dependencies or network requests.
 
 `measure` compares current repo continuity score against an estimated no-continuity baseline and reports observed hook events from local JSONL telemetry.
 

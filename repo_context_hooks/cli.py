@@ -146,6 +146,16 @@ def build_parser() -> argparse.ArgumentParser:
             "(for example: docs/monitoring)."
         ),
     )
+    measure.add_argument(
+        "--badge",
+        action="store_true",
+        help="Output an SVG badge showing the current contract score.",
+    )
+    measure.add_argument(
+        "--badge-out",
+        metavar="PATH",
+        help="Write the SVG badge to this file path (implies --badge).",
+    )
 
     platforms = subparsers.add_parser(
         "platforms",
@@ -328,6 +338,19 @@ def _uninstall(args: argparse.Namespace) -> int:
 def _measure(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
     report = measure_impact(repo_root=repo_root)
+
+    badge_out = getattr(args, "badge_out", None)
+    show_badge = getattr(args, "badge", False) or badge_out is not None
+    if show_badge:
+        from .badge import render_badge
+        svg = render_badge(report.current_score)
+        if badge_out:
+            Path(badge_out).write_text(svg, encoding="utf-8")
+            print(f"Badge written to: {badge_out}")
+        else:
+            print(svg)
+        return 0
+
     snapshot = None
     snapshot_dir = getattr(args, "snapshot_dir", None)
     if snapshot_dir:
