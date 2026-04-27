@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 
-EVENT = sys.argv[1] if len(sys.argv) > 1 else "session-start"
+_VALID_EVENTS = {"session-start", "pre-compact", "post-compact", "session-end"}
+_raw_env = os.environ.get("EVENT", "")
+EVENT: str = (
+    _raw_env if _raw_env in _VALID_EVENTS
+    else (sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in _VALID_EVENTS else "session-start")
+)
 
 AUTO_BLOCK_START = "<!-- AUTO:REPO_CONTEXT_START -->"
 AUTO_BLOCK_END = "<!-- AUTO:REPO_CONTEXT_END -->"
@@ -205,13 +211,25 @@ def record_telemetry(repo_root: Path, specs_readme: Path, ul_path: Path) -> None
                 sys.path.insert(0, str(parent))
                 break
 
-        from repo_context_hooks.telemetry import record_event
+        from repo_context_hooks.telemetry import (
+            read_session_duration_minutes,
+            record_event,
+            record_session_start_time,
+        )
+
+        if EVENT == "session-start":
+            record_session_start_time(repo_root)
+
+        duration_minutes = (
+            read_session_duration_minutes(repo_root) if EVENT == "session-end" else None
+        )
 
         event_path = record_event(
             repo_root,
             EVENT,
             source="repo_specs_memory",
             details={"specs_readme": str(specs_readme), "glossary": str(ul_path)},
+            duration_minutes=duration_minutes,
         )
         print(f"- Telemetry: `{event_path}`")
     except Exception:
