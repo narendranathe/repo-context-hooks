@@ -47,7 +47,7 @@ jobs:
         run: pip install build && python -m build --wheel
 
       - name: Install from wheel
-        run: pip install dist/*.whl
+        run: pip install --find-links=dist repo-context-hooks
 
       - name: Run install (Claude, temp home)
         shell: bash
