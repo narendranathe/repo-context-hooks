@@ -9,9 +9,15 @@ from pathlib import Path
 
 EVENT = sys.argv[1] if len(sys.argv) > 1 else "session-start"
 
+# Allow --message flag for agent-driven decision entries: script decision --message "..."
+_DECISION_MESSAGE: str | None = None
+if EVENT == "decision" and len(sys.argv) > 3 and sys.argv[2] == "--message":
+    _DECISION_MESSAGE = sys.argv[3]
+
 AUTO_BLOCK_START = "<!-- AUTO:REPO_CONTEXT_START -->"
 AUTO_BLOCK_END = "<!-- AUTO:REPO_CONTEXT_END -->"
 CHECKPOINTS_HEADING = "## Session Checkpoints"
+SESSION_LOG_HEADING = "## Session Log"
 
 SECTIONS: list[tuple[str, str]] = [
     (
@@ -47,6 +53,15 @@ SECTIONS: list[tuple[str, str]] = [
         "- Read `README.md` first for user-facing behavior and contribution flow.\n"
         "- Read this `specs/README.md` before implementation.\n"
         "- Update this file before `compact` and at session end.",
+    ),
+]
+
+SESSION_LOG_SECTIONS: list[tuple[str, str]] = [
+    (
+        "Session Log",
+        "- Append decision summaries and handoff notes here at session end and compaction.\n"
+        "- Each entry records what was built, key decisions made, and the next step.\n"
+        "- Written by the agent via `repo-context-hooks checkpoint --message '...'`.",
     ),
 ]
 
@@ -166,6 +181,9 @@ def ensure_specs_readme(repo_root: Path, summary: str, ul_path: Path) -> Path:
     for title, body in SECTIONS:
         content = ensure_section(content, title, body)
 
+    for title, body in SESSION_LOG_SECTIONS:
+        content = ensure_section(content, title, body)
+
     if CHECKPOINTS_HEADING not in content:
         if not content.endswith("\n"):
             content += "\n"
@@ -179,6 +197,7 @@ def append_checkpoint(specs_readme: Path) -> None:
     now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     branch = git_output("branch", "--show-current") or "unknown"
     modified = git_output("status", "--short")
+    recent_commits = git_output("log", "--oneline", "-3")
 
     changed_files: list[str] = []
     if modified:
@@ -193,8 +212,39 @@ def append_checkpoint(specs_readme: Path) -> None:
         f"- Branch: `{branch}`\n"
         f"- Working changes: {file_list}\n"
     )
+    if recent_commits:
+        entry += "- Recent commits:\n"
+        for commit_line in recent_commits.splitlines():
+            entry += f"  - {commit_line}\n"
 
     content = specs_readme.read_text(encoding="utf-8", errors="ignore")
+    specs_readme.write_text(content + entry, encoding="utf-8")
+
+
+def write_decision_entry(specs_readme: Path, message: str) -> None:
+    now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    branch = git_output("branch", "--show-current") or "unknown"
+
+    entry = (
+        f"\n### {now} - decision ({branch})\n\n"
+        f"{message.strip()}\n"
+    )
+
+    content = specs_readme.read_text(encoding="utf-8", errors="ignore")
+
+    if SESSION_LOG_HEADING in content:
+        # Append right after the Session Log heading's intro bullets, before the next ## heading
+        pattern = re.compile(
+            rf"({re.escape(SESSION_LOG_HEADING)}[\s\S]*?)(?=\n## |\Z)",
+            re.MULTILINE,
+        )
+        match = pattern.search(content)
+        if match:
+            insert_pos = match.end(1)
+            content = content[:insert_pos] + entry + content[insert_pos:]
+            specs_readme.write_text(content, encoding="utf-8")
+            return
+
     specs_readme.write_text(content + entry, encoding="utf-8")
 
 
@@ -250,6 +300,8 @@ def main() -> int:
     if not (repo_root / "specs" / "README.md").exists():
         if EVENT in {"pre-compact", "post-compact", "session-end"}:
             print("nothing to checkpoint — no workspace contract")
+        elif EVENT == "decision":
+            print("no workspace contract found — run `repo-context-hooks init` to set one up")
         else:
             print("no workspace contract found — run `repo-context-hooks init` to set one up")
         return 0
@@ -262,7 +314,10 @@ def main() -> int:
     print(f"- Synced: `{specs_readme}`")
     print(f"- Glossary: `{ul_path}`")
 
-    if EVENT in {"pre-compact", "post-compact", "session-end"}:
+    if EVENT == "decision" and _DECISION_MESSAGE:
+        write_decision_entry(specs_readme, _DECISION_MESSAGE)
+        print(f"- Appended decision entry to `{SESSION_LOG_HEADING}`")
+    elif EVENT in {"pre-compact", "post-compact", "session-end"}:
         append_checkpoint(specs_readme)
         print(f"- Appended checkpoint for `{EVENT}`")
     else:

@@ -48,6 +48,7 @@ def test_repo_tracks_canonical_memory_files() -> None:
         "## What Failed or Was Reverted",
         "## Open Issues and Next Work",
         "## How To Work in This Repo",
+        "## Session Log",
         "## Session Checkpoints",
     ]
     for section in expected_sections:
@@ -117,3 +118,66 @@ def test_repo_specs_memory_emits_local_telemetry_event() -> None:
     assert len(events) == 1
     payload = events[0].read_text(encoding="utf-8")
     assert '"event_name": "pre-compact"' in payload
+
+
+SKILLS_SCRIPT = ROOT / "repo_context_hooks" / "bundle" / "skills" / "context-handoff-hooks" / "scripts" / "repo_specs_memory.py"
+
+
+def test_decision_entry_written_to_session_log() -> None:
+    temp_root = _tmp_dir()
+    repo = temp_root / "repo"
+    repo.mkdir()
+
+    subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True, text=True)
+    (repo / "README.md").write_text(
+        "# Demo Repo\n\nDecision entry test.\n",
+        encoding="utf-8",
+    )
+
+    # Bootstrap specs/README.md (normally done via repo-context-hooks init)
+    (repo / "specs").mkdir()
+    (repo / "specs" / "README.md").write_text("# Engineering Memory", encoding="utf-8")
+
+    # Write a decision entry
+    message = "Built: auth endpoint. Decided: JWT over sessions for stateless scaling. Next: wire middleware."
+    result = subprocess.run(
+        [sys.executable, str(SKILLS_SCRIPT), "decision", "--message", message],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    specs = (repo / "specs" / "README.md").read_text(encoding="utf-8")
+    assert "## Session Log" in specs
+    assert "Built: auth endpoint" in specs
+    assert "decision (" in specs
+
+
+def test_checkpoint_appends_recent_commits() -> None:
+    temp_root = _tmp_dir()
+    repo = temp_root / "repo"
+    repo.mkdir()
+
+    subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True, capture_output=True)
+    (repo / "README.md").write_text("# Demo\n\nRecent commits test.\n", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-m", "initial commit"], cwd=repo, check=True, capture_output=True)
+
+    # Bootstrap specs/README.md (normally done via repo-context-hooks init)
+    (repo / "specs").mkdir()
+    (repo / "specs" / "README.md").write_text("# Engineering Memory", encoding="utf-8")
+
+    subprocess.run(
+        [sys.executable, str(SKILLS_SCRIPT), "pre-compact"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    specs = (repo / "specs" / "README.md").read_text(encoding="utf-8")
+    assert "pre-compact" in specs
+    assert "initial commit" in specs

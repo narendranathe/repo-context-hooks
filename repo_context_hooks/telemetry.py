@@ -1593,7 +1593,7 @@ def experiment_status(experiment_dir: Path) -> dict[str, Any]:
 
 
 _EXPORT_DISCLAIMER = (
-    "local operational telemetry — no source code, prompts, or personal data"
+    "local operational telemetry - no source code, prompts, or personal data"
 )
 
 
@@ -1683,7 +1683,7 @@ def export_impact_report(
             event_count_lines.append(f"| {name} | {count} |")
 
     parts = [
-        f"## repo-context-hooks Impact Report — {report.repo_name}",
+        f"## repo-context-hooks Impact Report - {report.repo_name}",
         "",
         "\n".join(table_lines),
     ]

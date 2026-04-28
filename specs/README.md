@@ -56,6 +56,17 @@ This file is the persistent project context for agents and maintainers.
   - `v0.2.1`: canonical repo memory contract plus repo-first onboarding
   - `v0.2.4`: continuity impact monitoring, public telemetry snapshots, and README brand/visibility polish
   - `v0.3.0`: agent-level skill runtime, session metrics sampling, CI/CD matrix, PyPI OIDC publish
+- We shipped semantic decision capture: `repo-context-hooks checkpoint --message "..."` writes agent decisions and rationale into `## Session Log` in `specs/README.md`.
+  - `write_decision_entry()` in `repo_specs_memory.py` appends timestamped, branch-stamped entries under the Session Log heading
+  - Automated checkpoints (`pre-compact`, `session-end`) now include the last 3 git commits alongside changed files
+  - `context-handoff-hooks` SKILL.md rewritten with concrete PreCompact and SessionEnd write-back steps + checkpoint message format template
+  - 2 new tests: `test_decision_entry_written_to_session_log`, `test_checkpoint_appends_recent_commits`
+  - 2 new CLI tests: `test_parser_supports_checkpoint_command`, `test_parser_checkpoint_requires_message`
+  - `## Session Log` section now scaffolded in every new workspace contract
+
+### 2026-04-27 21:50 - decision (main)
+
+Built: repo-context-hooks checkpoint --message CLI command + Session Log section in workspace contracts + write_decision_entry() in repo_specs_memory.py. Decided: keep session-start as read-only (no auto-scaffold) to preserve degradation contract — init is the explicit setup step. Decided: Session Log (agent-written semantic entries) stays separate from Session Checkpoints (automated mechanical data). Decided: SKILL.md rewritten with hard PreCompact/SessionEnd write-back steps + checkpoint message format template so the agent knows exactly what to write. Built: richer automated checkpoints now include last 3 git commits. 253/253 tests pass. Synced to ~/.claude/skills. Next: cut a release (v0.6.0) with these changes.
 
 ## Delivery Timeline
 
@@ -179,8 +190,11 @@ This file is the persistent project context for agents and maintainers.
 
 ## Open Issues and Next Work
 
-Priority backlog for the next phase:
+Next: cut v0.6.0 release with session decision capture.
 
+Priority backlog:
+
+- **Release v0.6.0** - checkpoint command + Session Log + SKILL.md rewrite are shippable; cut the release
 - **#43** - Auto-detect platform (`--platform` flag should be optional): biggest DX win
 - **#42** - `uninstall` command: developers need a clean exit
 - **#45** - First-run "what just happened" output: reduces churn on first install
@@ -198,6 +212,12 @@ Ongoing:
 - Keep support claims narrow unless docs, tests, and install behavior all support widening them.
 - Update this file before `compact` and at session end.
 - Preserve merged feature and release branches unless the user explicitly asks to delete them.
+
+## Session Log
+
+- Append decision summaries and handoff notes here at session end and compaction.
+- Each entry records what was built, key decisions made, and the next step.
+- Written by the agent via `repo-context-hooks checkpoint --message '...'`.
 
 ## Session Checkpoints
 
@@ -336,3 +356,105 @@ Ongoing:
 - Branch: `feat/telemetry-reliability`
 - Last commit: `feat(doctor): detect duplicate hook entries in settings.json â€” closes #62`
 - Working changes: .claude/settings.json, docs/superpowers/specs/2026-04-17-repo-context-hooks-design.md, specs/README.md, tests/test_readme_contract.py, tests/test_session_metrics.py, tests/test_telemetry_sampling_regression.py
+
+### 2026-04-27 15:08 - session-end
+
+- Branch: `main`
+- Last commit: `feat: Telemetry Reliability & Analytics sprint â€” closes #57-#64`
+- Working changes: specs/README.md
+
+### 2026-04-27 15:21 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_telemetry.py
+
+### 2026-04-27 15:21 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:21 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:22 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:22 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:22 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:22 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: README.md, docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:23 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: README.md, docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:23 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: README.md, docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:23 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: README.md, docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:23 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: README.md, docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:23 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: README.md, docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:24 - pre-compact
+
+- Branch: `main`
+- Last commit: `fix(tests): load alias modules from project root to avoid graphifyy conda conflict`
+- Working changes: README.md, docs/monitoring/history.json, docs/monitoring/index.html, repo_context_hooks/cli.py, repo_context_hooks/telemetry.py, specs/README.md, tests/test_monitoring_surface.py, tests/test_telemetry.py
+
+### 2026-04-27 15:24 - pre-compact
+
+- Branch: `main`
+- Last commit: `feat(dashboard): rich browser dashboard with tokens/cost/lifecycle/branches/forecast`
+- Working changes: specs/README.md
+
+### 2026-04-27 21:36 - session-end
+
+- Branch: `main`
+- Last commit: `chore: update monitoring snapshot`
+- Working changes: repo_context_hooks/bundle/skills/context-handoff-hooks/SKILL.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, repo_context_hooks/cli.py, specs/README.md, tests/test_cli.py, tests/test_repo_memory_contract.py, docs/superpowers/plans/2026-04-27-sampling-fix-roi-metrics.md
+
+### 2026-04-27 22:46 - session-end
+
+- Branch: `feat/issues-23-24-26`
+- Last commit: `feat: add measure export, measure experiment, and telemetry consent layer (closes #24, #23, #26)`
+- Working changes: README.md, repo_context_hooks/bundle/skills/context-handoff-hooks/SKILL.md, repo_context_hooks/bundle/skills/context-handoff-hooks/scripts/repo_specs_memory.py, specs/README.md, tests/test_cli.py, tests/test_repo_memory_contract.py, .claude/worktrees/, docs/superpowers/plans/2026-04-27-sampling-fix-roi-metrics.md

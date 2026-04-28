@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-04-28
+
+### Added
+- `measure export [--format markdown|json] [-o PATH]` - redacted shareable impact report; paste directly into LinkedIn post, README, or PR description
+- `measure experiment start/finish/status` - guided before/after continuity experiment; captures contract score delta as concrete adoption evidence
+- `telemetry status/preview/enable/disable` - remote telemetry consent layer; `preview` shows exact payload before any data leaves the machine
+- Two new ROI dashboard cards: "Cold starts prevented (est.)" and "Week-1 uplift" (score at day 7 minus day 0)
+
+### Fixed
+- `is_sampled()` bypasses stale file cache; deterministic rates (>=1.0 always True, <=0.0 always False) - resolves 0% lifecycle coverage where old sampling decisions silently blocked pre-compact/post-compact/session-end events
+- `avg_session_duration_minutes` now populates from session-end events (was null in 0.5.0)
+- Export output uses ASCII hyphens - fixes `?` rendering on Windows cp1252 consoles
+- Bundle script `_VALID_EVENTS` validation prevents pytest argv leaking as EVENT values
+
+### Tests
+- 249 tests (from 210 in 0.5.0)
+
 ## [0.5.0] - 2026-04-27
 
 ### Added

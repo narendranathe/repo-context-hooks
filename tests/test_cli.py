@@ -863,3 +863,18 @@ def test_install_multi_platform_prints_section_headers(
     assert "=== Agent skill install ===" not in out
     # doctor hint uses --all-platforms
     assert "doctor --all-platforms" in out
+
+
+def test_parser_supports_checkpoint_command() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["checkpoint", "--message", "Built X. Decided Y. Next: Z."])
+    assert args.command == "checkpoint"
+    assert args.message == "Built X. Decided Y. Next: Z."
+    assert args.path == "."
+
+
+def test_parser_checkpoint_requires_message() -> None:
+    import pytest
+    parser = build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["checkpoint"])
