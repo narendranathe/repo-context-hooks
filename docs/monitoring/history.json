@@ -21,7 +21,7 @@
   "observed_events": 26,
   "repo": "repo-context-hooks",
   "score": 90,
-  "snapshot_at": "2026-04-28T01:57:11Z",
+  "snapshot_at": "2026-04-28T01:59:06Z",
   "time_series": [
     {
       "date": "2026-04-27",
@@ -37,7 +37,7 @@
     "cold_start_time_saved_minutes": 0,
     "lifecycle_coverage": 25,
     "max_session_duration_minutes": null,
-    "readiness_minutes_since_last_event": 205,
+    "readiness_minutes_since_last_event": 207,
     "reload_events": 0,
     "resume_events": 26,
     "score_week1_uplift": null,
