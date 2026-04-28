@@ -1460,6 +1460,244 @@ def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> Impac
     return report
 
 
+_EXPERIMENT_BEFORE = "before.json"
+_EXPERIMENT_AFTER = "after.json"
+
+
+def _make_experiment_snapshot(repo_root: Path) -> dict[str, Any]:
+    """Build a redacted snapshot dict from a current measure_impact call."""
+    report = measure_impact(repo_root)
+    signals = contract_signals(repo_root)
+    contract_files_present: dict[str, bool] = dict(signals["present"])
+    return {
+        "timestamp": dt.datetime.now(dt.timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
+        "score": report.current_score,
+        "baseline": report.estimated_baseline_score,
+        "uplift": report.uplift,
+        "observed_events": report.observed_events,
+        "event_counts": dict(sorted(report.event_counts.items())),
+        "lifecycle_coverage": report.usability.lifecycle_coverage,
+        "contract_files_present": contract_files_present,
+    }
+
+
+def experiment_start(repo_root: Path, experiment_dir: Path) -> Path:
+    """Snapshot current state as before.json. Returns path to before.json."""
+    experiment_dir.mkdir(parents=True, exist_ok=True)
+    before_path = experiment_dir / _EXPERIMENT_BEFORE
+    if before_path.exists():
+        raise FileExistsError(
+            f"An experiment is already in progress ({before_path}). "
+            "Run `repo-context-hooks measure experiment finish` to complete it, "
+            "or delete before.json manually to start over."
+        )
+    snapshot = _make_experiment_snapshot(repo_root)
+    before_path.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print("Experiment started. Make your setup changes, then run:")
+    print("  repo-context-hooks measure experiment finish")
+    return before_path
+
+
+def experiment_finish(repo_root: Path, experiment_dir: Path) -> dict[str, Any]:
+    """Snapshot current state as after.json, compute comparison. Returns comparison dict."""
+    before_path = experiment_dir / _EXPERIMENT_BEFORE
+    if not before_path.exists():
+        raise FileNotFoundError(
+            "No experiment in progress. "
+            "Run `repo-context-hooks measure experiment start` first."
+        )
+    before = json.loads(before_path.read_text(encoding="utf-8"))
+    after = _make_experiment_snapshot(repo_root)
+
+    after_path = experiment_dir / _EXPERIMENT_AFTER
+    after_path.write_text(json.dumps(after, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    score_delta = after["score"] - before["score"]
+    uplift_delta = after["uplift"] - before["uplift"]
+    events_delta = after["observed_events"] - before["observed_events"]
+
+    before_files = {f for f, present in before.get("contract_files_present", {}).items() if present}
+    after_files = {f for f, present in after.get("contract_files_present", {}).items() if present}
+    new_files = sorted(after_files - before_files)
+
+    parts: list[str] = []
+    if score_delta > 0:
+        parts.append(f"Continuity score improved by +{score_delta} (from {before['score']} to {after['score']}).")
+    elif score_delta < 0:
+        parts.append(f"Continuity score decreased by {score_delta} (from {before['score']} to {after['score']}).")
+    else:
+        parts.append(f"Continuity score unchanged at {after['score']}.")
+    if new_files:
+        parts.append(f"{len(new_files)} new contract file(s) added: {', '.join(new_files)}.")
+    if events_delta > 0:
+        parts.append(f"{events_delta} new hook event(s) observed.")
+    if uplift_delta > 0:
+        parts.append(f"Repo contract uplift increased by +{uplift_delta}.")
+    elif uplift_delta < 0:
+        parts.append(f"Repo contract uplift decreased by {uplift_delta}.")
+    summary = " ".join(parts)
+
+    comparison: dict[str, Any] = {
+        "before": before,
+        "after": after,
+        "score_delta": score_delta,
+        "uplift_delta": uplift_delta,
+        "events_delta": events_delta,
+        "new_files": new_files,
+        "summary": summary,
+    }
+
+    print("=== Experiment complete ===")
+    print(summary)
+    print(f"Before score: {before['score']}  ->  After score: {after['score']}  (delta: {score_delta:+d})")
+    print(f"Lifecycle coverage: {before['lifecycle_coverage']}% -> {after['lifecycle_coverage']}%")
+    if new_files:
+        print("New files:")
+        for f in new_files:
+            print(f"  + {f}")
+    print(f"Results written to: {experiment_dir}")
+    return comparison
+
+
+def experiment_status(experiment_dir: Path) -> dict[str, Any]:
+    """Return state of the current experiment."""
+    before_path = experiment_dir / _EXPERIMENT_BEFORE
+    after_path = experiment_dir / _EXPERIMENT_AFTER
+
+    if before_path.exists() and after_path.exists():
+        return {
+            "state": "finished",
+            "message": (
+                "Experiment complete. "
+                "Run `repo-context-hooks measure experiment start` to begin a new one "
+                "(delete before.json and after.json first)."
+            ),
+        }
+    if before_path.exists():
+        try:
+            before = json.loads(before_path.read_text(encoding="utf-8"))
+            ts = before.get("timestamp", "unknown")
+        except Exception:
+            ts = "unknown"
+        return {
+            "state": "in_progress",
+            "message": f"Experiment in progress. Before snapshot taken at {ts}.",
+        }
+    return {
+        "state": "not_started",
+        "message": "No experiment in progress. Run `repo-context-hooks measure experiment start` to begin.",
+    }
+
+
+_EXPORT_DISCLAIMER = (
+    "local operational telemetry — no source code, prompts, or personal data"
+)
+
+
+def export_impact_report(
+    report: "ImpactReport",
+    format: str = "markdown",
+    redact: bool = True,
+) -> str:
+    """Return a redacted shareable export of the impact report.
+
+    Includes: repo name (basename only), scores, event counts, usability
+    metrics, and timestamps (date-only).
+    Excludes: telemetry_path, dashboard_path, repo_id, any local filesystem
+    paths.
+    """
+    # Date-only timestamps (strip time component to avoid leaking session timing precision)
+    first_seen_date = (report.history.first_seen or "")[:10] or None
+    latest_seen_date = (report.history.latest_seen or "")[:10] or None
+    u = report.usability
+
+    if format == "json":
+        payload: dict[str, Any] = {
+            "generated_at": dt.datetime.now(dt.timezone.utc).date().isoformat(),
+            "disclaimer": _EXPORT_DISCLAIMER,
+            "repo": report.repo_name,
+            "score": report.current_score,
+            "baseline": report.estimated_baseline_score,
+            "uplift": report.uplift,
+            "observed_events": report.observed_events,
+            "event_counts": dict(sorted(report.event_counts.items())),
+            "active_days": u.active_days,
+            "lifecycle_coverage_pct": u.lifecycle_coverage,
+            "resume_events": u.resume_events,
+            "checkpoint_events": u.checkpoint_events,
+            "reload_events": u.reload_events,
+            "avg_session_duration_minutes": u.avg_session_duration_minutes,
+            "cold_start_time_saved_minutes": u.cold_start_time_saved_minutes,
+            "score_week1_uplift": u.score_week1_uplift,
+            "first_seen": first_seen_date,
+            "latest_seen": latest_seen_date,
+        }
+        return json.dumps(payload, indent=2, sort_keys=True)
+
+    # Markdown format
+    def _val(v: Any) -> str:
+        if v is None:
+            return "-"
+        return str(v)
+
+    uplift_str = f"+{report.uplift}" if report.uplift >= 0 else str(report.uplift)
+    w1_str = (
+        f"+{u.score_week1_uplift}" if u.score_week1_uplift is not None and u.score_week1_uplift >= 0
+        else _val(u.score_week1_uplift)
+    )
+
+    rows = [
+        ("Contract score", _val(report.current_score)),
+        ("Baseline (no hooks)", _val(report.estimated_baseline_score)),
+        ("Continuity uplift", uplift_str),
+        ("Observed events", _val(report.observed_events)),
+        ("Active days", _val(u.active_days)),
+        ("Lifecycle coverage", f"{u.lifecycle_coverage}%"),
+        ("Sessions (resume events)", _val(u.resume_events)),
+        ("Checkpoint events", _val(u.checkpoint_events)),
+        ("Context reloads (post-compact)", _val(u.reload_events)),
+        ("Avg session duration (min)", _val(u.avg_session_duration_minutes)),
+        ("Cold-start time saved (min)", _val(u.cold_start_time_saved_minutes)),
+        ("Week-1 score uplift", w1_str),
+        ("First seen (date)", _val(first_seen_date)),
+        ("Latest seen (date)", _val(latest_seen_date)),
+    ]
+
+    table_lines = [
+        "| Metric | Value |",
+        "|---|---|",
+    ]
+    table_lines.extend(f"| {metric} | {value} |" for metric, value in rows)
+
+    event_count_lines: list[str] = []
+    if report.event_counts:
+        event_count_lines.append("")
+        event_count_lines.append("### Event breakdown")
+        event_count_lines.append("")
+        event_count_lines.append("| Event | Count |")
+        event_count_lines.append("|---|---|")
+        for name, count in sorted(report.event_counts.items()):
+            event_count_lines.append(f"| {name} | {count} |")
+
+    parts = [
+        f"## repo-context-hooks Impact Report — {report.repo_name}",
+        "",
+        "\n".join(table_lines),
+    ]
+    if event_count_lines:
+        parts.append("\n".join(event_count_lines))
+    parts.append("")
+    parts.append(
+        f"*Source: {_EXPORT_DISCLAIMER}. "
+        "Generated by [repo-context-hooks](https://github.com/narendranathe/repo-context-hooks).*"
+    )
+
+    return "\n".join(parts)
+
+
 def auto_commit_snapshot(
     repo_root: Path,
     telemetry_base: Path | None = None,

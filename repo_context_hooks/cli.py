@@ -10,7 +10,15 @@ from .platforms import get_registry
 from .recommend import recommend_setup
 from .repo_contract import init_repo_contract
 from .doctor import diagnose_repo_contract
-from .telemetry import measure_impact, write_public_monitoring_snapshot
+from .telemetry import (
+    experiment_finish,
+    experiment_start,
+    experiment_status,
+    export_impact_report,
+    measure_impact,
+    write_public_monitoring_snapshot,
+)
+from . import consent as _consent_mod
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -187,6 +195,43 @@ def build_parser() -> argparse.ArgumentParser:
         dest="dry_run",
         help="Actually delete ghost repos (use with --clean-ghosts).",
     )
+    measure.add_argument(
+        "positional_args",
+        nargs="*",
+        metavar="SUBCOMMAND [ARGS...]",
+        help=(
+            "Sub-commands: "
+            "'export [--format markdown|json]' — redacted shareable impact report; "
+            "'experiment [start|finish|status]' — guided before/after continuity experiment."
+        ),
+    )
+    measure.add_argument(
+        "--format",
+        choices=["markdown", "json"],
+        default="markdown",
+        help="Output format for 'export' (default: markdown).",
+    )
+    measure.add_argument(
+        "--redact",
+        action="store_true",
+        default=True,
+        help="Redact local filesystem paths from the export (default: on; always enforced).",
+    )
+    measure.add_argument(
+        "--output",
+        "-o",
+        metavar="PATH",
+        help="Write export output to this file path instead of stdout.",
+    )
+    measure.add_argument(
+        "--experiment-dir",
+        metavar="PATH",
+        default=None,
+        help=(
+            "Directory to store before.json/after.json for experiments "
+            "(default: .repo-context-hooks/experiment in the repo root)."
+        ),
+    )
 
     platforms = subparsers.add_parser(
         "platforms",
@@ -207,6 +252,57 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         choices=supported_platform_ids(),
         help="Platform to uninstall.",
+    )
+
+    checkpoint = subparsers.add_parser(
+        "checkpoint",
+        help="Append a decision/handoff summary to specs/README.md Session Log.",
+    )
+    checkpoint.add_argument(
+        "--message",
+        required=True,
+        help="Decision summary to record (what was built, key decisions, next step).",
+    )
+    checkpoint.add_argument(
+        "--path",
+        default=".",
+        help="Repository root (default: current directory).",
+    )
+
+    telemetry = subparsers.add_parser(
+        "telemetry",
+        help="Manage remote telemetry consent (opt-in, local config only).",
+    )
+    telemetry_sub = telemetry.add_subparsers(dest="telemetry_subcommand", required=True)
+
+    telemetry_sub.add_parser(
+        "status",
+        help="Show the current remote telemetry consent state.",
+    )
+
+    telemetry_enable = telemetry_sub.add_parser(
+        "enable",
+        help="Opt in to remote telemetry. Shows consent text and prompts for confirmation.",
+    )
+    telemetry_enable.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip interactive confirmation prompt (for CI/non-interactive use).",
+    )
+
+    telemetry_sub.add_parser(
+        "disable",
+        help="Opt out of remote telemetry.",
+    )
+
+    telemetry_preview = telemetry_sub.add_parser(
+        "preview",
+        help="Preview the payload that would be sent if telemetry were enabled.",
+    )
+    telemetry_preview.add_argument(
+        "--repo-root",
+        default=None,
+        help="Repository root to include continuity score in the preview (optional).",
     )
 
     return parser
@@ -372,6 +468,14 @@ def _uninstall(args: argparse.Namespace) -> int:
     return 0
 
 
+def _resolve_experiment_dir(args: argparse.Namespace, repo_root: Path) -> Path:
+    raw = getattr(args, "experiment_dir", None)
+    if raw:
+        p = Path(raw)
+        return p if p.is_absolute() else repo_root / p
+    return repo_root / ".repo-context-hooks" / "experiment"
+
+
 def _measure(args: argparse.Namespace) -> int:
     if getattr(args, "clean_ghosts", False):
         from .telemetry import purge_ghost_repos
@@ -388,6 +492,48 @@ def _measure(args: argparse.Namespace) -> int:
         return 0
 
     repo_root = Path(args.repo_root).resolve()
+
+    positional = list(getattr(args, "positional_args", None) or [])
+
+    if positional and positional[0] == "export":
+        report = measure_impact(repo_root=repo_root)
+        output = export_impact_report(
+            report,
+            format=getattr(args, "format", "markdown"),
+            redact=True,
+        )
+        out_path = getattr(args, "output", None)
+        if out_path:
+            Path(out_path).write_text(output, encoding="utf-8")
+            print(f"Export written to: {out_path}")
+        else:
+            print(output)
+        return 0
+
+    if positional and positional[0] == "experiment":
+        exp_dir = _resolve_experiment_dir(args, repo_root)
+        sub = positional[1] if len(positional) > 1 else "status"
+        if sub == "start":
+            try:
+                before_path = experiment_start(repo_root, exp_dir)
+                print(f"Before snapshot: {before_path}")
+            except FileExistsError as exc:
+                print(f"Error: {exc}")
+                return 1
+        elif sub == "finish":
+            try:
+                experiment_finish(repo_root, exp_dir)
+            except FileNotFoundError as exc:
+                print(f"Error: {exc}")
+                return 1
+        elif sub == "status":
+            status = experiment_status(exp_dir)
+            print(status["message"])
+        else:
+            print(f"Unknown experiment subcommand: {sub!r}")
+            print("Usage: repo-context-hooks measure experiment [start|finish|status]")
+            return 1
+        return 0
 
     if getattr(args, "forecast", False):
         from .telemetry import forecast_activity
@@ -459,6 +605,113 @@ def _measure(args: argparse.Namespace) -> int:
     return 0
 
 
+def _checkpoint(args: argparse.Namespace) -> int:
+    import subprocess
+    import sys
+
+    repo_root_raw = ""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=args.path,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        repo_root_raw = result.stdout.strip()
+    except Exception:
+        pass
+
+    if not repo_root_raw:
+        print("error: no git repo found at the specified path")
+        return 1
+
+    specs_readme = Path(repo_root_raw) / "specs" / "README.md"
+    if not specs_readme.exists():
+        print("error: no workspace contract found — run `repo-context-hooks init` first")
+        return 1
+
+    bundle_script = Path(__file__).parent / "bundle" / "skills" / "context-handoff-hooks" / "scripts" / "repo_specs_memory.py"
+    result = subprocess.run(
+        [sys.executable, str(bundle_script), "decision", "--message", args.message],
+        cwd=repo_root_raw,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(result.stderr.strip())
+        return result.returncode
+
+    print(result.stdout.strip())
+    return 0
+
+
+def _telemetry_cmd(args: argparse.Namespace) -> int:
+    sub = args.telemetry_subcommand
+
+    if sub == "status":
+        state = _consent_mod.get_consent_state()
+        status = state["status"]
+        config_path = state["config_path"]
+
+        if status == "enabled":
+            print(f"Remote telemetry: enabled")
+            print(f"Install ID: {state['install_id']}")
+            if state["enabled_at"]:
+                print(f"Enabled at: {state['enabled_at']}")
+            print(f"Config: {config_path}")
+            print("Note: Remote collector endpoint not yet configured. No data is being sent.")
+        elif status == "disabled":
+            print("Remote telemetry: disabled")
+            print(f"Config: {config_path}")
+        else:
+            print("Remote telemetry: not configured")
+            print("Install ID: (will be generated on first enable)")
+            print(f"Config: {config_path}")
+        return 0
+
+    if sub == "enable":
+        use_yes = getattr(args, "yes", False)
+        if not use_yes:
+            # Interactive mode: show consent text and prompt.
+            print(_consent_mod.CONSENT_TEXT)
+            print()
+            try:
+                answer = input("Enable remote telemetry? [y/N]: ").strip().lower()
+            except (EOFError, OSError):
+                # Non-interactive environment without --yes flag.
+                print("Non-interactive environment detected. Use --yes to skip the prompt.")
+                print("Telemetry remains disabled.")
+                return 0
+            if answer not in ("y", "yes"):
+                print("Telemetry remains disabled.")
+                return 0
+
+        state = _consent_mod.enable_consent()
+        print("Remote telemetry enabled.")
+        print(f"Install ID: {state['install_id']}")
+        print(f"Config: {state['config_path']}")
+        print("Note: Remote collector endpoint not yet configured. No data is being sent.")
+        return 0
+
+    if sub == "disable":
+        state = _consent_mod.disable_consent()
+        print("Remote telemetry disabled.")
+        print(f"Config: {state['config_path']}")
+        return 0
+
+    if sub == "preview":
+        repo_root: Path | None = None
+        raw_root = getattr(args, "repo_root", None)
+        if raw_root is not None:
+            repo_root = Path(raw_root).resolve()
+        payload = _consent_mod.preview_payload(repo_root=repo_root)
+        _print_json(payload)
+        return 0
+
+    return 0
+
+
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
@@ -476,5 +729,9 @@ def main() -> int:
         return _measure(args)
     if args.command == "uninstall":
         return _uninstall(args)
+    if args.command == "checkpoint":
+        return _checkpoint(args)
+    if args.command == "telemetry":
+        return _telemetry_cmd(args)
     parser.error("Unknown command")
     return 2
