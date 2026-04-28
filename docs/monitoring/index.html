@@ -168,25 +168,35 @@
         <div class="metric"><span>Contract score</span><strong>90</strong></div>
         <div class="metric"><span>Baseline (no hooks)</span><strong>20</strong></div>
         <div class="metric"><span>Continuity uplift</span><strong>+70</strong></div>
-        <div class="metric"><span>Hook events total</span><strong>91</strong></div>
+        <div class="metric"><span>Hook events total</span><strong>26</strong></div>
       </div>
 
       <!-- Context savings row -->
       <div class="savings-row">
         <div class="savings-card">
           <span>Tokens injected</span>
-          <strong>409,500</strong>
-          <em>~4,500 tok/session × 91 sessions</em>
+          <strong>117,000</strong>
+          <em>~4,500 tok/session × 26 sessions</em>
         </div>
         <div class="savings-card">
           <span>Tokens saved (est.)</span>
-          <strong>54,600</strong>
+          <strong>15,600</strong>
           <em>30% of sessions avoid 2,000-tok re-orientation</em>
         </div>
         <div class="savings-card">
           <span>Est. cost saved</span>
-          <strong>$0.16</strong>
+          <strong>$0.05</strong>
           <em>Claude Sonnet $3/M input tokens</em>
+        </div>
+        <div class="savings-card">
+          <span>Cold starts prevented (est.)</span>
+          <strong>—</strong>
+          <em>Each context reload saves ~5 min re-orientation</em>
+        </div>
+        <div class="savings-card">
+          <span>Week-1 uplift</span>
+          <strong>—</strong>
+          <em>Score gain from day 0 to day 7</em>
         </div>
       </div>
 
@@ -194,12 +204,11 @@
       <div class="grid">
         <section class="panel">
           <h2>Daily activity</h2>
-          <div class="bar-row"><span>2026-04-26</span><div class="bar-track"><div class="bar-fill" style="width:17%"></div></div><strong>13</strong></div>
-<div class="bar-row"><span>2026-04-27</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><strong>78</strong></div>
+          <div class="bar-row"><span>2026-04-27</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><strong>26</strong></div>
         </section>
         <section class="panel">
           <h2>Event mix</h2>
-          <div class="events"><div><span>session-start</span><strong>91</strong></div></div>
+          <div class="events"><div><span>session-start</span><strong>26</strong></div></div>
         </section>
       </div>
 
@@ -214,14 +223,13 @@
                 25% of the 4-event lifecycle is instrumented.
                 session-start is active. session-end, pre-compact, and post-compact will populate after longer sessions.
               </p>
-              <div class="lc-grid"><div class="lc-pill lc-active"><span>session-start</span><strong>91</strong></div><div class="lc-pill lc-empty"><span>pre-compact</span><strong>0</strong></div><div class="lc-pill lc-empty"><span>post-compact</span><strong>0</strong></div><div class="lc-pill lc-empty"><span>session-end</span><strong>0</strong></div></div>
+              <div class="lc-grid"><div class="lc-pill lc-active"><span>session-start</span><strong>26</strong></div><div class="lc-pill lc-empty"><span>pre-compact</span><strong>0</strong></div><div class="lc-pill lc-empty"><span>post-compact</span><strong>0</strong></div><div class="lc-pill lc-empty"><span>session-end</span><strong>0</strong></div></div>
             </div>
           </div>
         </section>
         <section class="panel">
           <h2>Score history</h2>
-          <div class="score-point"><span>2026-04-26</span><strong>90</strong><div class="bar-track"><div class="bar-fill moss" style="width:90%"></div></div></div>
-<div class="score-point"><span>2026-04-27</span><strong>90</strong><div class="bar-track"><div class="bar-fill moss" style="width:90%"></div></div></div>
+          <div class="score-point"><span>2026-04-27</span><strong>90</strong><div class="bar-track"><div class="bar-fill moss" style="width:90%"></div></div></div>
         </section>
       </div>
 
@@ -241,8 +249,8 @@
         <section class="panel">
           <h2>Usability metrics</h2>
           <div class="usability">
-            <div><span>Active days</span><strong>2</strong></div>
-            <div><span>Sessions</span><strong>91</strong></div>
+            <div><span>Active days</span><strong>1</strong></div>
+            <div><span>Sessions</span><strong>26</strong></div>
             <div><span>Checkpoints</span><strong>0</strong></div>
             <div><span>Reloads</span><strong>0</strong></div>
             <div><span>Session ends</span><strong>0</strong></div>
@@ -257,11 +265,11 @@
         <section class="panel">
           <h2>30-day forecast <small style="font-size:14px;font-weight:400;opacity:.6">confidence: low</small></h2>
           <div class="metrics4">
-            <div class="metric"><span>Daily rate</span><strong>45.5</strong></div>
-            <div class="metric"><span>Projected events</span><strong>1,365</strong></div>
+            <div class="metric"><span>Daily rate</span><strong>26.0</strong></div>
+            <div class="metric"><span>Projected events</span><strong>780</strong></div>
             <div class="metric"><span>Active days (30d)</span><strong>30</strong></div>
           </div>
-          <div class="fc-grid"><div class="fc-week"><span>Week 1</span><strong>318</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div><div class="fc-week"><span>Week 2</span><strong>318</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div><div class="fc-week"><span>Week 3</span><strong>318</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div><div class="fc-week"><span>Week 4</span><strong>318</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div><div class="fc-week"><span>Week 5</span><strong>91</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div></div>
+          <div class="fc-grid"><div class="fc-week"><span>Week 1</span><strong>182</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div><div class="fc-week"><span>Week 2</span><strong>182</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div><div class="fc-week"><span>Week 3</span><strong>182</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div><div class="fc-week"><span>Week 4</span><strong>182</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div><div class="fc-week"><span>Week 5</span><strong>52</strong><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div></div></div>
         </section>
         <section class="panel">
           <h2>Platform proof</h2>

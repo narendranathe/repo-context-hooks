@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -8,7 +9,12 @@ import sys
 from pathlib import Path
 
 
-EVENT = sys.argv[1] if len(sys.argv) > 1 else "session-start"
+_VALID_EVENTS = {"session-start", "pre-compact", "post-compact", "session-end"}
+_raw_env = os.environ.get("EVENT", "")
+EVENT: str = (
+    _raw_env if _raw_env in _VALID_EVENTS
+    else (sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in _VALID_EVENTS else "session-start")
+)
 
 
 def git_output(*args: str) -> str:
@@ -120,13 +126,22 @@ def record_telemetry(
             auto_commit_snapshot,
             clear_session_state,
             is_sampled,
+            read_session_duration_minutes,
             record_event,
+            record_session_start_time,
         )
 
         if not is_sampled(repo_root):
             if EVENT == "session-end":
                 clear_session_state(repo_root)
             return
+
+        if EVENT == "session-start":
+            record_session_start_time(repo_root)
+
+        duration_minutes = (
+            read_session_duration_minutes(repo_root) if EVENT == "session-end" else None
+        )
 
         record_event(
             repo_root,
@@ -137,6 +152,7 @@ def record_telemetry(
                 "workflow_items": len(method_items),
                 "open_issues": len(issues),
             },
+            duration_minutes=duration_minutes,
         )
         if EVENT == "session-end":
             auto_commit_snapshot(repo_root)

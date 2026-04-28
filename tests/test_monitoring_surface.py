@@ -77,3 +77,30 @@ def test_svg_brand_logo_source_carries_product_language() -> None:
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_dashboard_contains_cold_start_card():
+    """Dashboard HTML must show the cold start time saved metric."""
+    from repo_context_hooks.telemetry import render_monitoring_dashboard, _make_test_report
+    report = _make_test_report(reload_events=3)  # 3 * 5 = 15 min
+    html = render_monitoring_dashboard(report)
+    assert "Cold starts prevented" in html
+    assert "15 min" in html
+
+
+def test_dashboard_contains_week1_uplift_card():
+    """Dashboard HTML must show the week-1 score uplift when data is available."""
+    from repo_context_hooks.telemetry import render_monitoring_dashboard, _make_test_report
+    report = _make_test_report(score_week1_uplift=25)
+    html = render_monitoring_dashboard(report)
+    assert "Week-1 uplift" in html
+    assert "+25" in html
+
+
+def test_dashboard_uplift_dash_when_none():
+    """Dashboard must show — when score_week1_uplift is None."""
+    from repo_context_hooks.telemetry import render_monitoring_dashboard, _make_test_report
+    report = _make_test_report(score_week1_uplift=None)
+    html = render_monitoring_dashboard(report)
+    assert "Week-1 uplift" in html
+    assert "—" in html  # em-dash rendered when uplift is None
