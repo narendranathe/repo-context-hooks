@@ -1,3 +1,10 @@
+from __future__ import annotations
+
 __all__ = ["__version__"]
 
-__version__ = "0.2.4"
+try:
+    from importlib.metadata import version as _pkg_version
+
+    __version__ = _pkg_version("repo-context-hooks")
+except Exception:
+    __version__ = "0.6.0"
