@@ -665,6 +665,54 @@ def _lifecycle_donut_svg(coverage: int, r: int = 44) -> str:
     )
 
 
+def _make_test_report(
+    *,
+    current_score: int = 60,
+    reload_events: int = 0,
+    resume_events: int = 5,
+    score_week1_uplift: int | None = None,
+) -> "ImpactReport":
+    """Build a minimal ImpactReport for tests and dashboard snapshots."""
+    now = dt.datetime.now(dt.timezone.utc)
+    history = ImpactHistory(
+        first_seen=now.isoformat(),
+        latest_seen=now.isoformat(),
+        latest_score=current_score,
+        min_score=current_score,
+        max_score=current_score,
+        score_delta=0,
+        daily_event_counts=(),
+        score_series=(),
+        recent_events=(),
+    )
+    usability = UsabilityMetrics(
+        active_days=1,
+        resume_events=resume_events,
+        checkpoint_events=0,
+        reload_events=reload_events,
+        session_end_events=0,
+        lifecycle_coverage=25,
+        readiness_minutes_since_last_event=0,
+        avg_session_duration_minutes=None,
+        max_session_duration_minutes=None,
+        cold_start_time_saved_minutes=reload_events * 5,
+        score_week1_uplift=score_week1_uplift,
+    )
+    return ImpactReport(
+        repo_name="test-repo",
+        repo_id="test-repo",
+        telemetry_path=Path("/tmp/test-telemetry.jsonl"),
+        current_score=current_score,
+        estimated_baseline_score=20,
+        observed_events=resume_events + reload_events,
+        event_counts={},
+        dashboard_path=Path("/tmp/test-dashboard.html"),
+        history=history,
+        usability=usability,
+        recommendations=(),
+    )
+
+
 def render_monitoring_dashboard(
     report: ImpactReport,
     branch_stats: list[Any] | None = None,
@@ -730,6 +778,19 @@ def render_monitoring_dashboard(
     tokens_injected_str = f"{tokens_injected:,}"
     tokens_saved_str = f"{tokens_saved:,}"
     cost_saved_str = f"${cost_saved_usd:.2f}"
+
+    # cold-start time saved
+    cold_start_min = report.usability.cold_start_time_saved_minutes
+    cold_start_str = f"{cold_start_min} min" if cold_start_min > 0 else "—"
+
+    # week-1 score uplift
+    uplift = report.usability.score_week1_uplift
+    if uplift is None:
+        uplift_str = "—"
+    elif uplift >= 0:
+        uplift_str = f"+{uplift}"
+    else:
+        uplift_str = str(uplift)
 
     # lifecycle donut
     donut = _lifecycle_donut_svg(report.usability.lifecycle_coverage)
@@ -867,7 +928,7 @@ def render_monitoring_dashboard(
     }}
     .metric sub {{ font-size: 14px; opacity: .6; }}
     .savings-row {{
-      display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 14px; margin: 14px 0;
     }}
     .savings-card {{
@@ -994,6 +1055,16 @@ def render_monitoring_dashboard(
           <span>Est. cost saved</span>
           <strong>{cost_saved_str}</strong>
           <em>Claude Sonnet $3/M input tokens</em>
+        </div>
+        <div class="savings-card">
+          <span>Cold starts prevented (est.)</span>
+          <strong>{cold_start_str}</strong>
+          <em>Each context reload saves ~5 min re-orientation</em>
+        </div>
+        <div class="savings-card">
+          <span>Week-1 uplift</span>
+          <strong>{uplift_str}</strong>
+          <em>Score gain from day 0 to day 7</em>
         </div>
       </div>
 
