@@ -14,3 +14,7 @@ build/
 *.egg-info/
 .worktrees/
 .repo-context-hooks/
+.hypothesis/
+.coverage
+coverage.xml
+docs/internal/
