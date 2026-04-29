@@ -1,0 +1,11 @@
+repo-context-hooks
+Copyright 2024-2026 Narendranath Edara
+
+This product includes software developed by Narendranath Edara.
+
+Third-party text inclusions: none currently.
+Add entries here when bundling Apache-2.0 / BSD attribution-required code.
+
+Third-party runtime dependencies: none. This package depends only on the
+Python standard library at runtime. Optional development tooling lives
+under the `[dev]` extras and is not required to run installed hooks.

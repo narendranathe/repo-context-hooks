@@ -35,6 +35,10 @@ Need per-repo hooks too?
 repo-context-hooks install --platform claude --also-repo-hooks
 ```
 
+## Zero runtime dependencies
+
+`pip install repo-context-hooks` pulls only the Python standard library at runtime - `pyproject.toml` declares `dependencies = []`. The package installs nothing into your project's import graph; hooks run inside the agent's own runtime (Claude Code, Codex, Cursor, etc.) and read checked-in workspace files. Optional development tooling (pytest, ruff, black, mypy) lives under the `[dev]` extras and is never installed for end users.
+
 ## Set Up a Workspace Contract (per-repo)
 
 ```bash
@@ -92,6 +96,16 @@ The old approach (install a hook per repo) means every new workspace starts from
 - Agent skill: fires on `SessionStart`, `PreCompact`, `PostCompact`, `SessionEnd`
 - Workspace contract: `specs/README.md` (engineering memory), `README.md` (product intent), `UBIQUITOUS_LANGUAGE.md` (shared terms)
 - Telemetry: local JSONL events so `repo-context-hooks measure` can verify hooks actually fired
+
+## Scope
+
+repo-context-hooks is scoped to **single-developer** workflows today.
+It installs context hooks into your local Claude Code (or other AI agent)
+environment - one developer, one machine.
+
+Team aggregation (shared event streams, multi-seat dashboards) is tracked
+in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26)
+and is out of scope for the current release.
 
 ## How It Works
 
@@ -296,6 +310,17 @@ python -m pytest -q
 ```
 
 Pull requests are welcome when they make the repo contract clearer, more durable, or easier to adopt without widening the product claims beyond what the implementation supports.
+
+## Maintainer status
+
+This project is solo-maintained by [@narendranathe](https://github.com/narendranathe).
+
+- **Issue response window:** best-effort within 7 days
+- **PR review window:** best-effort within 14 days
+- **Security reports:** handled on the [SECURITY.md](SECURITY.md) timeline (acknowledgement within 7 days, initial assessment within 14 days)
+- **Active development cadence:** see [CHANGELOG.md](CHANGELOG.md)
+
+If a thread goes quiet past these windows, please bump the issue or PR - it has not been ignored, only deprioritized against day-job load.
 
 ## License
 
