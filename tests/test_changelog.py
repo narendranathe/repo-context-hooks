@@ -201,6 +201,100 @@ def test_find_unreleased_change_count_empty_diff() -> None:
 
 
 # ---------------------------------------------------------------------------
+# head_changelog mode — the realistic case where a PR adds bullets BELOW an
+# already-existing `## [Unreleased]` heading. With `--unified=0`, the heading
+# is not in the diff context, so we must use the post-image to know its line.
+# This is the bug surfaced by the gate failing on its own PR (issue #76).
+# ---------------------------------------------------------------------------
+
+
+def test_find_unreleased_change_count_with_head_post_image() -> None:
+    """Bullets added under an existing [Unreleased] heading are detected when
+    the head-side CHANGELOG.md is supplied as the post-image."""
+    head = """\
+# Changelog
+
+## [Unreleased]
+
+### Added
+- bullet one (existing)
+- bullet two (newly added)
+- bullet three (newly added)
+
+## [0.6.0] - 2026-04-28
+
+### Added
+- old release entry
+"""
+    # Diff: two `+` lines at post-image lines 7 and 8 (under [Unreleased]
+    # which is at line 3, body starts line 4, next section [0.6.0] is at line 10).
+    diff = """\
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -7,0 +7,2 @@
++- bullet two (newly added)
++- bullet three (newly added)
+"""
+    assert find_unreleased_changed_lines(diff, head_changelog=head) == 2
+
+
+def test_find_unreleased_change_count_with_head_rejects_historical_addition() -> None:
+    """Even with the post-image, additions OUTSIDE [Unreleased] must not count."""
+    head = """\
+# Changelog
+
+## [Unreleased]
+
+- (no entries yet)
+
+## [0.6.0] - 2026-04-28
+
+### Added
+- bullet one
+- bullet two (newly added to historical)
+"""
+    diff = """\
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -10,0 +11,1 @@
++- bullet two (newly added to historical)
+"""
+    assert find_unreleased_changed_lines(diff, head_changelog=head) == 0
+
+
+def test_find_unreleased_change_count_with_head_no_unreleased_section() -> None:
+    """If [Unreleased] is missing from the post-image, return 0."""
+    head = "# Changelog\n\n## [0.6.0] - 2026-04-28\n\n- only release\n"
+    diff = """\
+@@ -3,0 +4,1 @@
++- some new line
+"""
+    assert find_unreleased_changed_lines(diff, head_changelog=head) == 0
+
+
+def test_find_unreleased_change_count_with_head_unreleased_at_eof() -> None:
+    """[Unreleased] as the last section in the file (no following heading)."""
+    head = """\
+# Changelog
+
+## [0.6.0] - 2026-04-28
+
+- old release
+
+## [Unreleased]
+
+- new bullet
+"""
+    diff = """\
+@@ -7,0 +9,1 @@
++- new bullet
+"""
+    assert find_unreleased_changed_lines(diff, head_changelog=head) == 1
+
+
+# ---------------------------------------------------------------------------
 # CLI: `python -m repo_context_hooks.changelog extract ...`
 # ---------------------------------------------------------------------------
 
@@ -250,7 +344,38 @@ def test_extract_cli_empty_section_returns_one(tmp_path, capsys) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_gate_cli_passes_when_unreleased_added_lines(monkeypatch, capsys) -> None:
+def _write_changelog_with_unreleased_through_line_30(tmp_path: Path) -> Path:
+    """Synthetic CHANGELOG where [Unreleased] body covers lines 4..30 and
+    [0.6.0] starts at line 31. Makes diff hunks at +11..+28 land safely
+    inside [Unreleased] for the `_DIFF_UNRELEASED_ADD` fixture.
+    """
+    lines = ["# Changelog", "", "## [Unreleased]"]
+    lines.extend([f"- placeholder bullet {i}" for i in range(27)])  # lines 4-30
+    lines.append("## [0.6.0] - 2026-04-28")  # line 31
+    lines.append("- old release")
+    cl = tmp_path / "CHANGELOG.md"
+    cl.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return cl
+
+
+def _write_changelog_where_line_21_is_new_historical(tmp_path: Path) -> Path:
+    """Synthetic CHANGELOG where line 21 is a NEW `## [0.5.0]` heading and
+    lines 21+ are OUTSIDE the [Unreleased] body. Mirrors the post-image of a
+    PR that only adds a historical section. Used with `_DIFF_HISTORICAL_ONLY`.
+    """
+    lines = ["# Changelog", "", "## [Unreleased]"]  # heading at line 3
+    lines.extend([f"- pre-existing bullet {i}" for i in range(17)])  # lines 4-20
+    lines.append("## [0.5.0] - 2026-04-27")  # line 21 (the newly-added heading)
+    lines.append("- typo fix in historical section")  # line 22 (newly added)
+    cl = tmp_path / "CHANGELOG.md"
+    cl.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return cl
+
+
+def test_gate_cli_passes_when_unreleased_added_lines(monkeypatch, capsys, tmp_path) -> None:
+    _write_changelog_with_unreleased_through_line_30(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
     def fake_run(args, **kwargs):
         return subprocess.CompletedProcess(
             args=args, returncode=0, stdout=_DIFF_UNRELEASED_ADD, stderr=""
@@ -263,7 +388,10 @@ def test_gate_cli_passes_when_unreleased_added_lines(monkeypatch, capsys) -> Non
     assert "OK" in out
 
 
-def test_gate_cli_fails_when_only_historical_edits(monkeypatch, capsys) -> None:
+def test_gate_cli_fails_when_only_historical_edits(monkeypatch, capsys, tmp_path) -> None:
+    _write_changelog_where_line_21_is_new_historical(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
     def fake_run(args, **kwargs):
         return subprocess.CompletedProcess(
             args=args, returncode=0, stdout=_DIFF_HISTORICAL_ONLY, stderr=""
@@ -311,3 +439,55 @@ def test_gate_cli_handles_subprocess_exception(monkeypatch, capsys) -> None:
     err = capsys.readouterr().err
     assert rc == 1
     assert "git diff failed" in err
+
+
+def test_gate_cli_passes_when_bullets_added_below_existing_unreleased_heading(
+    monkeypatch, capsys, tmp_path
+) -> None:
+    """Regression test for the bug discovered when this gate failed on its own
+    PR: with `--unified=0`, a diff that ONLY adds bullets below an existing
+    `## [Unreleased]` heading does not include the heading line. The gate must
+    still pass by reading the head-side CHANGELOG.md from the working tree.
+    """
+    cl = tmp_path / "CHANGELOG.md"
+    cl.write_text(
+        "\n".join(
+            [
+                "# Changelog",
+                "",
+                "## [Unreleased]",  # line 3
+                "",  # line 4
+                "### Added",  # line 5
+                "- existing bullet",  # line 6
+                "- new bullet 1",  # line 7
+                "- new bullet 2",  # line 8
+                "",  # line 9
+                "## [0.6.0] - 2026-04-28",  # line 10
+                "",
+                "- old release",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    # The diff a real PR like #94 produces: `--unified=0`, no [Unreleased]
+    # heading shown, only the new bullets at post-image lines 7 and 8.
+    diff_text = (
+        "diff --git a/CHANGELOG.md b/CHANGELOG.md\n"
+        "--- a/CHANGELOG.md\n"
+        "+++ b/CHANGELOG.md\n"
+        "@@ -6,0 +7,2 @@\n"
+        "+- new bullet 1\n"
+        "+- new bullet 2\n"
+    )
+
+    def fake_run(args, **kwargs):
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout=diff_text, stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    rc = changelog.main(["gate", "BASE", "HEAD"])
+    out = capsys.readouterr().out
+    assert rc == 0, "gate must pass when bullets are added below an existing [Unreleased] heading"
+    assert "OK" in out

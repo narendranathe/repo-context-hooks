@@ -35,6 +35,7 @@ All notable changes to this project will be documented in this file.
 <!-- none -->
 
 ### Fixed
+- `find_unreleased_changed_lines()` now accepts a `head_changelog` post-image so the gate detects bullets added BELOW an existing `## [Unreleased]` heading. Previously, `--unified=0` diffs without the heading line returned 0 — surfaced when the gate red-X'd its own PR (#94). Regression test pins the exact diff shape. (#76)
 - `tests/conftest.py` env-isolation list previously missed `REPO_CONTEXT_HOOKS_TELEMETRY_DIR`; switched to a `startswith()` glob that future-proofs every Wave 2/3 env var.
 
 ### Security

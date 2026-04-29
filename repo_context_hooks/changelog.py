@@ -116,67 +116,84 @@ def extract_section(text: str, version: str) -> str:
     return body + "\n"
 
 
-def find_unreleased_changed_lines(diff_text: str) -> int:
-    """Count `+` lines inside the `## [Unreleased]` section of the new file.
+def _find_unreleased_range(head_changelog: str) -> tuple[int, int] | None:
+    """Return (first_body_line, end_exclusive) of `## [Unreleased]` in the
+    post-image of CHANGELOG.md, both as 1-indexed line numbers. None if absent.
 
-    Walks a `git diff --unified=0` patch for CHANGELOG.md and tracks, for each
-    hunk, whether the hunk's destination line range falls inside the
-    `[Unreleased]` block. Hunk header form: `@@ -A,B +C,D @@`. The new file's
-    starting line is `C`; we resolve it against the post-image of the file
-    (we don't have it here, so we infer from `+` context lines AND the heading
-    line layout in the hunk itself).
+    `end_exclusive` is the line number of the next `## [Version]` heading, or
+    one past the file's last line if `[Unreleased]` is the last section.
+    """
+    lines = _normalize(head_changelog).split("\n")
+    start: int | None = None
+    end: int = len(lines) + 1  # 1-indexed, past EOF
+    for i, line in enumerate(lines, start=1):
+        m = RCH_CHANGELOG_HEADING_RE.match(line)
+        if not m:
+            continue
+        if start is None and m.group("ver") == "Unreleased":
+            start = i + 1  # body starts AFTER the heading line
+        elif start is not None:
+            end = i
+            break
+    if start is None:
+        return None
+    return (start, end)
 
-    Implementation: instead of resolving line numbers (we'd need the post-image
-    to know where `## [Unreleased]` lives), we walk the patch sequentially and
-    track our "current section" by remembering the most recent `+## [...]` or
-    ` ## [...]` line seen in the new file, plus any contextless cases.
 
-    A `+` line counts iff:
-      - the hunk it belongs to has a `## [Unreleased]` heading visible in the
-        patch (either added in `+## [Unreleased]` form or shown as context
-        ` ## [Unreleased]`), AND no later `+## [...]` or ` ## [...]` for a
-        different section has appeared first in this hunk.
+def find_unreleased_changed_lines(
+    diff_text: str, head_changelog: str | None = None
+) -> int:
+    """Count `+` lines whose post-image position falls inside `## [Unreleased]`.
 
-    Edge case: hunk with `--unified=0` has no context lines, so a hunk that
-    only edits `[Unreleased]` body lines without touching the heading needs
-    a different signal. Solution: also accept hunks where the destination
-    line number `C` falls AFTER the line number we recorded for the
-    `## [Unreleased]` heading on a previous pass.
+    Two modes:
+
+    1. **head_changelog supplied (preferred):** we know exactly where
+       `## [Unreleased]` lives in the post-image. We walk the diff hunks and
+       count any `+` line whose new-file line number lands inside the
+       `[Unreleased]` body range. This is the path the gate workflow uses,
+       since `actions/checkout@v4` always gives us the head-side file on disk.
+
+    2. **head_changelog not supplied (legacy):** we try to infer the
+       `[Unreleased]` post-image line from the diff itself. This only works if
+       the heading was touched in the diff. Otherwise we return 0.
     """
     text = _normalize(diff_text)
     lines = text.split("\n")
 
-    # First pass: find the post-image line number of `## [Unreleased]` heading.
-    # We do this by scanning hunk headers and counting the heading positions.
     unreleased_post_line: int | None = None
-    next_section_post_line: int | None = None  # first heading AFTER [Unreleased]
-    cursor: int | None = None  # current post-image line counter
-    for line in lines:
-        hunk_m = re.match(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@", line)
-        if hunk_m:
-            cursor = int(hunk_m.group(1))
-            continue
-        if cursor is None:
-            continue
-        if line.startswith("-"):
-            continue  # source-side only, doesn't advance new-file cursor
-        if line.startswith("\\"):
-            continue  # \ No newline at end of file
-        m = RCH_CHANGELOG_HEADING_RE.match(line[1:] if line.startswith(("+", " ")) else line)
-        if m:
-            if m.group("ver") == "Unreleased" and unreleased_post_line is None:
-                unreleased_post_line = cursor
-            elif unreleased_post_line is not None and next_section_post_line is None:
-                next_section_post_line = cursor
-        cursor += 1
+    next_section_post_line: int | None = None
 
-    if unreleased_post_line is None:
-        # No [Unreleased] heading visible in the diff; ambiguous — caller's
-        # intent is "did they add to [Unreleased]?" If the heading itself
-        # wasn't touched, we cannot prove it from the diff alone. This branch
-        # is the conservative answer for adopters: zero. The caller must
-        # supply the file post-image (via separate API) for the strict check.
-        return 0
+    if head_changelog is not None:
+        rng = _find_unreleased_range(head_changelog)
+        if rng is None:
+            return 0
+        unreleased_post_line, next_section_post_line = rng
+    else:
+        # Fallback: scan the diff for the heading itself.
+        cursor: int | None = None
+        for line in lines:
+            hunk_m = re.match(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@", line)
+            if hunk_m:
+                cursor = int(hunk_m.group(1))
+                continue
+            if cursor is None:
+                continue
+            if line.startswith("-"):
+                continue
+            if line.startswith("\\"):
+                continue
+            m = RCH_CHANGELOG_HEADING_RE.match(
+                line[1:] if line.startswith(("+", " ")) else line
+            )
+            if m:
+                if m.group("ver") == "Unreleased" and unreleased_post_line is None:
+                    unreleased_post_line = cursor
+                elif unreleased_post_line is not None and next_section_post_line is None:
+                    next_section_post_line = cursor
+            cursor += 1
+
+        if unreleased_post_line is None:
+            return 0
 
     # Second pass: count `+` lines whose post-image line number is in
     # [unreleased_post_line, next_section_post_line).
@@ -258,7 +275,18 @@ def _cmd_gate(args: argparse.Namespace) -> int:
         )
         return 1
 
-    added = find_unreleased_changed_lines(diff_text)
+    # Read the head-side CHANGELOG.md from the working tree (the gate workflow
+    # checks out the PR head). Without this, a PR that adds bullets UNDER an
+    # already-existing `## [Unreleased]` heading would fail the gate, because
+    # `--unified=0` diffs don't include the heading line as context.
+    head_changelog: str | None = None
+    try:
+        head_changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+    except OSError:
+        # CHANGELOG.md missing on disk — fall back to diff-only inference.
+        pass
+
+    added = find_unreleased_changed_lines(diff_text, head_changelog=head_changelog)
     if added <= 0:
         print(
             "::error::CHANGELOG.md changed but no addition under '## [Unreleased]'. "
