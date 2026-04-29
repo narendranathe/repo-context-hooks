@@ -1,0 +1,80 @@
+{
+  "_doc": "Source of truth for the repo-context-hooks public API. Edited in lockstep with repo_context_hooks/__init__.py, repo_context_hooks/cli.py, and the REPO_CONTEXT_HOOKS_* env-var readers. See docs/stability.md and docs/deprecation-policy.md. The CI gate scripts/check_public_surface.py compares the running package against this file and blocks unannounced removals.",
+  "schema_version": 1,
+  "all": [
+    "__version__"
+  ],
+  "console_scripts": [
+    "graphify",
+    "repo-context-hooks",
+    "repohandoff"
+  ],
+  "cli_commands": [
+    {
+      "name": "checkpoint",
+      "flags": ["--message", "--path"]
+    },
+    {
+      "name": "doctor",
+      "flags": ["--all-platforms", "--json", "--platform", "--repo-root"]
+    },
+    {
+      "name": "init",
+      "flags": ["--force", "--repo-root"]
+    },
+    {
+      "name": "install",
+      "flags": ["--also-repo-hooks", "--dedup", "--force", "--no-telemetry", "--platform", "--repo-root", "--skip-repo-hooks"]
+    },
+    {
+      "name": "measure",
+      "flags": ["--badge", "--badge-out", "--branches", "--clean-ghosts", "--experiment-dir", "--forecast", "--format", "--json", "--no-dry-run", "--open", "--output", "--redact", "--repo-root", "--snapshot-dir", "-o"]
+    },
+    {
+      "name": "platforms",
+      "flags": ["--json"]
+    },
+    {
+      "name": "recommend",
+      "flags": ["--json", "--limit", "--repo-root"]
+    },
+    {
+      "name": "telemetry",
+      "flags": [],
+      "subcommands": [
+        {"name": "disable", "flags": []},
+        {"name": "enable", "flags": ["--yes"]},
+        {"name": "preview", "flags": ["--repo-root"]},
+        {"name": "status", "flags": []}
+      ]
+    },
+    {
+      "name": "uninstall",
+      "flags": ["--platform"]
+    }
+  ],
+  "platform_choices": [
+    "claude",
+    "codex",
+    "cursor",
+    "kimi",
+    "lovable",
+    "ollama",
+    "openclaw",
+    "replit",
+    "windsurf"
+  ],
+  "env_vars": [
+    "REPO_CONTEXT_HOOKS_SAMPLE_RATE",
+    "REPO_CONTEXT_HOOKS_SESSION_ID",
+    "REPO_CONTEXT_HOOKS_TELEMETRY",
+    "REPO_CONTEXT_HOOKS_TELEMETRY_DIR"
+  ],
+  "file_locations": [
+    "%LOCALAPPDATA%\\repo-context-hooks\\events.jsonl",
+    "<repo>/.claude/settings.json",
+    "<repo>/specs/README.md#session-log",
+    "~/.cache/repo-context-hooks/events.jsonl",
+    "~/.claude/settings.json"
+  ]
+}

@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - `tests/test_bundle_scripts_compile.py`: `py_compile` smoke for every script shipped under `bundle/`.
 - `tests/test_telemetry_edge_cases.py`: NaN/+inf/-inf rate contracts.
 - README Codecov badge inside `<!-- BADGES:START/END -->` anchor block.
+- Public-API stability contract (issue #72): explicit `__all__ = ["__version__"]` in `repo_context_hooks/__init__.py`, machine-readable snapshot at `tests/contract/public_surface.json`, CI gate `scripts/check_public_surface.py` (drift check + `--verify-removals` mode against prior release tag), and contract tests under `tests/contract/`. `docs/stability.md` and `docs/deprecation-policy.md` document stable vs internal surfaces and the one-MINOR-cycle deprecation rule. README adds `## Stability` section. (#72)
 
 ### Changed
 - `is_sampled`: NaN sample-rate now coerces to 0.0 (safe-default opt-out) instead of silently falling through to `random.random() < NaN` and returning False with no diagnostic. (issue #71 audit follow-up)

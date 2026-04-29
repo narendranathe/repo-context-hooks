@@ -199,6 +199,36 @@ jobs:
           }
           Write-Host "No backslash paths - OK"
 
+  public-surface-guard:
+    # Stability-contract enforcement (issue #72). Compares the introspected
+    # public surface of the package against the committed snapshot at
+    # `tests/contract/public_surface.json`, then -- in `--verify-removals`
+    # mode -- diffs against the snapshot at the previous release tag and
+    # requires every removal to be excused by a matching `### Deprecated`
+    # bullet (in some prior version) plus a `### Removed` bullet under
+    # `[Unreleased]` in CHANGELOG.md. See docs/stability.md.
+    name: Public surface guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Required so the gate can `git show <prior-tag>:tests/contract/public_surface.json`.
+          # `fetch-depth: 1` (the default) hides every prior tag and the gate would
+          # silently pass on a shallow clone -- exactly the failure mode this job
+          # exists to prevent.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PRIMARY_PYTHON }}
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Verify drift + verify removals against prior release tag
+        run: python scripts/check_public_surface.py --verify-removals
+
   platform-matrix:
     name: Platform matrix (${{ matrix.platform }})
     runs-on: ubuntu-latest
