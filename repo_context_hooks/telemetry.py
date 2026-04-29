@@ -4,6 +4,7 @@ import datetime as dt
 import hashlib
 import html
 import json
+import math
 import os
 import random
 import subprocess
@@ -146,6 +147,14 @@ def is_sampled(repo_root: Path, rate: float = 1.0) -> bool:
             rate = float(rate_str)
         except ValueError:
             pass
+
+    # Coerce NaN to a safe-default opt-out. Without this, NaN falls through both
+    # boundary comparisons (NaN >= 1.0 is False AND NaN <= 0.0 is False), reaches
+    # `random.random() < NaN` which is always False, and the user gets a silent
+    # permanent opt-out with no diagnostic. Treating NaN as rate=0.0 makes the
+    # behaviour intentional (and matches the telemetry-off safe default).
+    if math.isnan(rate):
+        rate = 0.0
 
     # Deterministic rates bypass the file cache to avoid stale-false poisoning the
     # session.  We still write the canonical value so clear_session_state() and

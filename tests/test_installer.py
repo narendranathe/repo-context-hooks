@@ -788,3 +788,43 @@ def test_deduplicate_hooks_idempotent_on_disk(
     after_second = settings_path.read_text(encoding="utf-8")
 
     assert after_first == after_second
+
+
+# ---------------------------------------------------------------------------
+# deduplicate_hooks — defensive contracts (audit F1.2)
+#
+# `_load_json` already tolerates missing files, malformed JSON, and zero-byte
+# files (returns ``{}``), so `deduplicate_hooks` cannot crash the install flow
+# on these inputs. These tests lock that contract so a future refactor of
+# `_load_json` cannot silently break the agent install path.
+# ---------------------------------------------------------------------------
+
+
+def test_deduplicate_hooks_missing_settings_file_returns_zero() -> None:
+    """Fresh-install case: no settings.json yet."""
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    # Deliberately do NOT create settings.json.
+    assert deduplicate_hooks(agent_home) == {"removed": 0}
+
+
+def test_deduplicate_hooks_zero_byte_settings_returns_zero() -> None:
+    """Power-loss / partial-write produces a zero-byte settings.json."""
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    (agent_home / ".claude" / "settings.json").write_text("", encoding="utf-8")
+    assert deduplicate_hooks(agent_home) == {"removed": 0}
+
+
+def test_deduplicate_hooks_malformed_json_returns_zero() -> None:
+    """Merge-conflict markers / hand-edited typos produce malformed JSON.
+
+    Contract: must return cleanly so ``install_global_hooks`` can recover
+    instead of raising ``json.JSONDecodeError`` up to the agent install flow.
+    """
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    (agent_home / ".claude" / "settings.json").write_text(
+        "{not valid json <<<<<", encoding="utf-8"
+    )
+    assert deduplicate_hooks(agent_home) == {"removed": 0}
