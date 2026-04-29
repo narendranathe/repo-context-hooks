@@ -1,38 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">repo-context-hooks brand mark</title>
-  <desc id="desc">repo-context-hooks context continuity logo showing hook events flowing into an impact monitor.</desc>
+  <desc id="desc">repo-context-hooks context continuity mark showing repo files, hook events, a resumed agent node, and a local impact monitor.</desc>
   <defs>
-    <radialGradient id="sun" cx="28%" cy="20%" r="76%">
+    <radialGradient id="paper" cx="28%" cy="20%" r="78%">
       <stop offset="0%" stop-color="#ffe3a1"/>
-      <stop offset="52%" stop-color="#e8ad3d"/>
+      <stop offset="54%" stop-color="#e8ad3d"/>
       <stop offset="100%" stop-color="#8f3d22"/>
     </radialGradient>
-    <linearGradient id="ink" x1="12%" y1="10%" x2="92%" y2="96%">
+    <linearGradient id="ink" x1="14%" y1="12%" x2="90%" y2="94%">
       <stop offset="0%" stop-color="#203a33"/>
       <stop offset="100%" stop-color="#101820"/>
     </linearGradient>
-    <linearGradient id="wire" x1="0%" y1="0%" x2="100%" y2="0%">
+    <linearGradient id="signal" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#f7d86b"/>
       <stop offset="100%" stop-color="#80b6a2"/>
     </linearGradient>
     <filter id="shadow" x="-12%" y="-12%" width="124%" height="130%">
-      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#17120b" flood-opacity=".24"/>
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#17120b" flood-opacity=".24"/>
     </filter>
   </defs>
-  <rect x="44" y="44" width="424" height="424" rx="108" fill="url(#sun)"/>
-  <rect x="82" y="92" width="348" height="328" rx="78" fill="url(#ink)" filter="url(#shadow)"/>
-  <rect x="122" y="136" width="114" height="76" rx="22" fill="#fff8e8"/>
-  <rect x="276" y="136" width="114" height="76" rx="22" fill="#fff8e8"/>
-  <rect x="122" y="284" width="114" height="76" rx="22" fill="#fff8e8"/>
-  <rect x="276" y="284" width="114" height="76" rx="22" fill="#fff8e8"/>
-  <line x1="236" y1="174" x2="276" y2="174" stroke="url(#wire)" stroke-width="16" stroke-linecap="round"/>
-  <line x1="179" y1="212" x2="179" y2="284" stroke="url(#wire)" stroke-width="16" stroke-linecap="round"/>
-  <line x1="333" y1="212" x2="333" y2="284" stroke="url(#wire)" stroke-width="16" stroke-linecap="round"/>
-  <line x1="236" y1="322" x2="276" y2="322" stroke="url(#wire)" stroke-width="16" stroke-linecap="round"/>
-  <circle cx="179" cy="174" r="24" fill="#f7d86b" stroke="#fff6d9" stroke-width="8"/>
-  <circle cx="333" cy="174" r="24" fill="#80b6a2" stroke="#fff6d9" stroke-width="8"/>
-  <circle cx="179" cy="322" r="24" fill="#80b6a2" stroke="#fff6d9" stroke-width="8"/>
-  <circle cx="333" cy="322" r="24" fill="#f7d86b" stroke="#fff6d9" stroke-width="8"/>
-  <rect x="186" y="224" width="140" height="48" rx="24" fill="#fff8e8"/>
-  <text x="256" y="256" text-anchor="middle" font-family="Georgia, serif" font-size="25" font-weight="800" fill="#101820">RCH</text>
+
+  <rect x="44" y="44" width="424" height="424" rx="88" fill="url(#paper)"/>
+  <rect x="86" y="90" width="340" height="332" rx="48" fill="url(#ink)" filter="url(#shadow)"/>
+
+  <rect x="122" y="130" width="116" height="64" rx="8" fill="#fff8e8"/>
+  <rect x="122" y="218" width="116" height="64" rx="8" fill="#fff8e8"/>
+  <rect x="122" y="306" width="116" height="64" rx="8" fill="#fff8e8"/>
+  <line x1="148" y1="154" x2="212" y2="154" stroke="#203a33" stroke-width="8" stroke-linecap="round"/>
+  <line x1="148" y1="242" x2="212" y2="242" stroke="#203a33" stroke-width="8" stroke-linecap="round"/>
+  <line x1="148" y1="330" x2="212" y2="330" stroke="#203a33" stroke-width="8" stroke-linecap="round"/>
+
+  <line x1="238" y1="162" x2="284" y2="212" stroke="url(#signal)" stroke-width="14" stroke-linecap="round"/>
+  <line x1="238" y1="250" x2="284" y2="250" stroke="url(#signal)" stroke-width="14" stroke-linecap="round"/>
+  <line x1="238" y1="338" x2="284" y2="288" stroke="url(#signal)" stroke-width="14" stroke-linecap="round"/>
+
+  <circle cx="300" cy="250" r="40" fill="#f7d86b" stroke="#fff6d9" stroke-width="10"/>
+  <text x="300" y="260" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="800" fill="#101820">h</text>
+
+  <line x1="340" y1="250" x2="372" y2="250" stroke="url(#signal)" stroke-width="14" stroke-linecap="round"/>
+  <rect x="352" y="174" width="72" height="152" rx="18" fill="#fff8e8"/>
+  <circle cx="388" cy="214" r="18" fill="#80b6a2" stroke="#203a33" stroke-width="8"/>
+  <rect x="374" y="246" width="28" height="48" rx="14" fill="#203a33"/>
+  <line x1="374" y1="306" x2="402" y2="306" stroke="#80b6a2" stroke-width="8" stroke-linecap="round"/>
+  <line x1="374" y1="326" x2="402" y2="326" stroke="#f7d86b" stroke-width="8" stroke-linecap="round"/>
+
+  <text x="256" y="402" text-anchor="middle" font-family="Georgia, serif" font-size="32" font-weight="800" fill="#fff8e8">RCH</text>
 </svg>

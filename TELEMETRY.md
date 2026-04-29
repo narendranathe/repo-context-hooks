@@ -69,7 +69,9 @@ REPO_CONTEXT_HOOKS_TELEMETRY=0 repo-context-hooks <command>
 ## No Remote Telemetry
 
 All telemetry described above is strictly local. No data is sent to any server, analytics
-service, or third-party endpoint by this tool. Remote telemetry is an explicit opt-in feature
-that does not exist yet. If it is ever added, it will require a separate consent step before
-any data leaves your machine. See [docs/telemetry-policy.md](docs/telemetry-policy.md) for
-the full policy.
+service, or third-party endpoint by this tool.
+
+The CLI includes consent-management commands so maintainers can inspect the current state,
+preview the exact payload shape, and record local opt-in consent for a future community
+collector. No remote collector is configured, and enabling consent does not send data.
+See [docs/telemetry-policy.md](docs/telemetry-policy.md) for the full policy.

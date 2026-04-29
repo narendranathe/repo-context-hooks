@@ -8,11 +8,36 @@ Agent-level continuity skill for coding agents.
   <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">
 </p>
 
-![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
+![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, local operational telemetry, Score 90, baseline 20, +70 uplift, 108 observed events, 3 active days, 25% coverage, and the next agent resuming warm](assets/diagrams/context-continuity-engine.svg)
 
-`repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. Install once to agent home — every workspace you open picks it up automatically.
+`repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. On Claude, install once to agent home and native lifecycle hooks activate across workspaces; other platforms use repo-native context surfaces with narrower automation.
 
-The goal: a new agent session should start with full project context without rediscovering everything from scratch.
+The goal: a new agent session should start with the right repo context and latest handoff state without rediscovering everything from scratch.
+
+## Why It Exists
+
+Every fresh coding-agent session has the same painful cold start: reread the repo, reconstruct what changed, ask what matters next, and risk repeating failed paths. Compaction and session handoffs make that worse because the most tactical context often lives only in chat.
+
+`repo-context-hooks` makes that context repo-owned instead of chat-owned. The public story stays in `README.md`, engineering memory lives in `specs/README.md`, platform entry rules live in `AGENTS.md`, and local operational telemetry shows whether the continuity loop is actually firing.
+
+### Latest checked-in local telemetry snapshot
+
+This is a local continuity audit, not a hosted analytics claim or productivity benchmark. The current snapshot shows strong session-start continuity; compact/end coverage is not yet evidenced in this local log.
+
+| Metric | Value |
+|--------|-------|
+| Contract score | **90 / 100** |
+| Baseline without hooks | 20 / 100 |
+| Continuity uplift | **+70 points** |
+| Hook events recorded | 108 |
+| Active days | 3 |
+| Lifecycle coverage | 25% |
+| Session-start events | 107 |
+| Decision events | 1 |
+| Checkpoint/reload/session-end events | 0 |
+| Source | Local operational telemetry |
+
+The honest read: session-start continuity is strong; compact/end coverage is not yet evidenced by this checked-in snapshot.
 
 ## Install
 
@@ -21,7 +46,7 @@ pip install repo-context-hooks
 repo-context-hooks install --platform claude
 ```
 
-That's the full install. Hooks write to `~/.claude/settings.json` and activate in every workspace from that point on.
+That's the full Claude-native install. Hooks write to `~/.claude/settings.json` and activate for future Claude Code workspaces from that point on.
 
 Need per-repo hooks too?
 
@@ -64,6 +89,8 @@ The `context-handoff-hooks` skill instructs the agent to run this command at `Pr
 
 ## Other Platforms
 
+These commands scaffold each platform's strongest available repo-context surface. They do not imply Claude-style lifecycle hook parity on partial platforms; see the support matrix below for the exact boundary.
+
 ```bash
 repo-context-hooks install --platform codex
 repo-context-hooks install --platform cursor
@@ -79,9 +106,9 @@ repo-context-hooks install --platform kimi
 
 Coding sessions rarely fail because the model forgot a fact. They fail because useful state of the work never survived the session boundary.
 
-The old approach (install a hook per repo) means every new workspace starts from zero. The right approach is a skill installed once at agent home that activates in every workspace and uses checked-in repo files as its persistence layer.
+The old approach (install a hook per repo) means every new workspace starts from zero. The right approach is a skill installed once at agent home for native runtimes, with checked-in repo files as the persistence layer that other platforms can also read.
 
-`repo-context-hooks` brings the same model as `superpowers` and `caveman`: install once to the agent runtime, works everywhere.
+`repo-context-hooks` brings the same agent-level model as `superpowers` and `caveman` where the runtime supports it, while keeping the repo contract useful for partial platforms.
 
 - Agent skill: fires on `SessionStart`, `PreCompact`, `PostCompact`, `SessionEnd`
 - Workspace contract: `specs/README.md` (engineering memory), `README.md` (product intent), `UBIQUITOUS_LANGUAGE.md` (shared terms)
@@ -109,6 +136,8 @@ The old approach (install a hook per repo) means every new workspace starts from
 | OpenClaw | `partial` | `SOUL.md`, `USER.md`, `TOOLS.md`, `AGENTS.md`; requires manual workspace config |
 | Ollama | `partial` | `Modelfile.repo-context` for local-model workflows |
 | Kimi | `partial` | Root `AGENTS.md` for Kimi Code CLI; no generic API or lifecycle hooks |
+
+![Platform support surfaces showing Claude native lifecycle hooks and Codex, Cursor, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi as partial repo-context surfaces](assets/diagrams/platform-support.svg)
 
 See [docs/platforms.md](docs/platforms.md) for the full support matrix.
 
@@ -156,11 +185,14 @@ Paste the output directly into a LinkedIn post, pull request description, or REA
 | Metric | Value |
 |--------|-------|
 | Contract score | 90 / 100 |
+| Baseline (no hooks) | 20 |
 | Continuity uplift | +70 |
-| Hook events recorded | 104 |
-| Sessions instrumented | ~48 |
-| Lifecycle coverage | 100% |
-| Tokens injected | ~237,000 |
+| Observed events | 108 |
+| Active days | 3 |
+| Lifecycle coverage | 25% |
+| Session-start events | 107 |
+| Checkpoint events | 0 |
+| Context reloads (post-compact) | 0 |
 
 *Source: local operational telemetry - no source code, prompts, or personal data.
 Generated by [repo-context-hooks](https://github.com/narendranathe/repo-context-hooks).*
@@ -191,31 +223,30 @@ repo-context-hooks measure --badge-out docs/badge.svg
 ![context score](docs/badge.svg)
 ```
 
-### Live telemetry (this repo, v0.6.0)
+### Latest checked-in local telemetry snapshot (this repo, v0.6.0)
 
-`measure` compares the current repo contract score against an estimated no-continuity baseline and shows token savings, lifecycle health, and branch drift in one view.
+`measure` compares the current repo contract score against an estimated no-continuity baseline and shows observed local events, lifecycle health, and branch drift in one view. This checked-in snapshot is manually refreshed from local operational telemetry.
 
 | Metric | Value |
 |--------|-------|
 | Contract score | **90 / 100** |
 | Baseline without hooks | 20 / 100 |
 | Continuity uplift | **+70 points** |
-| Hook events recorded | 85 |
-| Sessions instrumented | ~48 |
-| Active days | 2 |
-| Lifecycle coverage | 25% (session-start firing; session-end populates after longer sessions) |
-| Branches monitored | 3 — main, feat/telemetry-reliability, feat/agent-level-skill-runtime |
-| Tokens injected | ~237,000 (4,950 tok/session × 48 sessions) |
-| Est. tokens saved | ~28,800 (30% of sessions skip 2,000-tok re-orientation) |
-| Est. cost saved | ~$0.09 at current scale ($3/M input, Claude Sonnet) |
+| Hook events recorded | 108 |
+| Active days | 3 |
+| Lifecycle coverage | 25% |
+| Session-start events | 107 |
+| Decision events | 1 |
+| Checkpoint/reload/session-end events | 0 |
 | Engineering memory | 11 sections across specs/README.md |
+| Source | Local operational telemetry |
 
-At 30-day scale (~50 sessions/day): ~72,000 tokens saved/day, ~$65/year per developer.
+The honest read: session-start continuity is strong; compact/end coverage is not yet evidenced by this checked-in snapshot.
 
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 - Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
 
-Remote telemetry is not enabled. Any future community metrics require explicit opt-in per [docs/telemetry-policy.md](docs/telemetry-policy.md).
+Remote telemetry is not sending data. Consent commands exist so maintainers can preview and record opt-in state, but no remote collector is configured.
 
 See [TELEMETRY.md](TELEMETRY.md) for what is collected locally and how to opt out.
 
@@ -223,23 +254,23 @@ See [TELEMETRY.md](TELEMETRY.md) for what is collected locally and how to opt ou
 
 | Surface | What it shows | How to use it |
 |---------|--------------|---------------|
-| [Impact monitor](docs/monitoring/index.html) | Score, uplift, tokens injected, lifecycle ring, branch health, forecast | `measure --open` or open from GitHub Pages |
-| [History JSON](docs/monitoring/history.json) | Time-series score, daily events, usability metrics, branch scores, forecast | Import into Observable Plot, Vega-Lite, DuckDB |
+| [Impact monitor](docs/monitoring/index.html) | Score, uplift, observed events, lifecycle ring, and sample forecast | `measure --open` or open from GitHub Pages |
+| [History JSON](docs/monitoring/history.json) | Time-series score, daily events, usability metrics, and forecast | Import into Observable Plot, Vega-Lite, DuckDB |
 | Local dashboard | Private full-detail view with branch + forecast panels | `repo-context-hooks measure --open` |
 | Public snapshot | Sanitized version for README or docs site | `repo-context-hooks measure --snapshot-dir docs/monitoring` |
 
 ### Manage consent
 
-Remote telemetry is disabled by default. Use these commands to inspect, preview, or change the consent state.
+Remote telemetry is disabled by default and no remote collector is configured. Use these commands to inspect, preview, or change the local consent state.
 
 ```bash
 repo-context-hooks telemetry status              # show current consent state
 repo-context-hooks telemetry preview             # preview what would be sent (nothing is sent)
-repo-context-hooks telemetry enable              # opt in to remote community metrics
+repo-context-hooks telemetry enable              # record opt-in consent locally
 repo-context-hooks telemetry disable             # opt out
 ```
 
-The `preview` command shows the exact payload before you decide. No data leaves your machine until you run `enable` and confirm.
+The `preview` command shows the exact payload before you decide. No data leaves your machine; `enable` records consent locally for a future collector.
 
 ## Concrete Stories
 
