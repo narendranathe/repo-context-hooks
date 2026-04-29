@@ -84,11 +84,9 @@ source = [
 
 [tool.coverage.report]
 # Initial floor is 80%, intentionally lower than the eventual 85% target.
-# The issue #71 risk note explicitly authorised "lower the gate to a true floor
-# (e.g., 80%) and ratchet up in a follow-up" — cli.py (372 stmts) is at 67% and
-# pulls the project total to ~83%. Driving cli.py up is its own scoped work,
-# tracked as a follow-up. The gate exists to PREVENT REGRESSION below the
-# current line; raising the number is mechanical once cli.py tests land.
+# Tracked: cli.py backfill in issue #92 — once that lands, bump this to 85.
+# The gate exists to PREVENT REGRESSION below the current line; raising the
+# number is mechanical once cli.py tests land. (audit F4.3, F5.1)
 fail_under = 80
 show_missing = true
 skip_covered = false
