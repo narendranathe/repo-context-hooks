@@ -18,7 +18,9 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7", "pytest-cov>=4", "hypothesis>=6"]
+# Upper bounds prevent a compromised future major release from auto-installing
+# in CI/contributor environments. (audit F3.4) Bump alongside Dependabot.
+dev = ["pytest>=7,<9", "pytest-cov>=4,<8", "hypothesis>=6,<7"]
 
 [project.urls]
 Homepage = "https://github.com/narendranathe/repo-context-hooks"
@@ -41,6 +43,16 @@ repo_context_hooks = ["bundle/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Plain ``pytest`` produces the coverage report locally — contributors don't
+# need to remember --cov flags. CI inherits the same behaviour. The gate
+# (``fail_under = 80``) is enforced by the [tool.coverage.report] section
+# below, not by anything on this CLI. (audit F2.7)
+addopts = [
+    "--strict-markers",
+    "--cov=repo_context_hooks",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=xml",
+]
 
 [tool.coverage.run]
 source = ["repo_context_hooks"]
@@ -50,8 +62,24 @@ omit = [
     # CLI boilerplate that just delegates to repo_context_hooks.cli.main
     "repo_context_hooks/__main__.py",
     # Hook scripts shipped into agent_home and executed as subprocesses by Claude/Codex.
-    # Coverage of these is asserted by the install-smoke-test CI job, not by unit tests.
+    # Coverage of these is asserted by the install-smoke-test CI job AND the
+    # py_compile smoke test (tests/test_bundle_scripts_compile.py). NEW CLI
+    # commands belong in repo_context_hooks/ proper, NOT under bundle/scripts/,
+    # so they remain coverage-gated. (audit F4.7)
     "repo_context_hooks/bundle/scripts/*",
+]
+
+# Path equivalences so Codecov can map paths consistently across:
+#   - editable installs (`pip install -e .`)
+#   - wheel installs into site-packages
+#   - monorepo adopters who vendor at packages/repo-context-hooks/
+# Without this, monorepo adopters see Codecov 404s on the line-by-line view.
+# (audit F2.3)
+[tool.coverage.paths]
+source = [
+    "repo_context_hooks/",
+    "*/repo_context_hooks/",
+    "*/site-packages/repo_context_hooks/",
 ]
 
 [tool.coverage.report]
