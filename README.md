@@ -99,13 +99,14 @@ The old approach (install a hook per repo) means every new workspace starts from
 
 ## Scope
 
-repo-context-hooks is scoped to **single-developer** workflows today.
-It installs context hooks into your local Claude Code (or other AI agent)
-environment - one developer, one machine.
+**Today:** repo-context-hooks runs at **single-developer scope**. Each developer
+has their own local telemetry on their own machine; there is no shared team
+aggregation. The hooks work the same whether you are solo or one of fifty
+engineers each running them locally.
 
-Team aggregation (shared event streams, multi-seat dashboards) is tracked
-in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26)
-and is out of scope for the current release.
+**Roadmap:** team aggregation (shared event streams, multi-seat dashboards)
+is tracked in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26).
+If your team needs this, leave a +1 on that issue.
 
 ## How It Works
 

@@ -168,4 +168,5 @@ def test_readme_documents_dependency_and_maintainer_posture() -> None:
 def test_readme_documents_single_developer_scope() -> None:
     text = readme_text()
     assert "## Scope" in text, "missing ## Scope section"
-    assert "single-developer" in text, "missing single-developer scope callout"
+    assert "single-developer scope" in text, "missing single-developer scope callout"
+    assert "#26" in text, "missing roadmap link to issue #26"
