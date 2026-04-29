@@ -725,7 +725,8 @@ def test_deduplicate_hooks_idempotent() -> None:
 # the on-disk JSON is byte-equal after a second call.
 # ---------------------------------------------------------------------------
 
-from hypothesis import given, settings as hyp_settings, strategies as st  # noqa: E402
+import pytest  # noqa: E402
+from hypothesis import given, strategies as st  # noqa: E402
 
 _HOOK_EVENT = st.sampled_from(
     ["SessionStart", "PreCompact", "PostCompact", "SessionEnd", "PreToolUse", "PostToolUse"]
@@ -761,16 +762,22 @@ def _settings_with_potential_dupes(draw) -> dict:
     return {"hooks": hooks}
 
 
-@hyp_settings(derandomize=True, deadline=None, max_examples=40)
 @given(payload=_settings_with_potential_dupes())
-def test_deduplicate_hooks_idempotent_on_disk(payload: dict) -> None:
+def test_deduplicate_hooks_idempotent_on_disk(
+    payload: dict, tmp_path_factory: pytest.TempPathFactory
+) -> None:
     """Running `deduplicate_hooks` twice on the same input leaves settings.json byte-equal.
 
     The function's RETURN value legitimately differs between calls (first
     reports `{"removed": N>0}`, second reports `{"removed": 0}`). Idempotency
     is a property of the on-disk state, not the return dict.
+
+    Uses ``tmp_path_factory`` (not the local ``_tmp_dir()`` helper) so each
+    Hypothesis example writes to pytest's TTL-managed tmp tree instead of
+    accumulating dirs under the repo root. Settings/profile come from
+    ``tests/conftest.py`` via the ``"rch"`` Hypothesis profile.
     """
-    agent_home = _tmp_dir() / "home"
+    agent_home = tmp_path_factory.mktemp("home")
     (agent_home / ".claude").mkdir(parents=True)
     settings_path = agent_home / ".claude" / "settings.json"
     settings_path.write_text(json.dumps(payload), encoding="utf-8")
