@@ -726,6 +726,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#configuration-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#python-api" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -977,6 +988,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#configuration-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#python-api" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1098,6 +1120,8 @@
 <li><code>&lt;repo&gt;/specs/README.md</code> <code>## Session Log</code> heading — checkpoint append target</li>
 </ul>
 <p>These locations and the partial-ownership rule will not change before MAJOR.</p>
+<h3 id="configuration-contracts">Configuration contracts</h3>
+<p>The supply-chain policy file <code>.github/dependabot.yml</code> is part of the stability contract. Removing the <code>pip</code> or <code>github-actions</code> ecosystem is a breaking change that follows the <a href="../deprecation-policy/">deprecation policy</a>: the regression guard at <code>tests/test_dependabot_policy.py</code>, frozen against <code>tests/contract/dependabot_policy.json</code>, blocks accidental drops. Adopters forking the project may add additional ecosystems (<code>npm</code>, <code>gomod</code>, <code>bundler</code>, etc.) — those additions are non-breaking and do not require a contract update. The full policy, cadence, and rationale are documented in <a href="https://github.com/narendranathe/repo-context-hooks/blob/main/SECURITY.md#supply-chain-updates">SECURITY.md § Supply-Chain Updates</a>.</p>
 <h3 id="python-api">Python API</h3>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">repo_context_hooks</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
 </code></pre></div>
