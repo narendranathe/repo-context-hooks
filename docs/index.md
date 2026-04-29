@@ -6,6 +6,16 @@ Hook-based repo context continuity for coding agents.
 
 A new agent session should start with full project context without rediscovering everything from scratch.
 
+## Scope
+
+repo-context-hooks is scoped to **single-developer** workflows today.
+It installs context hooks into your local Claude Code (or other AI agent)
+environment - one developer, one machine.
+
+Team aggregation (shared event streams, multi-seat dashboards) is tracked
+in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26)
+and is out of scope for the current release.
+
 ## Key Features
 
 - **One-time install** - hooks write to agent home (`~/.claude/settings.json` or equivalent) and activate in every workspace automatically
