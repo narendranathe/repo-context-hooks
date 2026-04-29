@@ -751,5 +751,5 @@ def main() -> int:
         return _checkpoint(args)
     if args.command == "telemetry":
         return _telemetry_cmd(args)
-    parser.error("Unknown command")
-    return 2
+    parser.error("Unknown command")  # pragma: no cover
+    return 2  # pragma: no cover
