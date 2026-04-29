@@ -3,6 +3,7 @@
 Agent-level continuity skill for coding agents.
 
 ![context score](docs/badge.svg)
+[![codecov](https://codecov.io/gh/narendranathe/repo-context-hooks/branch/main/graph/badge.svg)](https://codecov.io/gh/narendranathe/repo-context-hooks)
 
 <p align="center">
   <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">
@@ -13,6 +14,8 @@ Agent-level continuity skill for coding agents.
 `repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. On Claude, install once to agent home and native lifecycle hooks activate across workspaces; other platforms use repo-native context surfaces with narrower automation.
 
 The goal: a new agent session should start with the right repo context and latest handoff state without rediscovering everything from scratch.
+
+> **Privacy:** local operational telemetry is written to local JSONL files; nothing is uploaded. See [TELEMETRY.md](TELEMETRY.md).
 
 ## Why It Exists
 
@@ -48,11 +51,29 @@ repo-context-hooks install --platform claude
 
 That's the full Claude-native install. Hooks write to `~/.claude/settings.json` and activate for future Claude Code workspaces from that point on.
 
+Verify your own continuity audit any time with `repo-context-hooks measure --open`. It renders a local dashboard from your evidence log without sending source code, prompts, or personal data anywhere.
+
+## Local Impact Evidence
+
+`repo-context-hooks` gives developers a repo-owned continuity loop instead of another chat-only memory ritual. The measurable public proof is intentionally narrow: current contract score, estimated no-hook baseline, observed events, lifecycle coverage, and a checked-in monitoring snapshot generated from local operational telemetry.
+
+The private dashboard can model token and cold-start savings from your own local events, but the checked-in README proof avoids productivity benchmark claims until the lifecycle log has broader evidence than session-start continuity.
+
+## Verify release integrity
+
+```bash
+gh attestation verify repo-context-hooks-X.Y.Z-py3-none-any.whl --repo narendranathe/repo-context-hooks
+```
+
 Need per-repo hooks too?
 
 ```bash
 repo-context-hooks install --platform claude --also-repo-hooks
 ```
+
+## Zero runtime dependencies
+
+`pip install repo-context-hooks` pulls only the Python standard library at runtime - `pyproject.toml` declares `dependencies = []`. The package installs nothing into your project's import graph; hooks run inside the agent runtime and read checked-in workspace files. Optional development tooling, including pytest, ruff, black, and mypy, lives under the `[dev]` extras and is never installed for end users.
 
 ## Set Up a Workspace Contract (per-repo)
 
@@ -113,6 +134,12 @@ The old approach (install a hook per repo) means every new workspace starts from
 - Agent skill: fires on `SessionStart`, `PreCompact`, `PostCompact`, `SessionEnd`
 - Workspace contract: `specs/README.md` (engineering memory), `README.md` (product intent), `UBIQUITOUS_LANGUAGE.md` (shared terms)
 - Telemetry: local JSONL events so `repo-context-hooks measure` can verify hooks actually fired
+
+## Scope
+
+**Today:** `repo-context-hooks` runs at single-developer scope. Each developer has their own local telemetry on their own machine; there is no shared team aggregation. The hooks are useful for solo developers and teams, but the checked-in evidence is local to the machine that generated it.
+
+**Roadmap:** team aggregation, including shared event streams and multi-seat dashboards, is tracked in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26).
 
 ## How It Works
 
@@ -321,6 +348,17 @@ python -m pytest -q
 ```
 
 Pull requests are welcome when they make the repo contract clearer, more durable, or easier to adopt without widening the product claims beyond what the implementation supports.
+
+## Maintainer status
+
+This project is solo-maintained by [@narendranathe](https://github.com/narendranathe).
+
+- **Issue response window:** best-effort within 7 days
+- **PR review window:** best-effort within 14 days
+- **Security reports:** handled on the [SECURITY.md](SECURITY.md) timeline
+- **Active development cadence:** see [CHANGELOG.md](CHANGELOG.md)
+
+If a thread goes quiet past these windows, please bump the issue or PR - it has not been ignored, only deprioritized against day-job load.
 
 ## License
 
