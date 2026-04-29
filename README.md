@@ -2,8 +2,19 @@
 
 Agent-level continuity skill for coding agents.
 
+<!-- BADGES:START -->
+<!--
+  Badge row convention. Add new badges INSIDE this anchor, one per line, in
+  this order: build/quality → coverage → version/release → stability → meta.
+  Each badge uses the linked form `[![alt](svg-url)](click-url)`. Sibling
+  Wave 2/3 PRs (#72 stability, #76 release) extend here without touching the
+  surrounding markdown.
+-->
 ![context score](docs/badge.svg)
 [![codecov](https://codecov.io/gh/narendranathe/repo-context-hooks/branch/main/graph/badge.svg)](https://codecov.io/gh/narendranathe/repo-context-hooks)
+<!-- BADGES:END -->
+
+> Coverage gate enforced at **80%** today; ratchet to 85% tracked in [#92](https://github.com/narendranathe/repo-context-hooks/issues/92).
 
 <p align="center">
   <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">

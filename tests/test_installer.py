@@ -725,7 +725,8 @@ def test_deduplicate_hooks_idempotent() -> None:
 # the on-disk JSON is byte-equal after a second call.
 # ---------------------------------------------------------------------------
 
-from hypothesis import given, settings as hyp_settings, strategies as st  # noqa: E402
+import pytest  # noqa: E402
+from hypothesis import given, strategies as st  # noqa: E402
 
 _HOOK_EVENT = st.sampled_from(
     ["SessionStart", "PreCompact", "PostCompact", "SessionEnd", "PreToolUse", "PostToolUse"]
@@ -761,16 +762,22 @@ def _settings_with_potential_dupes(draw) -> dict:
     return {"hooks": hooks}
 
 
-@hyp_settings(derandomize=True, deadline=None, max_examples=40)
 @given(payload=_settings_with_potential_dupes())
-def test_deduplicate_hooks_idempotent_on_disk(payload: dict) -> None:
+def test_deduplicate_hooks_idempotent_on_disk(
+    payload: dict, tmp_path_factory: pytest.TempPathFactory
+) -> None:
     """Running `deduplicate_hooks` twice on the same input leaves settings.json byte-equal.
 
     The function's RETURN value legitimately differs between calls (first
     reports `{"removed": N>0}`, second reports `{"removed": 0}`). Idempotency
     is a property of the on-disk state, not the return dict.
+
+    Uses ``tmp_path_factory`` (not the local ``_tmp_dir()`` helper) so each
+    Hypothesis example writes to pytest's TTL-managed tmp tree instead of
+    accumulating dirs under the repo root. Settings/profile come from
+    ``tests/conftest.py`` via the ``"rch"`` Hypothesis profile.
     """
-    agent_home = _tmp_dir() / "home"
+    agent_home = tmp_path_factory.mktemp("home")
     (agent_home / ".claude").mkdir(parents=True)
     settings_path = agent_home / ".claude" / "settings.json"
     settings_path.write_text(json.dumps(payload), encoding="utf-8")
@@ -781,3 +788,43 @@ def test_deduplicate_hooks_idempotent_on_disk(payload: dict) -> None:
     after_second = settings_path.read_text(encoding="utf-8")
 
     assert after_first == after_second
+
+
+# ---------------------------------------------------------------------------
+# deduplicate_hooks — defensive contracts (audit F1.2)
+#
+# `_load_json` already tolerates missing files, malformed JSON, and zero-byte
+# files (returns ``{}``), so `deduplicate_hooks` cannot crash the install flow
+# on these inputs. These tests lock that contract so a future refactor of
+# `_load_json` cannot silently break the agent install path.
+# ---------------------------------------------------------------------------
+
+
+def test_deduplicate_hooks_missing_settings_file_returns_zero() -> None:
+    """Fresh-install case: no settings.json yet."""
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    # Deliberately do NOT create settings.json.
+    assert deduplicate_hooks(agent_home) == {"removed": 0}
+
+
+def test_deduplicate_hooks_zero_byte_settings_returns_zero() -> None:
+    """Power-loss / partial-write produces a zero-byte settings.json."""
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    (agent_home / ".claude" / "settings.json").write_text("", encoding="utf-8")
+    assert deduplicate_hooks(agent_home) == {"removed": 0}
+
+
+def test_deduplicate_hooks_malformed_json_returns_zero() -> None:
+    """Merge-conflict markers / hand-edited typos produce malformed JSON.
+
+    Contract: must return cleanly so ``install_global_hooks`` can recover
+    instead of raising ``json.JSONDecodeError`` up to the agent install flow.
+    """
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    (agent_home / ".claude" / "settings.json").write_text(
+        "{not valid json <<<<<", encoding="utf-8"
+    )
+    assert deduplicate_hooks(agent_home) == {"removed": 0}

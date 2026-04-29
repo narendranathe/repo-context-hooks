@@ -2,10 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+<!--
+  CHANGELOG CONTRACT (issue #71). Every user-facing PR adds a bullet under
+  [Unreleased] using ONE of these subheadings, in this order, omitting
+  empty ones at release-cut time. This keeps line-merge conflicts away
+  when sibling Wave 2/3 PRs land in parallel.
+-->
+
 ## [Unreleased]
 
 ### Added
-- Coverage gate: `pyproject.toml` declares `[tool.coverage.run]` and `[tool.coverage.report] fail_under = 80`; CI enforces it on every push and PR (issue #71). Initial floor is 80%; current project coverage is ~83%, with `telemetry.py` at 86%. The 85% target is deferred to a follow-up that backfills `cli.py` tests (currently 67%, by far the largest gap).
+- Coverage gate via `pyproject.toml [tool.coverage.report] fail_under = 80`; CI enforces on every push and PR. Threshold rationale and ratchet plan: see issue [#92](https://github.com/narendranathe/repo-context-hooks/issues/92). (#71)
+- Hypothesis property tests for telemetry hot paths: `is_sampled` boundaries + cached-decision stability + cache-invalidation re-roll, `repo_id` shape + stability, `deduplicate_hooks` on-disk idempotency. (#71)
+- `tests/conftest.py`: shared `"rch"` Hypothesis profile, glob-based `REPO_CONTEXT_HOOKS_*` env-var isolation, pinned Hypothesis storage dir for read-only `$HOME` runners.
+- `tests/test_bundle_scripts_compile.py`: `py_compile` smoke for every script shipped under `bundle/`.
+- `tests/test_telemetry_edge_cases.py`: NaN/+inf/-inf rate contracts.
+- README Codecov badge inside `<!-- BADGES:START/END -->` anchor block.
+
+### Changed
+- `is_sampled`: NaN sample-rate now coerces to 0.0 (safe-default opt-out) instead of silently falling through to `random.random() < NaN` and returning False with no diagnostic. (issue #71 audit follow-up)
+- CI `permissions:` defaults to `contents: read`; the test job alone escalates to `id-token: write` for Codecov OIDC.
+- CI matrix adds Python 3.13.
+
+### Deprecated
+<!-- none -->
+
+### Removed
+<!-- none -->
+
+### Fixed
+- `tests/conftest.py` env-isolation list previously missed `REPO_CONTEXT_HOOKS_TELEMETRY_DIR`; switched to a `startswith()` glob that future-proofs every Wave 2/3 env var.
+
+### Security
+- Pin `codecov/codecov-action` to a 40-char SHA (was the floating `@v4` tag).
+- Add upper version bounds to dev deps (`pytest<9`, `pytest-cov<8`, `hypothesis<7`) so a compromised future major release cannot auto-install in CI.
+- Document why this workflow uses `pull_request` (not `pull_request_target`) so a future maintainer cannot accidentally migrate to the unsafe variant.
+
+### Tests
+- 347 tests (from 338 in PR #90); +9 added by this hardening branch.
 - Property-based tests via Hypothesis: `tests/test_property_telemetry.py` covers `is_sampled` boundary behaviour (rate ≥ 1.0 → True, rate ≤ 0.0 → False, mid-range cached decision is stable) and `repo_id` shape (16 lowercase hex chars, stable across calls); `tests/test_installer.py` adds an idempotency property test for `deduplicate_hooks` over realistic hook payloads
 - `tests/conftest.py`: autouse fixture clears `REPO_CONTEXT_HOOKS_*` env vars between tests so local dev environments do not leak telemetry decisions into the suite
 - `pytest-cov`, `hypothesis` added to `[project.optional-dependencies].dev`

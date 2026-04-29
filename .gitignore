@@ -14,7 +14,18 @@ build/
 *.egg-info/
 .worktrees/
 .repo-context-hooks/
+
+# Test runtime artefacts. .tmp-tests/ is the per-test scratch dir created by
+# tests/test_installer.py::_tmp_dir(). Anything under .hypothesis/ is the
+# Hypothesis example database (HYPOTHESIS_STORAGE_DIRECTORY in conftest moves
+# it to a tmpdir, but pin the .gitignore as belt-and-suspenders).
+.tmp-tests/
 .hypothesis/
+hypothesis-*.db
 .coverage
+.coverage.*
 coverage.xml
+htmlcov/
+
+# wave2 spec scratch dir; throwaway design notes, not published
 docs/internal/
