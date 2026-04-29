@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussions
+    url: https://github.com/narendranathe/repo-context-hooks/discussions
+    about: Please ask usage questions and share ideas in Discussions.
+  - name: Security vulnerabilities
+    url: https://github.com/narendranathe/repo-context-hooks/blob/main/SECURITY.md
+    about: Do not file public issues for security vulnerabilities. See SECURITY.md for the private disclosure process.

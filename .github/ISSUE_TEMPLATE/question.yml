@@ -1,0 +1,30 @@
+name: Question
+description: Ask a usage question
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For general usage questions, [GitHub Discussions](https://github.com/narendranathe/repo-context-hooks/discussions) is often the better venue and gets faster answers from the community. Use this form if you have already searched and are still stuck.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to accomplish, and what is unclear?
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Commands you ran, docs you read, related issues you searched.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Project setup, agent platform, version - anything that might be relevant.
+    validations:
+      required: false
