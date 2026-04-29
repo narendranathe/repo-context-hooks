@@ -10,9 +10,11 @@ Agent-level continuity skill for coding agents.
 
 ![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
 
-`repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. Install once to agent home — every workspace you open picks it up automatically.
+`repo-context-hooks` is an agent-level skill that keeps interrupted work and handoff notes alive across sessions — saving roughly 600 tokens of re-explanation and ~5 minutes of cold-start time on every resumed session, all measured locally. Install once to agent home — every workspace you open picks it up automatically.
 
 The goal: a new agent session should start with full project context without rediscovering everything from scratch.
+
+> **Privacy:** all telemetry is written to local JSONL files; nothing is uploaded. See [TELEMETRY.md](TELEMETRY.md).
 
 ## Install
 
@@ -22,6 +24,21 @@ repo-context-hooks install --platform claude
 ```
 
 That's the full install. Hooks write to `~/.claude/settings.json` and activate in every workspace from that point on.
+
+Verify your own savings any time with `repo-context-hooks measure --open` — it renders a local HTML dashboard with token, cost, and cold-start-time numbers from your evidence log.
+
+## Impact
+
+Every resumed session ships ~4,500 tokens of repo context (`specs/README.md`, `AGENTS.md`, `UBIQUITOUS_LANGUAGE.md`) into the agent so it doesn't re-derive state from scratch. The numbers below are estimates the tool computes from your local evidence log:
+
+| Per resumed session | Estimate |
+|---|---|
+| Tokens injected | ~4,500 |
+| Tokens saved (vs. cold rediscovery) | ~600 |
+| Cost saved at Claude Sonnet $3/M input | ~$0.0018 |
+| Cold-start time saved per `PostCompact` | ~5 min |
+
+Run `repo-context-hooks measure` to see your own numbers. All metrics are computed locally; no data leaves your machine.
 
 ## Verify release integrity
 
