@@ -1,0 +1,65 @@
+name: Changelog gate
+
+# SECURITY: This workflow uses `pull_request`, NOT `pull_request_target`.
+# Same posture as ci.yml. PRs from forks run in the FORK's context — secrets
+# are not exposed and the checked-out code is the PR's own changes. Do NOT
+# migrate to `pull_request_target` without gating every step that runs
+# untrusted PR code behind a same-repo predicate. See ci.yml for the full
+# rationale.
+on:
+  pull_request:
+    branches: [main]
+    # `labeled`/`unlabeled` ensures toggling `skip-changelog` re-evaluates the
+    # gate; without these types the gate stays red after a label is added.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: Require CHANGELOG entry
+    runs-on: ubuntu-latest
+    # Skip-list rationale:
+    #   skip-changelog  - explicit maintainer override
+    #   documentation   - docs-only PRs (issue #76 AC)
+    #   chore           - infra/build PRs (issue #76 AC)
+    #   dependencies    - Dependabot's default label; without this, every
+    #                     weekly dep bump red-Xes CI. (failure-modes critic)
+    # Bot actor guard:
+    #   Dependabot/Renovate sometimes open PRs without their canonical labels
+    #   (config drift, fork bots, etc.). The actor check is the belt to the
+    #   label suspenders.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      github.actor != 'renovate[bot]' &&
+      !contains(github.event.pull_request.labels.*.name, 'skip-changelog') &&
+      !contains(github.event.pull_request.labels.*.name, 'documentation') &&
+      !contains(github.event.pull_request.labels.*.name, 'chore') &&
+      !contains(github.event.pull_request.labels.*.name, 'dependencies')
+    steps:
+      - uses: actions/checkout@v4
+        # `fetch-depth: 0` is required so `git diff BASE...HEAD` can resolve
+        # the merge-base. The default shallow checkout breaks the gate.
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package (gives us the changelog gate module)
+        run: pip install -e .
+
+      - name: Verify CHANGELOG entry was added under [Unreleased]
+        # The gate is intentionally STRICTER than "CHANGELOG.md changed":
+        # we verify that at least one added line falls inside the
+        # `## [Unreleased]` section. An edit to a historical release section
+        # does NOT satisfy the gate. This prevents the silent-pass failure
+        # mode where a PR adds a typo fix to `## [0.5.0]` and ships without
+        # a real entry. (failure-modes critic non-negotiable)
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          python -m repo_context_hooks.changelog gate "$BASE" "$HEAD"
