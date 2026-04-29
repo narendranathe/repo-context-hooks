@@ -93,6 +93,17 @@ The old approach (install a hook per repo) means every new workspace starts from
 - Workspace contract: `specs/README.md` (engineering memory), `README.md` (product intent), `UBIQUITOUS_LANGUAGE.md` (shared terms)
 - Telemetry: local JSONL events so `repo-context-hooks measure` can verify hooks actually fired
 
+## Scope
+
+**Today:** repo-context-hooks runs at **single-developer scope**. Each developer
+has their own local telemetry on their own machine; there is no shared team
+aggregation. The hooks work the same whether you are solo or one of fifty
+engineers each running them locally.
+
+**Roadmap:** team aggregation (shared event streams, multi-seat dashboards)
+is tracked in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26).
+If your team needs this, leave a +1 on that issue.
+
 ## How It Works
 
 1. Agent skill loads at session start and reads workspace contract from repo

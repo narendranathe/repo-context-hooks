@@ -6,6 +6,17 @@ Hook-based repo context continuity for coding agents.
 
 A new agent session should start with full project context without rediscovering everything from scratch.
 
+## Scope
+
+**Today:** repo-context-hooks runs at **single-developer scope**. Each developer
+has their own local telemetry on their own machine; there is no shared team
+aggregation. The hooks work the same whether you are solo or one of fifty
+engineers each running them locally.
+
+**Roadmap:** team aggregation (shared event streams, multi-seat dashboards)
+is tracked in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26).
+If your team needs this, leave a +1 on that issue.
+
 ## Key Features
 
 - **One-time install** - hooks write to agent home (`~/.claude/settings.json` or equivalent) and activate in every workspace automatically
