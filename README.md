@@ -23,6 +23,12 @@ repo-context-hooks install --platform claude
 
 That's the full install. Hooks write to `~/.claude/settings.json` and activate in every workspace from that point on.
 
+## Verify release integrity
+
+```bash
+gh attestation verify repo-context-hooks-X.Y.Z-py3-none-any.whl --repo narendranathe/repo-context-hooks
+```
+
 Need per-repo hooks too?
 
 ```bash
