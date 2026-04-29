@@ -5,7 +5,12 @@ on:
     tags:
       - "v*"
 
+# Top-level token is read-only. Each job escalates exactly the writes it needs.
+# The `publish` job needs `contents: write` to call `gh release edit` AFTER a
+# successful PyPI publish — see the comment above that job's `permissions:`.
+# Do NOT promote `contents: write` here.
 permissions:
+  contents: read
   id-token: write    # required for PyPI Trusted Publisher (OIDC) and Sigstore
   attestations: write  # required for gh-action-sigstore-python and PEP 740 provenance
 
@@ -69,6 +74,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-on-testpypi
     environment: pypi
+    # JOB-SCOPED escalation: `contents: write` is REQUIRED for `gh release edit`
+    # to populate the GitHub Release page with notes from CHANGELOG.md after a
+    # successful PyPI publish. NEVER promote this to top-level — keep it here so
+    # only this single job (running maintainer-tagged code, gated by the
+    # `pypi` deployment environment) can write to the repo.
+    permissions:
+      id-token: write
+      attestations: write
+      contents: write
 
     steps:
       - uses: actions/download-artifact@v4
@@ -80,3 +94,38 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           attestations: true
+
+      # --- Auto release notes from CHANGELOG.md (issue #76) ---
+      # Runs ONLY after PyPI publish succeeds. Failure here does not retract
+      # the published artifact — a maintainer can re-run this job or manually
+      # `gh release edit "$TAG" --notes-file -` from a local checkout.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package for changelog extractor
+        # The CHANGELOG section parser ships in the wheel; install it so the
+        # workflow uses the SAME logic that adopters can import. (Repo
+        # convention: every non-trivial logic lives under coverage in a
+        # tested module, not in opaque YAML.)
+        run: pip install -e .
+
+      - name: Populate GitHub Release notes from CHANGELOG
+        # Fail-loud contract:
+        #   - Section missing or empty -> exit 1, surfaces in workflow log.
+        #   - `gh release edit` failure -> exit 1, log shows `gh` error.
+        # Never silently fall back to "(auto-generated)" because that would
+        # mask broken release-time CHANGELOG discipline.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VER="${TAG#v}"
+          python -m repo_context_hooks.changelog extract "$VER" CHANGELOG.md > /tmp/notes.md
+          test -s /tmp/notes.md
+          gh release view "$TAG" >/dev/null 2>&1 \
+            || gh release create "$TAG" --title "$TAG" --notes "(populating from CHANGELOG...)"
+          gh release edit "$TAG" --notes-file /tmp/notes.md

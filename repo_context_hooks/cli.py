@@ -26,7 +26,17 @@ def build_parser() -> argparse.ArgumentParser:
         prog="repo-context-hooks",
         description="Install repo context continuity skills and lifecycle hooks.",
     )
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    # `--version` is a top-level flag (universal `<tool> --version` mental model).
+    # It is intercepted in `main()` BEFORE the subcommand dispatch, so subparsers
+    # remain `required=False`. Calling without a command and without `--version`
+    # is still an error — `main()` enforces that explicitly.
+    parser.add_argument(
+        "--version",
+        action="store_true",
+        dest="version",
+        help="Print version (semver, git sha, python, platform, install method) and exit.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=False)
 
     install = subparsers.add_parser(
         "install",
@@ -715,6 +725,14 @@ def _telemetry_cmd(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
+    if getattr(args, "version", False):
+        from .version_info import format_version
+
+        print(format_version())
+        return 0
+    if args.command is None:
+        parser.error("a command is required (try `repo-context-hooks --help`)")
+        return 2
     if args.command == "init":
         return _init(args)
     if args.command == "install":
