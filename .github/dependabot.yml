@@ -1,3 +1,23 @@
+# Dependabot supply-chain policy for repo-context-hooks.
+#
+# Ecosystems watched (audit issue #85):
+#   - pip            : runtime + dev deps declared in pyproject.toml
+#   - github-actions : workflow action versions in .github/workflows/
+#
+# Cadence: weekly per ecosystem; open-pull-requests-limit=5 bounds queue depth
+# without flooding (validated by Wave 1 PRs #80–#83 — actions/checkout,
+# setup-python, upload-artifact, download-artifact). Each PR is auto-labelled
+# with `dependencies` plus the ecosystem name (`python` or `github-actions`).
+#
+# Policy is documented in SECURITY.md § "Supply-Chain Updates".
+# The ecosystem set is locked by tests/test_dependabot_policy.py and
+# tests/contract/dependabot_policy.json. docs/stability.md declares this file
+# a configuration contract — dropping either ecosystem is a MINOR-cycle
+# deprecation event.
+#
+# Forks: to add another ecosystem (e.g. npm, gomod, bundler, cargo), append
+# a new `package-ecosystem` block following the same shape below. Adding more
+# ecosystems is non-breaking; the regression guard only locks in the minimum.
 version: 2
 updates:
   - package-ecosystem: "pip"

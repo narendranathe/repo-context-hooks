@@ -71,6 +71,10 @@ The full list lives in `tests/contract/public_surface.json::env_vars`. Removing 
 
 These locations and the partial-ownership rule will not change before MAJOR.
 
+### Configuration contracts
+
+The supply-chain policy file `.github/dependabot.yml` is part of the stability contract. Removing the `pip` or `github-actions` ecosystem is a breaking change that follows the [deprecation policy](deprecation-policy.md): the regression guard at `tests/test_dependabot_policy.py`, frozen against `tests/contract/dependabot_policy.json`, blocks accidental drops. Adopters forking the project may add additional ecosystems (`npm`, `gomod`, `bundler`, etc.) — those additions are non-breaking and do not require a contract update. The full policy, cadence, and rationale are documented in [SECURITY.md § Supply-Chain Updates](https://github.com/narendranathe/repo-context-hooks/blob/main/SECURITY.md#supply-chain-updates).
+
 ### Python API
 
 ```python

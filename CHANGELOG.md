@@ -43,6 +43,7 @@ All notable changes to this project will be documented in this file.
 - Pin `codecov/codecov-action` to a 40-char SHA (was the floating `@v4` tag).
 - Add upper version bounds to dev deps (`pytest<9`, `pytest-cov<8`, `hypothesis<7`) so a compromised future major release cannot auto-install in CI.
 - Document why this workflow uses `pull_request` (not `pull_request_target`) so a future maintainer cannot accidentally migrate to the unsafe variant.
+- Document Dependabot supply-chain policy in `SECURITY.md` (`pip` + `github-actions` ecosystems, weekly cadence, SHA-pin policy for third-party Actions, upper-bound dev-dep policy, fork extension guidance). Lock the ecosystem set with a stdlib-only regression guard at `tests/test_dependabot_policy.py` frozen against `tests/contract/dependabot_policy.json`. `docs/stability.md` declares `.github/dependabot.yml` a configuration contract — removing either ecosystem is now a MINOR-cycle deprecation event. Inline policy comment block added to `.github/dependabot.yml` so adopters reading the file in isolation know what they inherit. (#85)
 
 ### Tests
 - 347 tests (from 338 in PR #90); +9 added by this hardening branch.

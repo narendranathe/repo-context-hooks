@@ -1,0 +1,4 @@
+{
+  "_comment": "Frozen ecosystem contract for .github/dependabot.yml. Adding or removing an entry is a deliberate human-reviewed change — see docs/stability.md § Configuration contracts and tests/test_dependabot_policy.py.",
+  "required_ecosystems": ["github-actions", "pip"]
+}
