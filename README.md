@@ -352,6 +352,15 @@ This project is solo-maintained by [@narendranathe](https://github.com/narendran
 
 If a thread goes quiet past these windows, please bump the issue or PR - it has not been ignored, only deprioritized against day-job load.
 
+## Stability
+
+`repo-context-hooks` follows [SemVer 2.0.0](https://semver.org/) starting at the `1.0.0` release. The public surface — console scripts, CLI subcommands, documented flags, `REPO_CONTEXT_HOOKS_*` env vars, and the file locations of `events.jsonl` and `settings.json` writes — will not break across a `1.x → 1.y` bump without first being deprecated for at least one full MINOR cycle.
+
+- [Stability contract](docs/stability.md) — full list of stable vs internal surfaces
+- [Deprecation policy](docs/deprecation-policy.md) — how we remove things from the surface above
+
+The contract is enforced in CI by `scripts/check_public_surface.py`, which compares the running package against the snapshot in `tests/contract/public_surface.json`. A removal that does not follow the deprecation policy fails the build.
+
 ## License
 
 MIT

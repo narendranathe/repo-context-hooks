@@ -20,6 +20,9 @@ nav:
   - Platforms: platforms.md
   - Platform Playbooks: platform-playbooks.md
   - Telemetry Policy: telemetry-policy.md
+  - Stability:
+      - Overview: stability.md
+      - Deprecation Policy: deprecation-policy.md
   - Monitoring: monitoring.md
   - Competitive Analysis: competitive-analysis.md
 
