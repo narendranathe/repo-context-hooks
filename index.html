@@ -436,6 +436,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#key-features" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -676,6 +687,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#key-features" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -743,6 +765,13 @@
 <p>Hook-based repo context continuity for coding agents.</p>
 <p><code>repo-context-hooks</code> is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. Install once to agent home - every workspace you open picks it up automatically.</p>
 <p>A new agent session should start with full project context without rediscovering everything from scratch.</p>
+<h2 id="scope">Scope</h2>
+<p>repo-context-hooks is scoped to <strong>single-developer</strong> workflows today.
+It installs context hooks into your local Claude Code (or other AI agent)
+environment - one developer, one machine.</p>
+<p>Team aggregation (shared event streams, multi-seat dashboards) is tracked
+in <a href="https://github.com/narendranathe/repo-context-hooks/issues/26">#26</a>
+and is out of scope for the current release.</p>
 <h2 id="key-features">Key Features</h2>
 <ul>
 <li><strong>One-time install</strong> - hooks write to agent home (<code>~/.claude/settings.json</code> or equivalent) and activate in every workspace automatically</li>
