@@ -1,13 +1,31 @@
 name: CI
 
+# SECURITY: This workflow uses `pull_request`, NOT `pull_request_target`.
+# `pull_request` runs in the FORK's context — secrets are not exposed and the
+# checked-out code is the PR's own changes. Do NOT migrate to
+# `pull_request_target` without also gating every step that runs untrusted PR
+# code behind `if: github.event.pull_request.head.repo.full_name == github.repository`.
+# `pull_request_target` runs in the BASE repo context with secrets exposed and
+# is the root cause of nearly every "GitHub Actions code execution" CVE.
 on:
   push:
     branches: [main, "feat/**", "fix/**", "release/**"]
   pull_request:
     branches: [main]
 
+# Default to read-only token. Individual jobs escalate explicitly when needed
+# (e.g. the test job needs `id-token: write` for Codecov OIDC). This means a
+# compromised step or third-party action cannot, by default, push code, edit
+# branch protections, or create releases.
+permissions:
+  contents: read
+
 jobs:
   test:
+    permissions:
+      contents: read
+      id-token: write   # Codecov tokenless OIDC upload only
+
     name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -33,7 +51,14 @@ jobs:
         # Only upload from the canonical repo + a single matrix cell to avoid 6x uploads
         # and to keep fork CIs green (forks have no Codecov enrollment).
         if: github.repository == 'narendranathe/repo-context-hooks' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v4
+        # Pinned to a 40-char SHA (v4.6.0) so a moved tag cannot inject malicious
+        # JS into our CI. Bump via Dependabot or manual SHA refresh.
+        uses: codecov/codecov-action@0f8570b1a125f4937846a11fcfa3bcd548bd8c97  # v4.6.0
+        # Locked-down corporate / mirrored CI runners can hard-fail on TLS to
+        # codecov.io. The gate is informational, not load-bearing — never block
+        # a green test run on the upload.
+        continue-on-error: true
+        timeout-minutes: 3
         with:
           files: ./coverage.xml
           slug: narendranathe/repo-context-hooks
