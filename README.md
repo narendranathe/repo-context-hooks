@@ -3,6 +3,7 @@
 Agent-level continuity skill for coding agents.
 
 ![context score](docs/badge.svg)
+[![codecov](https://codecov.io/gh/narendranathe/repo-context-hooks/branch/main/graph/badge.svg)](https://codecov.io/gh/narendranathe/repo-context-hooks)
 
 <p align="center">
   <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">

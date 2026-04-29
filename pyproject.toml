@@ -18,7 +18,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "pytest-cov>=4", "hypothesis>=6"]
 
 [project.urls]
 Homepage = "https://github.com/narendranathe/repo-context-hooks"
@@ -41,3 +41,31 @@ repo_context_hooks = ["bundle/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["repo_context_hooks"]
+branch = true
+relative_files = true
+omit = [
+    # CLI boilerplate that just delegates to repo_context_hooks.cli.main
+    "repo_context_hooks/__main__.py",
+    # Hook scripts shipped into agent_home and executed as subprocesses by Claude/Codex.
+    # Coverage of these is asserted by the install-smoke-test CI job, not by unit tests.
+    "repo_context_hooks/bundle/scripts/*",
+]
+
+[tool.coverage.report]
+# Initial floor is 80%, intentionally lower than the eventual 85% target.
+# The issue #71 risk note explicitly authorised "lower the gate to a true floor
+# (e.g., 80%) and ratchet up in a follow-up" — cli.py (372 stmts) is at 67% and
+# pulls the project total to ~83%. Driving cli.py up is its own scoped work,
+# tracked as a follow-up. The gate exists to PREVENT REGRESSION below the
+# current line; raising the number is mechanical once cli.py tests land.
+fail_under = 80
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

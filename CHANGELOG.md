@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Coverage gate: `pyproject.toml` declares `[tool.coverage.run]` and `[tool.coverage.report] fail_under = 80`; CI enforces it on every push and PR (issue #71). Initial floor is 80%; current project coverage is ~83%, with `telemetry.py` at 86%. The 85% target is deferred to a follow-up that backfills `cli.py` tests (currently 67%, by far the largest gap).
+- Property-based tests via Hypothesis: `tests/test_property_telemetry.py` covers `is_sampled` boundary behaviour (rate ≥ 1.0 → True, rate ≤ 0.0 → False, mid-range cached decision is stable) and `repo_id` shape (16 lowercase hex chars, stable across calls); `tests/test_installer.py` adds an idempotency property test for `deduplicate_hooks` over realistic hook payloads
+- `tests/conftest.py`: autouse fixture clears `REPO_CONTEXT_HOOKS_*` env vars between tests so local dev environments do not leak telemetry decisions into the suite
+- `pytest-cov`, `hypothesis` added to `[project.optional-dependencies].dev`
+- README badge: Codecov status next to the existing context-score badge
+- CI uploads `coverage.xml` to Codecov via `codecov/codecov-action@v4` (gated on the canonical repo + one matrix cell so forks are not broken by missing enrollment)
+
 ## [0.6.0] - 2026-04-28
 
 ### Added

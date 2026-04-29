@@ -714,3 +714,70 @@ def test_deduplicate_hooks_idempotent() -> None:
         f"Second dedup call must be a no-op; reported removed={second['removed']}"
     )
     _ = first  # first call result is not asserted — state may or may not have dupes
+
+
+# ---------------------------------------------------------------------------
+# Property-based idempotency over realistic hook payloads (issue #71)
+#
+# `deduplicate_hooks` is called from `install_global_hooks` on every agent
+# install. A regression that breaks idempotency would silently grow
+# settings.json on every run. The property: regardless of the input shape,
+# the on-disk JSON is byte-equal after a second call.
+# ---------------------------------------------------------------------------
+
+from hypothesis import given, settings as hyp_settings, strategies as st  # noqa: E402
+
+_HOOK_EVENT = st.sampled_from(
+    ["SessionStart", "PreCompact", "PostCompact", "SessionEnd", "PreToolUse", "PostToolUse"]
+)
+_HOOK_COMMAND = st.sampled_from(
+    [
+        'python "$CLAUDE_PROJECT_DIR"/.claude/scripts/repo_specs_memory.py session-start',
+        'python "$CLAUDE_PROJECT_DIR"/.claude/scripts/session_context.py session-start',
+        'python "$CLAUDE_PROJECT_DIR"/.claude/scripts/repo_specs_memory.py post-compact',
+        'python ./scripts/foo.py post-compact',
+        'echo "noop"',
+    ]
+)
+
+
+def _hook_entry(cmd: str) -> dict:
+    return {"type": "command", "command": cmd, "timeout": 10}
+
+
+def _matcher_group(cmds: list[str]) -> dict:
+    return {"matcher": "", "hooks": [_hook_entry(c) for c in cmds]}
+
+
+@st.composite
+def _settings_with_potential_dupes(draw) -> dict:
+    events = draw(st.lists(_HOOK_EVENT, min_size=1, max_size=4, unique=True))
+    hooks: dict = {}
+    for event in events:
+        cmds = draw(st.lists(_HOOK_COMMAND, min_size=1, max_size=4))
+        # Deliberately re-sample from the same list so duplicates are likely.
+        injected = draw(st.lists(st.sampled_from(cmds), min_size=0, max_size=2))
+        hooks[event] = [_matcher_group(cmds + injected)]
+    return {"hooks": hooks}
+
+
+@hyp_settings(derandomize=True, deadline=None, max_examples=40)
+@given(payload=_settings_with_potential_dupes())
+def test_deduplicate_hooks_idempotent_on_disk(payload: dict) -> None:
+    """Running `deduplicate_hooks` twice on the same input leaves settings.json byte-equal.
+
+    The function's RETURN value legitimately differs between calls (first
+    reports `{"removed": N>0}`, second reports `{"removed": 0}`). Idempotency
+    is a property of the on-disk state, not the return dict.
+    """
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    settings_path = agent_home / ".claude" / "settings.json"
+    settings_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    deduplicate_hooks(agent_home)
+    after_first = settings_path.read_text(encoding="utf-8")
+    deduplicate_hooks(agent_home)
+    after_second = settings_path.read_text(encoding="utf-8")
+
+    assert after_first == after_second
