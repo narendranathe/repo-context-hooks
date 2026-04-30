@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- PRD spec: `specs/prd-cross-workspace-telemetry-rollup.md` — design doc for `measure --all-repos`, a read-only fleet rollup over local telemetry. Decomposed into vertical-slice issues #106-#110. Implementation lands across those PRs. (#104)
 - Self-observability layer (#73): new `repo_context_hooks.logging_setup` module — stdlib-only, zero-dep. WARNING records go to stderr by default; ERROR records are also appended to `<cache>/errors.log` (rotated 5 × 1 MB) where `<cache>` is `$XDG_CACHE_HOME/repo-context-hooks/logs/` on POSIX or `%LOCALAPPDATA%\repo-context-hooks\logs\` on Windows. Public surface is `configure_logging()`, `get_last_error()`, `log_path()`, and the test seam `_LOG_DIR_OVERRIDE`. M6's `verify` command (#74) imports the same surface. (#73)
 - Global `--debug` flag on the CLI parser. Promotes stderr to DEBUG and writes full tracebacks to the rotating log. Top-level convention matches `--version`: intercepted in `main()` before subcommand dispatch, accessible from any subcommand via `args.debug`. (#73)
 - `doctor` output now ends with a "Last error:" section. Reads the last non-blank line of `errors.log` via 4 KB seek-backwards (O(1) on arbitrarily large logs) and decodes with `errors="replace"` so a corrupt tail cannot crash the command. JSON output gains `last_error` and `log_path` keys for programmatic consumers. (#73)
