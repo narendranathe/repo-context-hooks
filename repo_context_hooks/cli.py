@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from pathlib import Path
 
 from .doctor import diagnose_all_platforms, diagnose_platform
@@ -19,6 +20,9 @@ from .telemetry import (
     write_public_monitoring_snapshot,
 )
 from . import consent as _consent_mod
+from . import logging_setup as _logging_setup
+
+_log = logging.getLogger(__name__)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -35,6 +39,21 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         dest="version",
         help="Print version (semver, git sha, python, platform, install method) and exit.",
+    )
+    # Global self-observability flag (issue #73). Promotes stderr logging to
+    # DEBUG and writes full tracebacks to ``<cache>/errors.log``. Lives on the
+    # root parser so every subcommand inherits it via ``args.debug`` without
+    # the contract fragmenting across subparsers (matches the ``--version``
+    # convention above).
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        dest="debug",
+        help=(
+            "Verbose diagnostics: stderr at DEBUG, full tracebacks to "
+            "<cache>/errors.log. Use when 'something is silently broken' — "
+            "e.g. continuity score not moving, hooks firing without effect."
+        ),
     )
     subparsers = parser.add_subparsers(dest="command", required=False)
 
@@ -407,6 +426,9 @@ def _install(args: argparse.Namespace) -> int:
             for name, status in result.home_statuses.items():
                 print(f"- {name}: {status}")
         for warning in result.warnings:
+            # TEE: keep stdout for users who scan install output, also log
+            # so ``doctor`` and ``--debug`` runs can see what fired.
+            _log.warning("install warning (%s): %s", platform, warning)
             print(f"Warning: {warning}")
         for step in result.manual_steps:
             print(f"Manual: {step}")
@@ -454,10 +476,27 @@ def _doctor(args: argparse.Namespace) -> int:
         )
     else:
         report = diagnose_repo_contract(repo_root)
+
+    # Self-observability surface (issue #73). Read the last entry from
+    # ``errors.log`` so a user whose continuity score isn't moving can see
+    # the most recent failure right here in ``doctor`` output. This never
+    # raises — ``get_last_error`` catches OSError and returns None for
+    # missing/empty/permission-denied logs.
+    last_error = _logging_setup.get_last_error()
+
     if getattr(args, "json", False):
-        _print_json(report.to_dict())
+        payload = report.to_dict()
+        payload["last_error"] = last_error
+        payload["log_path"] = str(_logging_setup.log_path())
+        _print_json(payload)
     else:
         print(report.render())
+        print("")
+        print("Last error:")
+        if last_error:
+            print(last_error)
+        else:
+            print("No errors recorded")
     return 0 if report.ok else 1
 
 
@@ -528,12 +567,14 @@ def _measure(args: argparse.Namespace) -> int:
                 before_path = experiment_start(repo_root, exp_dir)
                 print(f"Before snapshot: {before_path}")
             except FileExistsError as exc:
+                _log.error("experiment start failed: %s", exc)
                 print(f"Error: {exc}")
                 return 1
         elif sub == "finish":
             try:
                 experiment_finish(repo_root, exp_dir)
             except FileNotFoundError as exc:
+                _log.error("experiment finish failed: %s", exc)
                 print(f"Error: {exc}")
                 return 1
         elif sub == "status":
@@ -633,11 +674,13 @@ def _checkpoint(args: argparse.Namespace) -> int:
         pass
 
     if not repo_root_raw:
+        _log.error("checkpoint: no git repo found at %s", args.path)
         print("error: no git repo found at the specified path")
         return 1
 
     specs_readme = Path(repo_root_raw) / "specs" / "README.md"
     if not specs_readme.exists():
+        _log.error("checkpoint: no workspace contract at %s", specs_readme)
         print("error: no workspace contract found — run `repo-context-hooks init` first")
         return 1
 
@@ -649,6 +692,13 @@ def _checkpoint(args: argparse.Namespace) -> int:
         text=True,
     )
     if result.returncode != 0:
+        # TEE the bundle subprocess stderr so doctor/--debug can surface why
+        # the checkpoint subprocess died after the user has moved on.
+        _log.error(
+            "checkpoint subprocess exited %d: %s",
+            result.returncode,
+            result.stderr.strip() or "<empty stderr>",
+        )
         print(result.stderr.strip())
         return result.returncode
 
@@ -730,6 +780,11 @@ def main() -> int:
 
         print(format_version())
         return 0
+    # Configure self-observability AFTER parse_args so ``--help`` (which
+    # raises SystemExit) never reaches this line — empty no-op runs do not
+    # create the log dir. The file handler is itself attached lazily on the
+    # first ERROR record (see ``logging_setup._LazyFileAttachFilter``).
+    _logging_setup.configure_logging(debug=getattr(args, "debug", False))
     if args.command is None:
         parser.error("a command is required (try `repo-context-hooks --help`)")
         return 2

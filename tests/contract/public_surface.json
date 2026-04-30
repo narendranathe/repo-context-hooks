@@ -65,6 +65,7 @@
     "windsurf"
   ],
   "env_vars": [
+    "REPO_CONTEXT_HOOKS_LOG_DIR",
     "REPO_CONTEXT_HOOKS_SAMPLE_RATE",
     "REPO_CONTEXT_HOOKS_SESSION_ID",
     "REPO_CONTEXT_HOOKS_TELEMETRY",
@@ -72,9 +73,11 @@
   ],
   "file_locations": [
     "%LOCALAPPDATA%\\repo-context-hooks\\events.jsonl",
+    "%LOCALAPPDATA%\\repo-context-hooks\\logs\\errors.log",
     "<repo>/.claude/settings.json",
     "<repo>/specs/README.md#session-log",
     "~/.cache/repo-context-hooks/events.jsonl",
+    "~/.cache/repo-context-hooks/logs/errors.log",
     "~/.claude/settings.json"
   ]
 }
