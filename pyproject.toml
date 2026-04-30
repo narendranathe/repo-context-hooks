@@ -83,11 +83,12 @@ source = [
 ]
 
 [tool.coverage.report]
-# Initial floor is 80%, intentionally lower than the eventual 85% target.
-# Tracked: cli.py backfill in issue #92 — once that lands, bump this to 85.
-# The gate exists to PREVENT REGRESSION below the current line; raising the
-# number is mechanical once cli.py tests land. (audit F4.3, F5.1)
-fail_under = 80
+# Coverage floor at 85% — ratcheted from 80% in #92 once cli.py was
+# backfilled (project total 87.75%, cli.py 87%). The gate exists to
+# PREVENT REGRESSION below the current line. Adopters who fork this repo:
+# `[tool.coverage.run] source = ["repo_context_hooks"]` scopes the gate to
+# OUR code only; your own modules are unaffected. (audit F4.3, F5.1)
+fail_under = 85
 show_missing = true
 skip_covered = false
 exclude_lines = [
