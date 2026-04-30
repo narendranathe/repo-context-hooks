@@ -71,6 +71,18 @@
     "REPO_CONTEXT_HOOKS_TELEMETRY",
     "REPO_CONTEXT_HOOKS_TELEMETRY_DIR"
   ],
+  "module_surface": {
+    "_doc": "Module-level helpers imported across sibling PRs (e.g. M6 verify imports logging_setup). Pinned here so a rename is a contract event, not a silent break. Underscore-prefixed names remain internal.",
+    "repo_context_hooks.logging_setup": [
+      "configure_logging",
+      "get_last_error",
+      "log_path"
+    ]
+  },
+  "json_output_keys": {
+    "_doc": "Stable keys in `<cmd> --json` output that downstream tools parse. Adding keys is non-breaking; renaming/removing requires deprecation.",
+    "doctor": ["last_error", "log_path", "ok", "platform_id"]
+  },
   "file_locations": [
     "%LOCALAPPDATA%\\repo-context-hooks\\events.jsonl",
     "%LOCALAPPDATA%\\repo-context-hooks\\logs\\errors.log",

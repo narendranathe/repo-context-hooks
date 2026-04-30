@@ -36,6 +36,7 @@ import logging
 import logging.handlers
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Optional
 
@@ -88,12 +89,37 @@ def _default_log_dir() -> Path:
         local_app_data = os.environ.get("LOCALAPPDATA")
         if local_app_data:
             return Path(local_app_data) / "repo-context-hooks" / "logs"
-        return Path.home() / "AppData" / "Local" / "repo-context-hooks" / "logs"
+        return _safe_home() / "AppData" / "Local" / "repo-context-hooks" / "logs"
 
     cache_home = os.environ.get("XDG_CACHE_HOME")
     if cache_home:
         return Path(cache_home) / "repo-context-hooks" / "logs"
-    return Path.home() / ".cache" / "repo-context-hooks" / "logs"
+    return _safe_home() / ".cache" / "repo-context-hooks" / "logs"
+
+
+def _safe_home() -> Path:
+    """Return ``Path.home()``, falling back to ``tempfile.gettempdir()``.
+
+    ``Path.home()`` raises ``RuntimeError`` (NOT ``OSError``) when neither
+    ``HOME``/``USERPROFILE`` is set nor a platform-specific lookup succeeds.
+    This fires on Windows SYSTEM accounts with unset ``LOCALAPPDATA``, AWS
+    Lambda layers, hermetic Bazel sandboxes, and distroless containers.
+
+    The error is not caught by ``_SafeRotatingFileHandler``'s OSError shield
+    because it fires inside ``_default_log_dir()`` long before any handler
+    receives a record. Without this fallback, ``configure_logging`` crashes
+    the entire CLI on those platforms — including ``doctor``, the very
+    command an adopter would run to diagnose a broken environment.
+
+    ``tempfile.gettempdir()`` is the stdlib's totalised fallback: it never
+    raises and is defined on every platform Python supports. The lazy
+    ``mkdir`` + OSError-swallowing ``emit`` then handle the case where even
+    tempdir is read-only.
+    """
+    try:
+        return Path.home()
+    except RuntimeError:
+        return Path(tempfile.gettempdir())
 
 
 def log_path() -> Path:

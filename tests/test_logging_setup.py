@@ -128,6 +128,35 @@ def test_log_path_windows_fallback_when_no_localappdata(
     assert logging_setup.log_path() == expected
 
 
+def test_log_path_falls_back_to_tempdir_when_home_unresolvable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """``Path.home()`` raises ``RuntimeError`` (NOT ``OSError``) on Windows
+    SYSTEM, AWS Lambda, distroless containers, hermetic Bazel sandboxes.
+    The fallback inside ``_safe_home`` MUST catch RuntimeError and return
+    ``tempfile.gettempdir()`` so the CLI can still start. Without this,
+    every subcommand that calls ``configure_logging`` crashes before
+    dispatch — including ``doctor``, the command the adopter would run
+    to diagnose the broken environment.
+    """
+    import tempfile as _tmp
+
+    monkeypatch.setattr(logging_setup, "_LOG_DIR_OVERRIDE", None)
+    monkeypatch.setattr(logging_setup, "_is_windows", lambda: False)
+    monkeypatch.delenv("REPO_CONTEXT_HOOKS_LOG_DIR", raising=False)
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
+
+    def _raise_runtime():
+        raise RuntimeError("Could not determine home directory.")
+
+    monkeypatch.setattr(Path, "home", staticmethod(_raise_runtime))
+
+    # Must NOT raise. Must produce a path under the system tempdir.
+    resolved = logging_setup.log_path()
+    assert resolved.name == "errors.log"
+    assert str(resolved).startswith(_tmp.gettempdir()), resolved
+
+
 @given(
     xdg=st.one_of(
         st.none(), st.text(min_size=1, max_size=10).filter(lambda s: "\x00" not in s)
