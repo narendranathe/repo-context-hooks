@@ -39,6 +39,16 @@ def test_build_parser_uses_public_name() -> None:
     assert "repo context continuity" in parser.description.lower()
 
 
+def test_parser_accepts_global_debug_flag() -> None:
+    """``--debug`` is a top-level flag (issue #73) and propagates via
+    ``args.debug`` to every subcommand without needing per-subparser
+    duplication. Mirrors the ``--version`` convention."""
+    parser = build_parser()
+    assert parser.parse_args(["--debug", "platforms"]).debug is True
+    assert parser.parse_args(["platforms"]).debug is False
+    assert parser.parse_args(["--debug", "doctor", "--platform", "claude"]).debug is True
+
+
 def test_parser_supports_platforms_and_doctor_commands() -> None:
     parser = build_parser()
 

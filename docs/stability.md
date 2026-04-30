@@ -58,6 +58,7 @@ The `REPO_CONTEXT_HOOKS_*` namespace, as documented in [TELEMETRY.md](https://gi
 - `REPO_CONTEXT_HOOKS_TELEMETRY_DIR` — directory override for the telemetry log
 - `REPO_CONTEXT_HOOKS_SAMPLE_RATE` — float in `[0.0, 1.0]`, defaults to `1.0`
 - `REPO_CONTEXT_HOOKS_SESSION_ID` — UUID override for deterministic test runs
+- `REPO_CONTEXT_HOOKS_LOG_DIR` — directory override for the self-observability error log (`errors.log`). Defaults to `$XDG_CACHE_HOME/repo-context-hooks/logs/` on POSIX or `%LOCALAPPDATA%\repo-context-hooks\logs\` on Windows. The directory is created lazily on first error — successful runs leave no filesystem trace.
 
 The full list lives in `tests/contract/public_surface.json::env_vars`. Removing or renaming any of these requires a deprecation cycle. Both names continue to be read for one full MINOR.
 
@@ -65,6 +66,8 @@ The full list lives in `tests/contract/public_surface.json::env_vars`. Removing 
 
 - `~/.cache/repo-context-hooks/events.jsonl` (Linux, macOS) — telemetry evidence log
 - `%LOCALAPPDATA%\repo-context-hooks\events.jsonl` (Windows) — telemetry evidence log
+- `~/.cache/repo-context-hooks/logs/errors.log` (Linux, macOS) — self-observability error log (rotated, 5 × 1 MB)
+- `%LOCALAPPDATA%\repo-context-hooks\logs\errors.log` (Windows) — self-observability error log (rotated, 5 × 1 MB)
 - `~/.claude/settings.json` — agent-level hook installation target (we own only the hook entries we wrote; the rest is the user's)
 - `<repo>/.claude/settings.json` — workspace-level hook installation target (same ownership rule)
 - `<repo>/specs/README.md` `## Session Log` heading — checkpoint append target

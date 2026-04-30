@@ -50,6 +50,53 @@ def test_every_name_in_dunder_all_is_importable():
         )
 
 
+def test_module_surface_pins_logging_setup_helpers():
+    """Cross-PR composability gate (issue #73 -> #74).
+
+    M6's `verify` command imports `configure_logging`, `get_last_error`, and
+    `log_path` from `repo_context_hooks.logging_setup`. Pin them so a rename
+    is a contract event, not a silent break.
+    """
+    import importlib
+
+    snapshot = gate.load_snapshot()
+    pinned = snapshot.get("module_surface") or {}
+    for module_name, names in pinned.items():
+        if module_name.startswith("_"):
+            continue
+        mod = importlib.import_module(module_name)
+        for name in names:
+            assert hasattr(mod, name) and callable(getattr(mod, name)), (
+                f"`{module_name}.{name}` is pinned in public_surface.json::module_surface "
+                f"but is missing or not callable. Sibling PRs (e.g. M6 verify) import this."
+            )
+
+
+def test_doctor_json_emits_pinned_keys(tmp_path):
+    """`doctor --json` keys are a sibling-PR contract — M6 verify reads them."""
+    import contextlib
+    import io
+    import json as _json
+    from argparse import Namespace
+
+    from repo_context_hooks import cli as _cli
+
+    snapshot = gate.load_snapshot()
+    pinned_keys = set((snapshot.get("json_output_keys") or {}).get("doctor") or [])
+    args = Namespace(
+        platform=None,
+        all_platforms=False,
+        repo_root=str(tmp_path),
+        json=True,
+    )
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        _cli._doctor(args)
+    payload = _json.loads(buf.getvalue())
+    missing = pinned_keys - set(payload.keys())
+    assert not missing, f"doctor --json missing pinned keys: {sorted(missing)}"
+
+
 def test_no_undocumented_env_var():
     """Every `REPO_CONTEXT_HOOKS_*` env var read by the package must be in
     the snapshot. Catches the 'added a new env var, forgot to document it'
@@ -75,36 +122,90 @@ def test_no_undocumented_env_var():
     "snapshot,current,expected_drift",
     [
         pytest.param(
-            {"all": ["a"], "console_scripts": [], "platform_choices": [], "env_vars": [], "cli_commands": []},
-            {"all": ["a"], "console_scripts": [], "platform_choices": [], "env_vars": [], "cli_commands": []},
+            {
+                "all": ["a"],
+                "console_scripts": [],
+                "platform_choices": [],
+                "env_vars": [],
+                "cli_commands": [],
+            },
+            {
+                "all": ["a"],
+                "console_scripts": [],
+                "platform_choices": [],
+                "env_vars": [],
+                "cli_commands": [],
+            },
             [],
             id="empty-diff",
         ),
         pytest.param(
-            {"all": ["a"], "console_scripts": [], "platform_choices": [], "env_vars": [], "cli_commands": []},
-            {"all": ["a", "b"], "console_scripts": [], "platform_choices": [], "env_vars": [], "cli_commands": []},
+            {
+                "all": ["a"],
+                "console_scripts": [],
+                "platform_choices": [],
+                "env_vars": [],
+                "cli_commands": [],
+            },
+            {
+                "all": ["a", "b"],
+                "console_scripts": [],
+                "platform_choices": [],
+                "env_vars": [],
+                "cli_commands": [],
+            },
             ["[all] added 'b' to source but missing from snapshot."],
             id="pure-addition-fails-drift",
         ),
         pytest.param(
-            {"all": ["a", "b"], "console_scripts": [], "platform_choices": [], "env_vars": [], "cli_commands": []},
-            {"all": ["a"], "console_scripts": [], "platform_choices": [], "env_vars": [], "cli_commands": []},
+            {
+                "all": ["a", "b"],
+                "console_scripts": [],
+                "platform_choices": [],
+                "env_vars": [],
+                "cli_commands": [],
+            },
+            {
+                "all": ["a"],
+                "console_scripts": [],
+                "platform_choices": [],
+                "env_vars": [],
+                "cli_commands": [],
+            },
             ["[all] removed 'b' from source but still in snapshot."],
             id="silent-removal-fails-drift",
         ),
         pytest.param(
-            {"all": [], "console_scripts": [], "platform_choices": ["x", "y"], "env_vars": [], "cli_commands": []},
-            {"all": [], "console_scripts": [], "platform_choices": ["x"], "env_vars": [], "cli_commands": []},
+            {
+                "all": [],
+                "console_scripts": [],
+                "platform_choices": ["x", "y"],
+                "env_vars": [],
+                "cli_commands": [],
+            },
+            {
+                "all": [],
+                "console_scripts": [],
+                "platform_choices": ["x"],
+                "env_vars": [],
+                "cli_commands": [],
+            },
             ["[platform_choices] removed 'y' from source but still in snapshot."],
             id="platform-choice-removal-detected",
         ),
         pytest.param(
             {
-                "all": [], "console_scripts": [], "platform_choices": [], "env_vars": [],
+                "all": [],
+                "console_scripts": [],
+                "platform_choices": [],
+                "env_vars": [],
                 "cli_commands": [{"name": "install", "flags": ["--platform"]}],
             },
             {
-                "all": [], "console_scripts": [], "platform_choices": [], "env_vars": [],
+                "all": [],
+                "console_scripts": [],
+                "platform_choices": [],
+                "env_vars": [],
                 "cli_commands": [{"name": "install", "flags": []}],
             },
             ["[cli_commands] 'install': removed flag '--platform' still in snapshot."],
@@ -160,14 +261,22 @@ def test_diff_surface_table(snapshot, current, expected_drift):
             id="current-removed-but-no-prior-deprecation-fails",
         ),
         pytest.param(
-            {"cli_commands": [{"name": "install", "flags": ["--platform", "--legacy"]}]},
+            {
+                "cli_commands": [
+                    {"name": "install", "flags": ["--platform", "--legacy"]}
+                ]
+            },
             {"cli_commands": [{"name": "install", "flags": ["--platform"]}]},
             "## [Unreleased]\n",
             1,
             id="cli-flag-removal-without-excuse-fails",
         ),
         pytest.param(
-            {"cli_commands": [{"name": "install", "flags": ["--platform", "--legacy"]}]},
+            {
+                "cli_commands": [
+                    {"name": "install", "flags": ["--platform", "--legacy"]}
+                ]
+            },
             {"cli_commands": [{"name": "install", "flags": ["--platform"]}]},
             "## [Unreleased]\n### Removed\n- `--legacy` flag removed; deprecated in 1.1.\n## [1.1.0] - 2026-05-01\n### Deprecated\n- `--legacy` flag deprecated.\n",
             0,
@@ -178,12 +287,16 @@ def test_diff_surface_table(snapshot, current, expected_drift):
 def test_removal_excuse_logic(baseline, current, changelog, expected_violations):
     baseline_full = {
         "all": baseline.get("all", []),
-        "console_scripts": [], "platform_choices": [], "env_vars": [],
+        "console_scripts": [],
+        "platform_choices": [],
+        "env_vars": [],
         "cli_commands": baseline.get("cli_commands", []),
     }
     current_full = {
         "all": current.get("all", []),
-        "console_scripts": [], "platform_choices": [], "env_vars": [],
+        "console_scripts": [],
+        "platform_choices": [],
+        "env_vars": [],
         "cli_commands": current.get("cli_commands", []),
     }
     removals = gate.removed_symbols_vs_baseline(baseline_full, current_full)
@@ -202,8 +315,20 @@ def test_removed_then_readded_in_same_pr_is_not_flagged():
     commit N and re-added in commit N+1 of the same branch, the net diff is
     empty and the gate stays green.
     """
-    baseline = {"all": ["a", "b"], "console_scripts": [], "platform_choices": [], "env_vars": [], "cli_commands": []}
-    current = {"all": ["a", "b"], "console_scripts": [], "platform_choices": [], "env_vars": [], "cli_commands": []}
+    baseline = {
+        "all": ["a", "b"],
+        "console_scripts": [],
+        "platform_choices": [],
+        "env_vars": [],
+        "cli_commands": [],
+    }
+    current = {
+        "all": ["a", "b"],
+        "console_scripts": [],
+        "platform_choices": [],
+        "env_vars": [],
+        "cli_commands": [],
+    }
     removals = gate.removed_symbols_vs_baseline(baseline, current)
     assert removals == []
 
@@ -216,16 +341,27 @@ def test_removed_then_readded_in_same_pr_is_not_flagged():
 @pytest.mark.parametrize(
     "raw",
     [
-        pytest.param("﻿## [1.1.0]\n### Deprecated\n- `foo` deprecated.\n", id="utf-8-sig-bom"),
-        pytest.param("## [1.1.0]\r\n### Deprecated\r\n- `foo` deprecated.\r\n", id="crlf-line-endings"),
-        pytest.param("## [1.1.0]\n### deprecated\n- `foo` deprecated.\n", id="lowercase-heading"),
-        pytest.param("## [1.1.0]\n### DEPRECATED\n- `foo` deprecated.\n", id="uppercase-heading"),
+        pytest.param(
+            "﻿## [1.1.0]\n### Deprecated\n- `foo` deprecated.\n", id="utf-8-sig-bom"
+        ),
+        pytest.param(
+            "## [1.1.0]\r\n### Deprecated\r\n- `foo` deprecated.\r\n",
+            id="crlf-line-endings",
+        ),
+        pytest.param(
+            "## [1.1.0]\n### deprecated\n- `foo` deprecated.\n", id="lowercase-heading"
+        ),
+        pytest.param(
+            "## [1.1.0]\n### DEPRECATED\n- `foo` deprecated.\n", id="uppercase-heading"
+        ),
     ],
 )
 def test_changelog_parser_handles_quirky_input(raw):
     deprecations = gate.parse_changelog_deprecations(raw)
     flat = [b for bs in deprecations.values() for b in bs]
-    assert any("foo" in b for b in flat), f"Expected `foo` in parsed bullets; got {deprecations}"
+    assert any(
+        "foo" in b for b in flat
+    ), f"Expected `foo` in parsed bullets; got {deprecations}"
 
 
 def test_unreleased_removed_section_isolated_from_release_versions():
@@ -280,8 +416,10 @@ def test_pyproject_does_not_globally_silence_deprecation_warnings():
     """
     pyproject_text = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8-sig")
     bad_lines = [
-        ln for ln in pyproject_text.splitlines()
-        if "ignore::DeprecationWarning" in ln.replace(" ", "") and not ln.strip().startswith("#")
+        ln
+        for ln in pyproject_text.splitlines()
+        if "ignore::DeprecationWarning" in ln.replace(" ", "")
+        and not ln.strip().startswith("#")
     ]
     assert not bad_lines, (
         "Found unconditional `ignore::DeprecationWarning` in pyproject.toml. "
