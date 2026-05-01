@@ -1,0 +1,53 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/repo_specs_memory.py session-start",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/session_context.py session-start",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "echo 'user-authored hook from 0.5 era — must survive upgrade'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/repo_specs_memory.py pre-compact",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'another user hook — UserPromptSubmit was a user-only event in 0.5'",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": ["Read", "Edit"]
+  }
+}

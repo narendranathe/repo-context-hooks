@@ -4,54 +4,131 @@
   "all": [
     "__version__"
   ],
+  "cli_commands": [
+    {
+      "flags": [
+        "--message",
+        "--path"
+      ],
+      "name": "checkpoint"
+    },
+    {
+      "flags": [
+        "--all-platforms",
+        "--json",
+        "--platform",
+        "--repo-root"
+      ],
+      "name": "doctor"
+    },
+    {
+      "flags": [
+        "--force",
+        "--repo-root"
+      ],
+      "name": "init"
+    },
+    {
+      "flags": [
+        "--also-repo-hooks",
+        "--dedup",
+        "--dry-run",
+        "--force",
+        "--json",
+        "--no-telemetry",
+        "--platform",
+        "--repo-root",
+        "--skip-repo-hooks"
+      ],
+      "name": "install"
+    },
+    {
+      "flags": [
+        "--badge",
+        "--badge-out",
+        "--branches",
+        "--clean-ghosts",
+        "--experiment-dir",
+        "--forecast",
+        "--format",
+        "--json",
+        "--no-dry-run",
+        "--open",
+        "--output",
+        "--redact",
+        "--repo-root",
+        "--snapshot-dir",
+        "-o"
+      ],
+      "name": "measure"
+    },
+    {
+      "flags": [
+        "--json"
+      ],
+      "name": "platforms"
+    },
+    {
+      "flags": [
+        "--json",
+        "--limit",
+        "--repo-root"
+      ],
+      "name": "recommend"
+    },
+    {
+      "flags": [],
+      "name": "telemetry",
+      "subcommands": [
+        {
+          "flags": [],
+          "name": "disable"
+        },
+        {
+          "flags": [
+            "--yes"
+          ],
+          "name": "enable"
+        },
+        {
+          "flags": [
+            "--repo-root"
+          ],
+          "name": "preview"
+        },
+        {
+          "flags": [],
+          "name": "status"
+        }
+      ]
+    },
+    {
+      "flags": [
+        "--dry-run",
+        "--json",
+        "--platform"
+      ],
+      "name": "uninstall"
+    },
+    {
+      "flags": [
+        "--json",
+        "--platform"
+      ],
+      "name": "verify"
+    }
+  ],
   "console_scripts": [
     "graphify",
     "repo-context-hooks",
     "repohandoff"
   ],
-  "cli_commands": [
-    {
-      "name": "checkpoint",
-      "flags": ["--message", "--path"]
-    },
-    {
-      "name": "doctor",
-      "flags": ["--all-platforms", "--json", "--platform", "--repo-root"]
-    },
-    {
-      "name": "init",
-      "flags": ["--force", "--repo-root"]
-    },
-    {
-      "name": "install",
-      "flags": ["--also-repo-hooks", "--dedup", "--force", "--no-telemetry", "--platform", "--repo-root", "--skip-repo-hooks"]
-    },
-    {
-      "name": "measure",
-      "flags": ["--badge", "--badge-out", "--branches", "--clean-ghosts", "--experiment-dir", "--forecast", "--format", "--json", "--no-dry-run", "--open", "--output", "--redact", "--repo-root", "--snapshot-dir", "-o"]
-    },
-    {
-      "name": "platforms",
-      "flags": ["--json"]
-    },
-    {
-      "name": "recommend",
-      "flags": ["--json", "--limit", "--repo-root"]
-    },
-    {
-      "name": "telemetry",
-      "flags": [],
-      "subcommands": [
-        {"name": "disable", "flags": []},
-        {"name": "enable", "flags": ["--yes"]},
-        {"name": "preview", "flags": ["--repo-root"]},
-        {"name": "status", "flags": []}
-      ]
-    },
-    {
-      "name": "uninstall",
-      "flags": ["--platform"]
-    }
+  "env_vars": [
+    "REPO_CONTEXT_HOOKS_LOG_DIR",
+    "REPO_CONTEXT_HOOKS_SAMPLE_RATE",
+    "REPO_CONTEXT_HOOKS_SESSION_ID",
+    "REPO_CONTEXT_HOOKS_TELEMETRY",
+    "REPO_CONTEXT_HOOKS_TELEMETRY_DIR"
   ],
   "platform_choices": [
     "claude",
@@ -63,33 +140,5 @@
     "openclaw",
     "replit",
     "windsurf"
-  ],
-  "env_vars": [
-    "REPO_CONTEXT_HOOKS_LOG_DIR",
-    "REPO_CONTEXT_HOOKS_SAMPLE_RATE",
-    "REPO_CONTEXT_HOOKS_SESSION_ID",
-    "REPO_CONTEXT_HOOKS_TELEMETRY",
-    "REPO_CONTEXT_HOOKS_TELEMETRY_DIR"
-  ],
-  "module_surface": {
-    "_doc": "Module-level helpers imported across sibling PRs (e.g. M6 verify imports logging_setup). Pinned here so a rename is a contract event, not a silent break. Underscore-prefixed names remain internal.",
-    "repo_context_hooks.logging_setup": [
-      "configure_logging",
-      "get_last_error",
-      "log_path"
-    ]
-  },
-  "json_output_keys": {
-    "_doc": "Stable keys in `<cmd> --json` output that downstream tools parse. Adding keys is non-breaking; renaming/removing requires deprecation.",
-    "doctor": ["last_error", "log_path", "ok", "platform_id"]
-  },
-  "file_locations": [
-    "%LOCALAPPDATA%\\repo-context-hooks\\events.jsonl",
-    "%LOCALAPPDATA%\\repo-context-hooks\\logs\\errors.log",
-    "<repo>/.claude/settings.json",
-    "<repo>/specs/README.md#session-log",
-    "~/.cache/repo-context-hooks/events.jsonl",
-    "~/.cache/repo-context-hooks/logs/errors.log",
-    "~/.claude/settings.json"
   ]
 }

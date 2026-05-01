@@ -828,3 +828,285 @@ def test_deduplicate_hooks_malformed_json_returns_zero() -> None:
         "{not valid json <<<<<", encoding="utf-8"
     )
     assert deduplicate_hooks(agent_home) == {"removed": 0}
+
+
+# ===========================================================================
+# Settings.json migration tests (issue #74).
+#
+# Real fixture files under ``tests/fixtures/migrations/`` represent
+# settings.json shapes from earlier rch versions. The contract tested here
+# is "upgrade preserves user customisations": after running the current
+# install on top of an old settings.json, every user-authored hook must
+# still appear in the result. Lives in test_installer.py (not a separate
+# test_migration.py) per grep-locality reasoning — migration is a property
+# OF install, not a separate concern.
+# ===========================================================================
+
+
+import json as _json_for_migration  # local alias to avoid colliding with module-top imports
+from typing import Iterable as _Iterable
+
+import pytest as _pytest_for_migration
+
+try:
+    from hypothesis import given as _hyp_given
+    from hypothesis import strategies as _st
+    from hypothesis import settings as _hyp_settings
+    _HYPOTHESIS_AVAILABLE = True
+except ImportError:  # pragma: no cover - hypothesis is in dev deps
+    _HYPOTHESIS_AVAILABLE = False
+
+
+_FIXTURES_DIR = ROOT / "tests" / "fixtures" / "migrations"
+
+
+def _all_user_hook_commands(settings: dict) -> set[str]:
+    """Return the set of every hook command string present in ``settings``.
+
+    User commands are anything NOT containing the rch skill scripts marker —
+    the install/uninstall logic uses the same marker rule, so the set we
+    extract here is exactly what 'must survive upgrade' means.
+    """
+    commands: set[str] = set()
+    for groups in (settings.get("hooks", {}) or {}).values():
+        if not isinstance(groups, list):
+            continue
+        for group in groups:
+            if not isinstance(group, dict):
+                continue
+            for h in group.get("hooks", []) or []:
+                if isinstance(h, dict):
+                    cmd = h.get("command", "")
+                    if cmd:
+                        commands.add(cmd)
+    return commands
+
+
+def _user_only_hooks(settings: dict, marker: str = "/skills/context-handoff-hooks/scripts/") -> set[str]:
+    return {c for c in _all_user_hook_commands(settings) if marker not in c}
+
+
+@_pytest_for_migration.mark.parametrize(
+    "fixture_name",
+    ["v0_5_settings.json", "v0_6_settings.json"],
+)
+def test_migration_install_preserves_user_hooks(fixture_name: str) -> None:
+    """Re-installing on top of an older settings.json keeps user hooks intact."""
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    settings_path = agent_home / ".claude" / "settings.json"
+    fixture_data = _json_for_migration.loads(
+        (_FIXTURES_DIR / fixture_name).read_text(encoding="utf-8")
+    )
+    settings_path.write_text(
+        _json_for_migration.dumps(fixture_data, indent=2),
+        encoding="utf-8",
+    )
+    user_hooks_before = _user_only_hooks(fixture_data)
+
+    install_global_hooks(agent_home)
+
+    after = _json_for_migration.loads(settings_path.read_text(encoding="utf-8"))
+    user_hooks_after = _user_only_hooks(after)
+    assert user_hooks_before.issubset(user_hooks_after), (
+        f"User hooks dropped during {fixture_name} migration: "
+        f"{user_hooks_before - user_hooks_after}"
+    )
+    # And install is idempotent — second install adds nothing.
+    install_global_hooks(agent_home)
+    after_2 = _json_for_migration.loads(settings_path.read_text(encoding="utf-8"))
+    assert after == after_2, "Second install changed settings.json (not idempotent)"
+
+
+def test_migration_install_preserves_top_level_keys() -> None:
+    """Non-hooks keys (e.g. ``permissions``) survive the install merge."""
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    settings_path = agent_home / ".claude" / "settings.json"
+    fixture_data = _json_for_migration.loads(
+        (_FIXTURES_DIR / "v0_5_settings.json").read_text(encoding="utf-8")
+    )
+    settings_path.write_text(
+        _json_for_migration.dumps(fixture_data, indent=2),
+        encoding="utf-8",
+    )
+
+    install_global_hooks(agent_home)
+
+    after = _json_for_migration.loads(settings_path.read_text(encoding="utf-8"))
+    assert "permissions" in after
+    assert after["permissions"] == fixture_data["permissions"]
+
+
+def test_migration_empty_settings_file_handled() -> None:
+    """Empty bytes ≠ malformed JSON — install must initialise cleanly."""
+    agent_home = _tmp_dir() / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    (agent_home / ".claude" / "settings.json").write_text("", encoding="utf-8")
+    result = install_global_hooks(agent_home)
+    assert result == {"settings.json": "installed"}
+    after = _json_for_migration.loads(
+        (agent_home / ".claude" / "settings.json").read_text(encoding="utf-8")
+    )
+    assert "hooks" in after
+
+
+# ---------------------------------------------------------------------------
+# Hypothesis property: arbitrary 0.5-shaped settings always preserve user hooks.
+# Uses the "rch" profile from tests/conftest.py (max_examples=50, derandomized).
+# ---------------------------------------------------------------------------
+
+if _HYPOTHESIS_AVAILABLE:
+    _hook_command = _st.text(
+        alphabet="abcdefghijklmnopqrstuvwxyz_-/. ",
+        min_size=4,
+        max_size=60,
+    ).filter(lambda s: "/skills/context-handoff-hooks/scripts/" not in s)
+    _hook_event = _st.dictionaries(
+        keys=_st.sampled_from(["matcher"]),
+        values=_st.text(min_size=0, max_size=12),
+        min_size=0,
+        max_size=1,
+    )
+
+    @_st.composite
+    def _arbitrary_v05_settings(draw):
+        # A 0.5-shaped settings.json with a list of user-authored hooks
+        # under various event keys. We deliberately use only canonical
+        # event names because install merges by key — surfacing
+        # arbitrary keys here would be testing a different invariant.
+        event_names = draw(_st.lists(
+            _st.sampled_from([
+                "SessionStart", "PreCompact", "PostCompact", "SessionEnd",
+                "UserPromptSubmit",
+            ]),
+            min_size=1,
+            max_size=5,
+            unique=True,
+        ))
+        cmds_per_event = draw(_st.lists(
+            _st.lists(_hook_command, min_size=1, max_size=4),
+            min_size=len(event_names),
+            max_size=len(event_names),
+        ))
+        hooks: dict = {}
+        for name, cmds in zip(event_names, cmds_per_event):
+            hooks[name] = [
+                {
+                    "matcher": "",
+                    "hooks": [{"type": "command", "command": cmd, "timeout": 10} for cmd in cmds],
+                }
+            ]
+        return {"hooks": hooks, "permissions": {"allow": ["Read"]}}
+
+    @_hyp_given(settings=_arbitrary_v05_settings())
+    @_hyp_settings(max_examples=50)
+    def test_property_install_preserves_arbitrary_user_hooks(settings: dict) -> None:
+        """Property: every user hook in arbitrary 0.5-shape survives install."""
+        agent_home = _tmp_dir() / "home"
+        (agent_home / ".claude").mkdir(parents=True)
+        settings_path = agent_home / ".claude" / "settings.json"
+        settings_path.write_text(
+            _json_for_migration.dumps(settings, indent=2),
+            encoding="utf-8",
+        )
+        before = _user_only_hooks(settings)
+
+        install_global_hooks(agent_home)
+
+        after = _json_for_migration.loads(settings_path.read_text(encoding="utf-8"))
+        assert before.issubset(_user_only_hooks(after))
+
+
+# ===========================================================================
+# Planner / dry-run sanity tests (issue #74 Critic B non-budge).
+#
+# The dry-run guarantee ("never writes to disk") is verified MECHANICALLY
+# by monkeypatching the underlying write to raise. If any planning function
+# silently writes, the test crashes loud.
+# ===========================================================================
+
+
+from repo_context_hooks.platforms import runtime as _runtime
+from repo_context_hooks.platforms.runtime import (
+    plan_deduplicate_hooks,
+    plan_global_hooks,
+    plan_uninstall_global_hooks,
+    SettingsPlan,
+)
+
+
+def test_plan_global_hooks_returns_diff_without_writing(
+    tmp_path: Path, monkeypatch: _pytest_for_migration.MonkeyPatch
+) -> None:
+    """plan_global_hooks must NEVER call _save_json — verified by monkeypatch."""
+    agent_home = tmp_path / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    monkeypatch.setattr(
+        _runtime,
+        "_save_json",
+        lambda *a, **k: pytest.fail("plan_global_hooks called _save_json"),
+    )
+
+    plan = plan_global_hooks(agent_home)
+    assert isinstance(plan, SettingsPlan)
+    assert plan.action == "install"
+    assert plan.diff
+    # And no settings.json was written.
+    assert not (agent_home / ".claude" / "settings.json").exists()
+
+
+def test_plan_uninstall_global_hooks_returns_diff_without_writing(
+    tmp_path: Path, monkeypatch: _pytest_for_migration.MonkeyPatch
+) -> None:
+    agent_home = tmp_path / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    # Seed a settings.json with rch hooks so uninstall has something to remove.
+    install_global_hooks(agent_home)
+    snapshot = (agent_home / ".claude" / "settings.json").read_text(encoding="utf-8")
+    monkeypatch.setattr(
+        _runtime,
+        "_save_json",
+        lambda *a, **k: pytest.fail("plan_uninstall called _save_json"),
+    )
+
+    plan = plan_uninstall_global_hooks(agent_home)
+    assert plan.action == "uninstall"
+    assert plan.diff
+    # File contents unchanged.
+    assert (agent_home / ".claude" / "settings.json").read_text(encoding="utf-8") == snapshot
+
+
+def test_plan_deduplicate_hooks_returns_diff_without_writing(
+    tmp_path: Path, monkeypatch: _pytest_for_migration.MonkeyPatch
+) -> None:
+    agent_home = tmp_path / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    # Build a settings.json with deliberate duplicates.
+    install_global_hooks(agent_home)
+    settings_path = agent_home / ".claude" / "settings.json"
+    data = _json_for_migration.loads(settings_path.read_text(encoding="utf-8"))
+    # Duplicate the SessionStart group.
+    data["hooks"]["SessionStart"].append(data["hooks"]["SessionStart"][0])
+    settings_path.write_text(_json_for_migration.dumps(data, indent=2), encoding="utf-8")
+    snapshot = settings_path.read_text(encoding="utf-8")
+    monkeypatch.setattr(
+        _runtime,
+        "_save_json",
+        lambda *a, **k: pytest.fail("plan_deduplicate called _save_json"),
+    )
+
+    plan = plan_deduplicate_hooks(agent_home)
+    assert plan.action == "install"
+    assert plan.statuses["removed"] > 0
+    assert settings_path.read_text(encoding="utf-8") == snapshot
+
+
+def test_plan_global_hooks_skip_when_already_installed(tmp_path: Path) -> None:
+    agent_home = tmp_path / "home"
+    (agent_home / ".claude").mkdir(parents=True)
+    install_global_hooks(agent_home)
+    plan = plan_global_hooks(agent_home)
+    assert plan.action == "skip"
+    assert plan.diff == ()
+    assert plan.statuses == {"settings.json": "skipped"}
