@@ -78,20 +78,33 @@ jobs:
         run: mkdocs build --strict
 
       - name: Resolve docs version
+        # Two trigger paths:
+        #
+        #   - Push to main (no tag): rebuild the `latest` snapshot in place.
+        #     `mike` treats `latest` as a plain version slot here. No alias
+        #     update — passing `--update-aliases latest latest` errors out
+        #     with "duplicated version and alias" because mike rejects the
+        #     same name in both positions (observed on the first deploy
+        #     after PR #113, run 25224017603).
+        #
+        #   - Tag push (v1.0.0 etc.): snapshot the version AND repoint the
+        #     `latest` alias at it atomically.
         id: version
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
+            DEPLOY_ARGS="--update-aliases ${VERSION} latest"
           else
             VERSION="latest"
+            DEPLOY_ARGS="${VERSION}"
           fi
           echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "DEPLOY_ARGS=${DEPLOY_ARGS}" >> "$GITHUB_OUTPUT"
 
       - name: Deploy versioned snapshot via mike
-        # `--update-aliases` makes `latest` track this version atomically.
-        # The `latest` alias is what users see at the bare site URL once
-        # `mike set-default` has been run at least once below.
-        run: mike deploy --push --update-aliases "${{ steps.version.outputs.VERSION }}" latest
+        # On main: `mike deploy --push latest` (rebuilds the `latest` slot).
+        # On tag:  `mike deploy --push --update-aliases <version> latest`.
+        run: mike deploy --push ${{ steps.version.outputs.DEPLOY_ARGS }}
 
       - name: Set default alias to latest
         # Idempotent — safe to run on every deploy. Without it, the live

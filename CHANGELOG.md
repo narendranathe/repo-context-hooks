@@ -50,6 +50,7 @@ All notable changes to this project will be documented in this file.
 <!-- none -->
 
 ### Fixed
+- `pages.yml` mike deploy: split the `--update-aliases` flag off the non-tag (push-to-main) path. Mike rejects `mike deploy --update-aliases latest latest` with "duplicated version and alias" when the version slot and the alias share a name. Tag pushes still pass `--update-aliases <version> latest`. Caught by the first post-#113 deploy (run 25224017603). (#75 follow-up)
 - `logging_setup._default_log_dir()` now wraps `Path.home()` in a `RuntimeError` guard with a `tempfile.gettempdir()` fallback. `Path.home()` raises `RuntimeError` (NOT `OSError`) on Windows SYSTEM accounts with unset `LOCALAPPDATA`, AWS Lambda layers, distroless containers, and hermetic Bazel sandboxes — exactly the global-adoption population v1.0 targets. The error fires before any handler can catch it, so without this fallback `configure_logging` crashed every subcommand including `doctor` itself. Phase 2 portability-axis review found this in PR #103 review. (#73)
 - `find_unreleased_changed_lines()` now accepts a `head_changelog` post-image so the gate detects bullets added BELOW an existing `## [Unreleased]` heading. Previously, `--unified=0` diffs without the heading line returned 0 — surfaced when the gate red-X'd its own PR (#94). Regression test pins the exact diff shape. (#76)
 - `tests/conftest.py` env-isolation list previously missed `REPO_CONTEXT_HOOKS_TELEMETRY_DIR`; switched to a `startswith()` glob that future-proofs every Wave 2/3 env var.
