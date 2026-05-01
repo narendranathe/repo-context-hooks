@@ -1,0 +1,1934 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Hook-based repo context continuity for coding agents">
+      
+      
+      
+        <link rel="canonical" href="https://narendranathe.github.io/repo-context-hooks/latest/troubleshooting/">
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+        <link rel="next" href="../cli-reference/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Troubleshooting - repo-context-hooks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#troubleshooting" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="repo-context-hooks" class="md-header__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            repo-context-hooks
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Troubleshooting
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../cli-reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  CLI Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../stability/" class="md-tabs__link">
+          
+  
+  
+  Stability
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../telemetry-policy/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Telemetry Policy
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../monitoring/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Monitoring
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../platforms/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platforms
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../platform-playbooks/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Platform Playbooks
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../competitive-analysis/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Competitive Analysis
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="repo-context-hooks" class="md-nav__button md-logo" aria-label="repo-context-hooks" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    repo-context-hooks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/narendranathe/repo-context-hooks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    narendranathe/repo-context-hooks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#hooks-do-not-fire-after-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hooks do not fire after install
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hooks do not fire after install">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eventsjsonl-is-empty-after-a-complete-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        events.jsonl is empty after a complete session
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="events.jsonl is empty after a complete session">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settingsjson-got-clobbered-or-has-duplicate-hook-entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        settings.json got clobbered or has duplicate hook entries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="settings.json got clobbered or has duplicate hook entries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#windows-path-issues-backslashes-mixed-separators-agent-home-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows path issues — backslashes, mixed separators, agent-home mismatch
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windows path issues — backslashes, mixed separators, agent-home mismatch">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multiple-python-environments-agent-runs-the-wrong-repo-context-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple Python environments — agent runs the wrong repo-context-hooks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multiple Python environments — agent runs the wrong repo-context-hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-exits-1-how-to-read-the-error-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        verify exits 1 — how to read the error log
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="verify exits 1 — how to read the error log">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stability
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Stability
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deprecation-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deprecation Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../telemetry-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry Policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../platform-playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../competitive-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#hooks-do-not-fire-after-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hooks do not fire after install
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hooks do not fire after install">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eventsjsonl-is-empty-after-a-complete-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        events.jsonl is empty after a complete session
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="events.jsonl is empty after a complete session">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settingsjson-got-clobbered-or-has-duplicate-hook-entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        settings.json got clobbered or has duplicate hook entries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="settings.json got clobbered or has duplicate hook entries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#windows-path-issues-backslashes-mixed-separators-agent-home-mismatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows path issues — backslashes, mixed separators, agent-home mismatch
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windows path issues — backslashes, mixed separators, agent-home mismatch">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multiple-python-environments-agent-runs-the-wrong-repo-context-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple Python environments — agent runs the wrong repo-context-hooks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multiple Python environments — agent runs the wrong repo-context-hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-exits-1-how-to-read-the-error-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        verify exits 1 — how to read the error log
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="verify exits 1 — how to read the error log">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptom_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Symptom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproduce_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#last-verified_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Last verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="troubleshooting">Troubleshooting</h1>
+<p>Common failure modes encountered while installing, running, or auditing
+<code>repo-context-hooks</code>. Each entry is sourced from a closed issue — the
+reproduction and fix below are self-contained, the issue link is for
+forensics. The <code>Last verified</code> line records the version on which the
+reproduction was last confirmed; if you hit one of these on a newer release,
+please <a href="https://github.com/narendranathe/repo-context-hooks/issues/new">open a new issue</a>
+so we can refresh the page.</p>
+<p>If your symptom does not match anything below, run <code>repo-context-hooks doctor</code>
+first and then <code>repo-context-hooks --debug &lt;subcommand&gt;</code> to surface a
+traceback in <code>&lt;cache&gt;/errors.log</code>. The "Last error" section in <code>doctor</code> output
+prints the path so you do not have to guess where it landed.</p>
+<hr />
+<h2 id="hooks-do-not-fire-after-install">Hooks do not fire after install</h2>
+<h3 id="symptom">Symptom</h3>
+<p><code>repo-context-hooks install --platform claude</code> exits 0, <code>doctor</code> reports the
+platform as ready, but <code>~/.cache/repo-context-hooks/events.jsonl</code> is empty
+after starting a Claude Code session in a workspace that has <code>specs/README.md</code>.
+No <code>SessionStart</code>, <code>PreCompact</code>, or <code>SessionEnd</code> records ever appear.</p>
+<h3 id="reproduce">Reproduce</h3>
+<ol>
+<li>POSIX: <code>pip install --user repo-context-hooks &amp;&amp; repo-context-hooks install --platform claude</code>.</li>
+<li>Open a fresh Claude Code session in a directory that contains <code>specs/README.md</code> and <code>.git/</code>.</li>
+<li>Run <code>cat ~/.cache/repo-context-hooks/events.jsonl</code> (POSIX) or
+   <code>Get-Content "$env:LOCALAPPDATA\repo-context-hooks\events.jsonl"</code> (Windows).</li>
+</ol>
+<h3 id="fix">Fix</h3>
+<p>The most common root cause is that <code>~/.claude/settings.json</code> was not actually
+updated — Claude Code only loads hooks from the file Python's <code>Path.home()</code>
+resolves to at install time. Re-install with <code>--force</code> after confirming
+<code>echo $HOME</code> (POSIX) or <code>echo $env:USERPROFILE</code> (Windows) matches the
+<code>Agent home</code> line printed by <code>repo-context-hooks doctor</code>. If the agent home
+matches but events still do not fire, run <code>repo-context-hooks verify --platform claude</code>
+to round-trip a synthetic event end-to-end — verify writes to an isolated
+tmpdir and tells you within two seconds whether the hook plumbing is wired
+to the same <code>settings.json</code> Claude is reading. See the
+<a href="../cli-reference/"><code>verify</code> reference</a> and the
+<a href="../">Verify section of the home page</a>.</p>
+<h3 id="last-verified">Last verified</h3>
+<p><code>0.6.0</code> — provenance: closed issue
+<a href="https://github.com/narendranathe/repo-context-hooks/issues/41">#41</a>
+(end-to-end smoke test pip install → install → doctor → hook fires).</p>
+<hr />
+<h2 id="eventsjsonl-is-empty-after-a-complete-session"><code>events.jsonl</code> is empty after a complete session</h2>
+<h3 id="symptom_1">Symptom</h3>
+<p><code>repo-context-hooks install</code> succeeded, the <code>SessionStart</code> record appears in
+<code>events.jsonl</code>, but no <code>SessionEnd</code> or <code>PreCompact</code> records ever land — even
+after closing the session normally. <code>repo-context-hooks measure</code> reports
+<code>0% lifecycle coverage</code> on a workspace where you have actually been working.</p>
+<h3 id="reproduce_1">Reproduce</h3>
+<ol>
+<li>Install the agent skill and open a session.</li>
+<li>Work for at least a minute, then close the session via the platform's
+   normal "end" or "exit" flow.</li>
+<li>Run <code>repo-context-hooks measure --json</code> and inspect <code>lifecycle_coverage</code>.</li>
+</ol>
+<h3 id="fix_1">Fix</h3>
+<p>Two failure paths converge on this symptom:</p>
+<ol>
+<li>The session-end subprocess timed out before the bundle script could finish
+   writing. The default timeout was raised to 30 seconds in 0.6.0; if you are
+   on an older release, upgrade.</li>
+<li>A previous version inlined <code>measure_impact</code> inside <code>record_event</code>, which
+   could fail under filesystem pressure and silently swallow the write. The
+   fix decoupled the two; if you are on 0.6.0 or later you should not see
+   this anymore.</li>
+</ol>
+<p>To recover lifecycle coverage on an existing repo, run
+<code>repo-context-hooks measure --clean-ghosts</code> to remove any test-run "ghost"
+repos that pollute the count, then <code>repo-context-hooks measure</code> again.</p>
+<h3 id="last-verified_1">Last verified</h3>
+<p><code>0.6.0</code> — provenance: closed issue
+<a href="https://github.com/narendranathe/repo-context-hooks/issues/57">#57</a>
+(remove inline <code>measure_impact</code> from <code>record_event</code>, raise session-end
+timeout to 30s).</p>
+<hr />
+<h2 id="settingsjson-got-clobbered-or-has-duplicate-hook-entries"><code>settings.json</code> got clobbered or has duplicate hook entries</h2>
+<h3 id="symptom_2">Symptom</h3>
+<p>After running <code>install</code> more than once (e.g. on a release upgrade), your
+agent's <code>settings.json</code> either lost a user-authored hook entry or now contains
+the same <code>repo-context-hooks</code> command three or four times. Claude prints a
+warning about hook ordering, or you see duplicate events in <code>events.jsonl</code>
+for the same session.</p>
+<h3 id="reproduce_2">Reproduce</h3>
+<ol>
+<li>Manually add a custom <code>SessionStart</code> hook to <code>~/.claude/settings.json</code>.</li>
+<li>Run <code>repo-context-hooks install --platform claude</code> twice.</li>
+<li>Open <code>~/.claude/settings.json</code> and look for repeated entries with the same
+   <code>command</code> field, or a missing user-authored hook.</li>
+</ol>
+<h3 id="fix_2">Fix</h3>
+<p><code>install</code> is idempotent against its own writes, but path normalization differs
+between Windows and POSIX (mixed <code>/</code> and <code>\\</code> resolved to distinct strings),
+which used to defeat the deduplication check. Re-run with the <code>--dedup</code> flag:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>install<span class="w"> </span>--platform<span class="w"> </span>claude<span class="w"> </span>--dedup
+</code></pre></div>
+<p>This collapses entries whose <code>command</code> strings are equal under canonical
+path normalization. Before letting <code>install</code> write, you can audit what would
+change with:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>install<span class="w"> </span>--platform<span class="w"> </span>claude<span class="w"> </span>--dry-run
+</code></pre></div>
+<p>The <code>--dry-run</code> flag prints the unified diff that would be applied and exits
+without writing. Pair with <code>--json</code> for a machine-parseable diff suitable for
+change-control review.</p>
+<h3 id="last-verified_2">Last verified</h3>
+<p><code>0.6.0</code> — provenance: closed issue
+<a href="https://github.com/narendranathe/repo-context-hooks/issues/58">#58</a>
+(hook deduplication, normalise paths in <code>install_global_hooks</code>, <code>--dedup</code>
+flag).</p>
+<hr />
+<h2 id="windows-path-issues-backslashes-mixed-separators-agent-home-mismatch">Windows path issues — backslashes, mixed separators, agent-home mismatch</h2>
+<h3 id="symptom_3">Symptom</h3>
+<p>On Windows, <code>install</code> succeeded but <code>doctor</code> exits non-zero with a path
+mismatch error. Or <code>~/.claude/settings.json</code> shows hook commands containing
+backslashes (<code>C:\\Users\\you\\AppData\\…</code>) and Claude Code refuses to load
+them. Or you ran <code>install</code> from Git Bash (<code>/c/Users/you/...</code>) and the saved
+paths do not match what Claude reads.</p>
+<h3 id="reproduce_3">Reproduce</h3>
+<ol>
+<li>Windows: open Git Bash and run <code>repo-context-hooks install --platform claude</code>.</li>
+<li>Open <code>%USERPROFILE%\.claude\settings.json</code> in Notepad and look for the
+   hook entries. Mixed <code>/c/Users/you/</code> and native <code>C:\Users\you\</code> paths
+   indicate the bug.</li>
+<li>Run <code>repo-context-hooks doctor --platform claude</code> from <code>cmd.exe</code>.</li>
+</ol>
+<h3 id="fix_3">Fix</h3>
+<p><code>install</code> now writes POSIX-style forward-slash paths regardless of which shell
+invoked it, and the smoke-test job in CI specifically asserts no backslash
+paths leak into <code>settings.json</code> on Windows. Upgrade to 0.6.0 or later. If
+you have a polluted <code>settings.json</code> from an older release, the safest
+recovery is:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Windows (PowerShell)</span>
+repo-context-hooks<span class="w"> </span>uninstall<span class="w"> </span>--platform<span class="w"> </span>claude<span class="w"> </span>--dry-run
+repo-context-hooks<span class="w"> </span>uninstall<span class="w"> </span>--platform<span class="w"> </span>claude
+repo-context-hooks<span class="w"> </span>install<span class="w"> </span>--platform<span class="w"> </span>claude
+</code></pre></div>
+<p><code>uninstall</code> only removes the hook entries it owns — your custom hooks are
+preserved.</p>
+<h3 id="last-verified_3">Last verified</h3>
+<p><code>0.6.0</code> — provenance: closed issue
+<a href="https://github.com/narendranathe/repo-context-hooks/issues/46">#46</a>
+(audit and fix Windows path handling across install, doctor, and hook
+commands).</p>
+<hr />
+<h2 id="multiple-python-environments-agent-runs-the-wrong-repo-context-hooks">Multiple Python environments — agent runs the wrong <code>repo-context-hooks</code></h2>
+<h3 id="symptom_4">Symptom</h3>
+<p><code>pip install repo-context-hooks</code> lands in your project venv, but Claude Code
+runs in your system shell where <code>which repo-context-hooks</code> (POSIX) or
+<code>Get-Command repo-context-hooks</code> (Windows) resolves to an older copy in a
+different env — so hooks fire, but they execute pre-0.6.0 logic and your
+new flags are unrecognized. Symptom variants: <code>--debug</code> is rejected,
+<code>verify</code> exits "command not found", or <code>events.jsonl</code> records have a stale
+schema.</p>
+<h3 id="reproduce_4">Reproduce</h3>
+<ol>
+<li>POSIX: <code>python -m venv .venv &amp;&amp; .venv/bin/pip install repo-context-hooks</code>.</li>
+<li>In a different shell (without the venv activated): <code>pip install --user repo-context-hooks==0.5.0</code>.</li>
+<li>From the venv shell: <code>repo-context-hooks --version</code> (shows 0.6.0).</li>
+<li>Open Claude Code from the OS shell with no venv: hooks run the 0.5.0 copy.</li>
+</ol>
+<h3 id="fix_4">Fix</h3>
+<p>Hooks execute via the agent's parent process, which usually does not inherit
+your venv. The bundle scripts shipped under <code>repo_context_hooks/bundle/</code>
+were hardened in 0.6.0 to gracefully degrade when imported from agent-home
+(read-only fallbacks instead of raising). You have three options, in
+preference order:</p>
+<ol>
+<li>
+<p>Install the package via <code>pipx</code> so it lives in an isolated env that is
+   always on <code>$PATH</code>:</p>
+<div class="highlight"><pre><span></span><code>pipx<span class="w"> </span>install<span class="w"> </span>repo-context-hooks
+repo-context-hooks<span class="w"> </span>install<span class="w"> </span>--platform<span class="w"> </span>claude
+</code></pre></div>
+</li>
+<li>
+<p>POSIX: install with <code>pip install --user</code> and ensure
+   <code>$HOME/.local/bin</code> is on <code>PATH</code> for every shell that will launch the
+   agent (<code>echo $PATH</code> in your <code>~/.bashrc</code> / <code>~/.zshrc</code>).</p>
+</li>
+<li>Windows: install with <code>pip install --user</code> and ensure
+   <code>%APPDATA%\Python\Python&lt;major&gt;&lt;minor&gt;\Scripts</code> is on <code>PATH</code> system-wide
+   (System Properties → Environment Variables).</li>
+</ol>
+<p>After whichever option you pick, re-run <code>repo-context-hooks install --platform claude --force</code>
+so the hook command strings in <code>settings.json</code> point at the new binary path,
+then <code>repo-context-hooks --version</code> from a fresh shell to confirm.</p>
+<h3 id="last-verified_4">Last verified</h3>
+<p><code>0.6.0</code> — provenance: closed issue
+<a href="https://github.com/narendranathe/repo-context-hooks/issues/32">#32</a>
+(script hardening: graceful degradation for agent-home execution).</p>
+<hr />
+<h2 id="verify-exits-1-how-to-read-the-error-log"><code>verify</code> exits 1 — how to read the error log</h2>
+<h3 id="symptom_5">Symptom</h3>
+<p><code>repo-context-hooks verify --platform claude</code> prints <code>Status: BROKEN</code> and
+exits 1. The receipt names a <code>failure_reason</code>, but the user-facing message
+is short — you want the full traceback.</p>
+<h3 id="reproduce_5">Reproduce</h3>
+<ol>
+<li>Install on a deliberately broken setup (e.g. delete <code>~/.claude/settings.json</code>
+   after <code>install</code>).</li>
+<li>Run <code>repo-context-hooks verify --platform claude</code> and observe
+   <code>Status: BROKEN</code>, exit code 1.</li>
+</ol>
+<h3 id="fix_5">Fix</h3>
+<p>Re-run with <code>--debug</code> to write the full traceback to the rotating error log,
+then read it:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>--debug<span class="w"> </span>verify<span class="w"> </span>--platform<span class="w"> </span>claude
+
+<span class="c1"># POSIX</span>
+cat<span class="w"> </span>~/.cache/repo-context-hooks/logs/errors.log
+
+<span class="c1"># Windows (PowerShell)</span>
+Get-Content<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$env</span><span class="s2">:LOCALAPPDATA\repo-context-hooks\logs\errors.log&quot;</span>
+</code></pre></div>
+<p><code>doctor</code> also prints the active log path and the last error in its output:</p>
+<div class="highlight"><pre><span></span><code>repo-context-hooks<span class="w"> </span>doctor<span class="w"> </span>--platform<span class="w"> </span>claude
+<span class="c1"># ...</span>
+<span class="c1"># Log path: /home/you/.cache/repo-context-hooks/logs/errors.log</span>
+<span class="c1"># Last error: 2026-04-30T22:14:03 - verify - settings.json missing at /home/you/.claude/settings.json</span>
+</code></pre></div>
+<p>The log directory is created lazily on the first ERROR record — a clean
+install with no errors leaves zero filesystem trace. The log rotates at
+1 MB with 5 backups, so even a chatty failure mode will not fill the disk.
+On Linux distributions that confine <code>~/.cache</code> (SELinux, AppArmor, sandboxed
+CI), set <code>REPO_CONTEXT_HOOKS_LOG_DIR</code> to a writable path; <code>doctor --json</code>
+exposes <code>log_path</code> so you can confirm where it landed.</p>
+<h3 id="last-verified_5">Last verified</h3>
+<p><code>0.6.0</code> — provenance: closed issues
+<a href="https://github.com/narendranathe/repo-context-hooks/issues/74">#74</a>
+(<code>verify</code> command, <code>--dry-run</code>, version-migration tests) and
+<a href="https://github.com/narendranathe/repo-context-hooks/issues/73">#73</a>
+(self-observability — error log, <code>--debug</code> flag, <code>doctor</code> surface).</p>
+<hr />
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="../">Verify the install in under two seconds</a> — happy-path receipt</li>
+<li><a href="../cli-reference/">CLI Reference</a> — every flag and subcommand</li>
+<li><a href="../stability/">Stability contract</a> — what this page is allowed to break across releases</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tabs", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
