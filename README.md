@@ -31,13 +31,21 @@ The goal: a new agent session should start with full project context without red
 ## Install
 
 ```bash
+# 1. Install the package and wire the hooks
 pip install repo-context-hooks
 repo-context-hooks install --platform claude
+
+# 2. Confirm the plumbing — synthesises a hook event end-to-end and
+#    prints a receipt. Exits 0 healthy, 1 broken, 2 cold-start.
+repo-context-hooks verify --platform claude
+
+# 3. Measure your continuity score on the current repo
+repo-context-hooks measure --repo-root .
 ```
 
 That's the full install. Hooks write to `~/.claude/settings.json` and activate in every workspace from that point on.
 
-Verify your own savings any time with `repo-context-hooks measure --open` — it renders a local HTML dashboard with token, cost, and cold-start-time numbers from your evidence log.
+If `verify` exits non-zero, see the [Troubleshooting page](https://narendranathe.github.io/repo-context-hooks/troubleshooting/) — six documented failure modes with reproductions and fixes. Render a local HTML dashboard any time with `repo-context-hooks measure --open` for token, cost, and cold-start-time numbers from your evidence log.
 
 ## Impact
 

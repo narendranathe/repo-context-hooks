@@ -6,6 +6,28 @@ Hook-based repo context continuity for coding agents.
 
 A new agent session should start with full project context without rediscovering everything from scratch.
 
+## Quickstart
+
+Three commands; each block runs in under thirty seconds on a healthy machine.
+No CDN, no JavaScript, no account.
+
+```bash
+# 1. Install the package and wire the hooks
+pip install repo-context-hooks
+repo-context-hooks install --platform claude
+
+# 2. Confirm the plumbing — synthesises an event end-to-end and prints a
+#    receipt. Exits 0 healthy, 1 broken, 2 cold-start.
+repo-context-hooks verify --platform claude
+
+# 3. Measure your continuity score on the current repo
+repo-context-hooks measure --repo-root .
+```
+
+If `verify` exits non-zero, jump straight to
+[Troubleshooting](troubleshooting.md). The `Last error` line in
+`doctor` output will name the log path and the failing step.
+
 ## Scope
 
 **Today:** repo-context-hooks runs at **single-developer scope**. Each developer
@@ -88,6 +110,8 @@ the tool would do before letting it run.
 ## Documentation
 
 - [Install Guide](architecture.md) - architecture and full install reference
+- [Troubleshooting](troubleshooting.md) - six documented failure modes with reproductions and fixes
+- [CLI Reference](cli-reference.md) - every flag and subcommand, auto-generated from the parser
 - [Platform Matrix](platforms.md) - support tiers across all platforms
 - [Platform Playbooks](platform-playbooks.md) - per-platform operating guides
 - [Telemetry Policy](telemetry-policy.md) - local-only by default; opt-in required for remote
