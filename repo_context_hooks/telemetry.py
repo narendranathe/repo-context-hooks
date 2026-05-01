@@ -1400,6 +1400,23 @@ def branch_scores(
 _GHOST_REPO_NAMES: frozenset[str] = frozenset({"repo", "tmp", "temp", "test"})
 
 
+def is_ghost_repo(repo_dir: Path) -> bool:
+    """Return True if a telemetry workspace dir is a ghost (test-run residue).
+
+    Ghost iff the dir has fewer than 2 events AND its repo_name (from the
+    first event's `repo_name` field, or the directory's basename if there
+    are no events) is in `_GHOST_REPO_NAMES`. Side-effect-free; never
+    deletes or mutates anything. Used by `purge_ghost_repos` to choose
+    which dirs to remove and by the cross-workspace rollup walker (#107)
+    to choose which dirs to skip.
+    """
+    events = _read_events(repo_dir / EVENTS_FILE)
+    if len(events) >= 2:
+        return False
+    repo_name = events[0].get("repo_name", "") if events else repo_dir.name
+    return repo_name in _GHOST_REPO_NAMES
+
+
 def purge_ghost_repos(
     telemetry_base: Path | None = None,
     dry_run: bool = True,
@@ -1422,12 +1439,7 @@ def purge_ghost_repos(
     for entry in base.iterdir():
         if not entry.is_dir():
             continue
-        events_file = entry / EVENTS_FILE
-        events = _read_events(events_file)
-        if len(events) >= 2:
-            continue
-        repo_name = events[0].get("repo_name", "") if events else entry.name
-        if repo_name not in _GHOST_REPO_NAMES:
+        if not is_ghost_repo(entry):
             continue
         dir_size = sum(f.stat().st_size for f in entry.rglob("*") if f.is_file())
         removed_dirs.append(str(entry))
