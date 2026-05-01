@@ -221,6 +221,20 @@ def test_purge_ghost_repos_keeps_non_ghost_names(tmp_path):
     assert real_repo.exists()
 
 
+def test_purge_ghost_repos_returns_empty_when_base_missing(tmp_path):
+    from repo_context_hooks.telemetry import purge_ghost_repos
+    missing = tmp_path / "does-not-exist"
+    result = purge_ghost_repos(telemetry_base=missing, dry_run=True)
+    assert result == {"removed": 0, "bytes_freed": 0, "dirs": []}
+
+
+def test_purge_ghost_repos_skips_non_directory_entries(tmp_path):
+    from repo_context_hooks.telemetry import purge_ghost_repos
+    (tmp_path / "stray-file.txt").write_text("ignored", encoding="utf-8")
+    result = purge_ghost_repos(telemetry_base=tmp_path, dry_run=True)
+    assert result["removed"] == 0
+
+
 # --- forecast_activity tests ---
 
 def test_forecast_empty_telemetry(tmp_path):
