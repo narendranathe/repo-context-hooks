@@ -242,3 +242,206 @@ def test_canonical_settings_sha256_ignores_key_order() -> None:
     a = {"hooks": {}, "permissions": {"allow": ["Read"]}}
     b = {"permissions": {"allow": ["Read"]}, "hooks": {}}
     assert verify_mod._canonical_settings_sha256(a) == verify_mod._canonical_settings_sha256(b)
+
+
+# ---------------------------------------------------------------------------
+# Coverage backfill for verify.py error paths (Codecov patch-coverage gate).
+# Each test below targets a specific except/branch that the happy-path tests
+# above did not exercise.
+# ---------------------------------------------------------------------------
+
+
+def test_read_settings_for_hash_returns_false_when_missing(tmp_path: Path) -> None:
+    """Non-existent path returns ``(False, None)`` cleanly."""
+    exists, sha = verify_mod._read_settings_for_hash(tmp_path / "absent.json")
+    assert exists is False
+    assert sha is None
+
+
+def test_read_settings_for_hash_handles_corrupt_json(tmp_path: Path) -> None:
+    """Malformed JSON returns ``(True, hash-of-empty-dict)`` rather than raising."""
+    p = tmp_path / "settings.json"
+    p.write_text("{not valid json <<<<<", encoding="utf-8")
+    exists, sha = verify_mod._read_settings_for_hash(p)
+    assert exists is True
+    assert sha == verify_mod._canonical_settings_sha256({})
+
+
+def test_read_settings_for_hash_handles_non_dict_json(tmp_path: Path) -> None:
+    """Top-level array (or scalar) coerces to empty dict for hashing."""
+    p = tmp_path / "settings.json"
+    p.write_text('["not", "a", "dict"]', encoding="utf-8")
+    exists, sha = verify_mod._read_settings_for_hash(p)
+    assert exists is True
+    assert sha == verify_mod._canonical_settings_sha256({})
+
+
+def test_read_settings_for_hash_handles_empty_file(tmp_path: Path) -> None:
+    """Zero-byte settings.json hashes to the empty-dict canonical form."""
+    p = tmp_path / "settings.json"
+    p.write_text("", encoding="utf-8")
+    exists, sha = verify_mod._read_settings_for_hash(p)
+    assert exists is True
+    assert sha == verify_mod._canonical_settings_sha256({})
+
+
+def test_init_synthetic_repo_survives_git_not_installed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """If ``git`` binary is missing (Nix sandbox / distroless), falls through
+    cleanly — the synthetic event still gets written downstream."""
+    import subprocess as _sp
+
+    def _raise_filenotfound(*_a, **_kw):
+        raise FileNotFoundError("git not on PATH")
+
+    monkeypatch.setattr("repo_context_hooks.verify.subprocess.run", _raise_filenotfound)
+    repo = verify_mod._init_synthetic_repo(tmp_path)
+    assert repo == tmp_path / "repo"
+    assert repo.exists()
+
+
+def test_platform_tier_returns_unknown_for_unregistered_platform() -> None:
+    """``_platform_tier`` swallows ``KeyError`` and returns ``"unknown"``."""
+    assert verify_mod._platform_tier("not-a-real-platform") == "unknown"
+
+
+def test_platform_tier_returns_native_for_claude() -> None:
+    assert verify_mod._platform_tier("claude") == "native"
+
+
+def test_render_includes_failure_line_when_set() -> None:
+    """When ``failure_reason`` is populated the render emits a `Failure:` line."""
+    report = verify_mod.VerifyReport(
+        platform="claude",
+        agent_home="/home/x/.claude",
+        settings_path="/home/x/.claude/settings.json",
+        settings_exists=True,
+        settings_sha256="abc",
+        event_round_tripped=False,
+        last_event_timestamp=None,
+        schema_ok=False,
+        schema_missing_keys=(),
+        elapsed_ms=10,
+        last_error=None,
+        failure_reason="agent home read-only — cannot run verify",
+    )
+    rendered = report.render()
+    assert "Failure: agent home read-only" in rendered
+    assert "Status: BROKEN" in rendered
+
+
+def test_render_omits_settings_sha_line_when_none() -> None:
+    """``settings_sha256=None`` (cold start) suppresses the sha line."""
+    report = verify_mod.VerifyReport(
+        platform="claude",
+        agent_home="/home/x/.claude",
+        settings_path="/home/x/.claude/settings.json",
+        settings_exists=False,
+        settings_sha256=None,
+        event_round_tripped=True,
+        last_event_timestamp="2026-04-30T12:00:00Z",
+        schema_ok=True,
+        schema_missing_keys=(),
+        elapsed_ms=42,
+        last_error=None,
+    )
+    rendered = report.render()
+    assert "Settings sha256" not in rendered
+    assert "Settings exists: no" in rendered
+
+
+def test_render_includes_schema_missing_keys_list_when_drifted() -> None:
+    """When schema_ok=False, the missing keys are enumerated in the receipt."""
+    report = verify_mod.VerifyReport(
+        platform="claude",
+        agent_home="/home/x/.claude",
+        settings_path="/home/x/.claude/settings.json",
+        settings_exists=True,
+        settings_sha256="abc",
+        event_round_tripped=True,
+        last_event_timestamp="2026-04-30T12:00:00Z",
+        schema_ok=False,
+        schema_missing_keys=("event_name", "session_id"),
+        elapsed_ms=10,
+        last_error=None,
+    )
+    rendered = report.render()
+    assert "Schema valid: NO" in rendered
+    assert "event_name" in rendered
+    assert "session_id" in rendered
+
+
+def test_run_verify_surfaces_permission_error_as_failure_reason(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A ``PermissionError`` during synthetic-event write is surfaced as a
+    receipt failure_reason rather than propagated as an exception."""
+
+    def _raise_perm(*_a, **_kw):
+        raise PermissionError("read-only filesystem")
+
+    monkeypatch.setattr(verify_mod, "_synthesize_session_start", _raise_perm)
+    report = verify_mod.run_verify(
+        platform="claude",
+        home=tmp_path / "fake-home",
+        telemetry_base_override=tmp_path / "ev",
+    )
+    assert report.ok is False
+    assert "agent home read-only" in (report.failure_reason or "").lower()
+
+
+def test_run_verify_surfaces_oserror_as_failure_reason(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A generic ``OSError`` is captured in ``failure_reason``."""
+
+    def _raise_os(*_a, **_kw):
+        raise OSError("disk quota exceeded")
+
+    monkeypatch.setattr(verify_mod, "_synthesize_session_start", _raise_os)
+    report = verify_mod.run_verify(
+        platform="claude",
+        home=tmp_path / "fake-home",
+        telemetry_base_override=tmp_path / "ev",
+    )
+    assert report.ok is False
+    assert "filesystem error" in (report.failure_reason or "").lower()
+
+
+def test_run_verify_handles_no_events_round_tripped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """If the read-back returns no matching synthetic events, surface that
+    explicitly as the failure reason."""
+    # Patch _read_events to return an empty list — simulates a write that
+    # vanished (e.g. an antivirus quarantine on Windows).
+    monkeypatch.setattr(
+        "repo_context_hooks.telemetry._read_events",
+        lambda _path: [],
+    )
+    report = verify_mod.run_verify(
+        platform="claude",
+        home=tmp_path / "fake-home",
+        telemetry_base_override=tmp_path / "ev",
+    )
+    assert report.ok is False
+    assert report.event_round_tripped is False
+    assert "did not appear" in (report.failure_reason or "")
+
+
+def test_is_subpath_handles_value_error() -> None:
+    """``relative_to`` raises ``ValueError`` for non-related paths → returns False."""
+    assert verify_mod._is_subpath(Path("/tmp/a"), Path("/var/b")) is False
+
+
+def test_is_subpath_returns_true_for_self() -> None:
+    """A path is its own subpath."""
+    p = Path("/tmp/somewhere")
+    assert verify_mod._is_subpath(p, p) is True
+
+
+def test_is_subpath_returns_true_for_descendant() -> None:
+    parent = Path("/tmp/parent")
+    child = Path("/tmp/parent/child/leaf")
+    assert verify_mod._is_subpath(child, parent) is True
