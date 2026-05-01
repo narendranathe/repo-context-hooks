@@ -229,6 +229,35 @@ jobs:
       - name: Verify drift + verify removals against prior release tag
         run: python scripts/check_public_surface.py --verify-removals
 
+  docs-build:
+    # Strict mkdocs build + CLI-reference drift gate (issue #75). Catches
+    # broken nav links, malformed Markdown, and CLI/docs drift before they
+    # reach the live site. Ubuntu-only, single Python version — the docs
+    # are platform-agnostic and re-running them across the matrix is wasted
+    # CI time. Forks: this job installs `mkdocs-material` and `mike` from
+    # PyPI; if your fork is air-gapped or behind a TLS-intercepting proxy,
+    # mark this job as `continue-on-error` in your fork's branch protection
+    # rather than removing the gate (the live site still benefits from it
+    # on canonical-repo PRs).
+    name: Docs build (strict)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PRIMARY_PYTHON }}
+
+      - name: Install package and docs extras
+        run: pip install -e ".[docs]"
+
+      - name: Verify cli-reference.md is up to date
+        run: python scripts/render_cli_reference.py --check
+
+      - name: Build docs strictly
+        run: mkdocs build --strict
+
   platform-matrix:
     name: Platform matrix (${{ matrix.platform }})
     runs-on: ubuntu-latest

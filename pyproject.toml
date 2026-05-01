@@ -21,6 +21,12 @@ classifiers = [
 # Upper bounds prevent a compromised future major release from auto-installing
 # in CI/contributor environments. (audit F3.4) Bump alongside Dependabot.
 dev = ["pytest>=7,<9", "pytest-cov>=4,<8", "hypothesis>=6,<7"]
+# Docs build chain. Kept SEPARATE from `dev` so contributors who only run
+# pytest do not pull mkdocs into their venv. The pages.yml workflow installs
+# this extra; the docs-build CI gate installs it on every PR. Same upper-bound
+# discipline as `dev` — a compromised major release of mkdocs-material or
+# mike cannot auto-install. (#75)
+docs = ["mkdocs-material>=9,<10", "mike>=2,<3"]
 
 [project.urls]
 Homepage = "https://github.com/narendranathe/repo-context-hooks"
