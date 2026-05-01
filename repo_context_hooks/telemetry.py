@@ -22,6 +22,25 @@ _SESSION_SAMPLED_FILE = "current-session-sampled"
 _SESSION_START_TS_FILE = "current-session-start-ts"
 _SESSION_STATE_DIR = ".repo-context-hooks"
 
+# Canonical key set every event written by ``record_event`` carries.
+# Verify (issue #74) imports this constant to schema-validate the dummy
+# event it round-trips, so a future change to the event shape forces a
+# corresponding update here — single source of truth for drift detection.
+# ``duration_minutes`` is intentionally NOT in this tuple; it is conditional
+# (only present for `*-end` events).
+CANONICAL_EVENT_KEYS: tuple[str, ...] = (
+    "timestamp",
+    "event_name",
+    "session_id",
+    "source",
+    "repo_id",
+    "repo_name",
+    "branch",
+    "repo_contract_score",
+    "estimated_baseline_score",
+    "details",
+)
+
 
 def _git_output(repo_root: Path, *args: str) -> str:
     try:

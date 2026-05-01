@@ -1575,3 +1575,198 @@ def test_main_dispatches_new_subcommands(
 
     assert main() == 7
     assert sentinel["called"] is True
+
+
+# ===========================================================================
+# verify subcommand + --dry-run wiring (issue #74)
+# ===========================================================================
+
+
+class TestVerifySubcommand:
+    """Wiring for the `verify` subcommand and its dispatch path."""
+
+    def test_main_dispatches_verify_subcommand(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sentinel = {"called": False, "args_seen": None}
+
+        def fake_verify(args):
+            sentinel["called"] = True
+            sentinel["args_seen"] = args
+            return 0
+
+        monkeypatch.setattr(cli_mod, "_verify", fake_verify)
+        monkeypatch.setattr("sys.argv", ["repo-context-hooks", "verify"])
+        assert main() == 0
+        assert sentinel["called"] is True
+
+    def test_verify_subcommand_accepts_platform_flag(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen: dict = {}
+
+        def fake_verify(args):
+            seen["platform"] = args.platform
+            seen["json"] = args.json
+            return 0
+
+        monkeypatch.setattr(cli_mod, "_verify", fake_verify)
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "verify", "--platform", "claude", "--json"],
+        )
+        assert main() == 0
+        assert seen["platform"] == "claude"
+        assert seen["json"] is True
+
+    def test_verify_cold_start_exits_2_with_clear_message(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture
+    ) -> None:
+        """No platforms detected → exit 2 with install command in output."""
+        # Force _detect_platforms to return empty.
+        monkeypatch.setattr(cli_mod, "_detect_platforms", lambda: [])
+        monkeypatch.setattr("sys.argv", ["repo-context-hooks", "verify"])
+        assert main() == 2
+        out = capsys.readouterr().out
+        assert "No platforms installed" in out
+        assert "install --platform claude" in out
+
+
+class TestInstallDryRunMutex:
+    """`--force` and `--dry-run` are parser-mutex (Critic C non-budge)."""
+
+    def test_install_dry_run_and_force_are_mutually_exclusive(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "claude",
+             "--dry-run", "--force"],
+        )
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        # argparse exits 2 on mutex violation.
+        assert excinfo.value.code == 2
+
+    def test_install_dry_run_alone_routes_to_dry_run_helper(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sentinel = {"called": False}
+
+        def fake_dry_run(args):
+            sentinel["called"] = True
+            return 0
+
+        monkeypatch.setattr(cli_mod, "_install_dry_run", fake_dry_run)
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "claude", "--dry-run"],
+        )
+        assert main() == 0
+        assert sentinel["called"] is True
+
+    def test_uninstall_dry_run_routes_to_dry_run_helper(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sentinel = {"called": False}
+
+        def fake_dry_run(args):
+            sentinel["called"] = True
+            return 0
+
+        monkeypatch.setattr(cli_mod, "_uninstall_dry_run", fake_dry_run)
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "uninstall", "--platform", "claude", "--dry-run"],
+        )
+        assert main() == 0
+        assert sentinel["called"] is True
+
+
+class TestDryRunOutputs:
+    """Receipt format checks. The dry-run path MUST NEVER write."""
+
+    def test_install_dry_run_json_output_is_machine_parseable(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        """Critic A non-budge: --json output for CI policy gates."""
+        fake_home = tmp_path / "fake-home"
+        (fake_home / ".claude").mkdir(parents=True)
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(lambda: fake_home))
+
+        # Refuse any disk write outside `mkdir`/the fake home — use the
+        # planner-side _save_json fail-fast.
+        from repo_context_hooks.platforms import runtime as _runtime
+        monkeypatch.setattr(
+            _runtime,
+            "_save_json",
+            lambda *a, **k: pytest.fail("dry-run wrote to disk via _save_json"),
+        )
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "claude",
+             "--dry-run", "--json"],
+        )
+        assert main() == 0
+        captured = capsys.readouterr().out
+        payload = json.loads(captured)
+        assert payload["dry_run"] is True
+        assert "platforms" in payload
+        assert payload["platforms"][0]["platform"] == "claude"
+        assert payload["platforms"][0]["would_write"] is True
+        assert isinstance(payload["platforms"][0]["diff"], list)
+        assert payload["dedup"]["removed"] == 0  # nothing to dedup yet
+
+    def test_install_dry_run_text_output_is_human_readable(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        fake_home = tmp_path / "fake-home"
+        (fake_home / ".claude").mkdir(parents=True)
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(lambda: fake_home))
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "claude", "--dry-run"],
+        )
+        assert main() == 0
+        out = capsys.readouterr().out
+        assert "Dry run" in out
+        assert "Re-run without --dry-run to apply" in out
+
+    def test_install_dry_run_partial_adapter_explains_no_settings_mutation(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        """Critic A non-budge: PARTIAL adapters must NOT silently no-op."""
+        fake_home = tmp_path / "fake-home"
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(lambda: fake_home))
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "cursor", "--dry-run"],
+        )
+        assert main() == 0
+        out = capsys.readouterr().out
+        assert "PARTIAL adapter" in out
+
+    def test_uninstall_dry_run_does_not_remove_bundle(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        fake_home = tmp_path / "fake-home"
+        bundle = fake_home / ".claude" / "skills" / "context-handoff-hooks"
+        bundle.mkdir(parents=True)
+        (bundle / "marker.txt").write_text("present")
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(lambda: fake_home))
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "uninstall", "--platform", "claude", "--dry-run"],
+        )
+        assert main() == 0
+        # Bundle still on disk — dry-run did NOT remove it.
+        assert (bundle / "marker.txt").exists()

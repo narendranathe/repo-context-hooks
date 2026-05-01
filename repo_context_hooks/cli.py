@@ -89,10 +89,25 @@ def build_parser() -> argparse.ArgumentParser:
             "--also-repo-hooks is passed."
         ),
     )
-    install.add_argument(
+    # ``--force`` and ``--dry-run`` are mutually exclusive: --force only
+    # matters at write time, and --dry-run never writes. The mutex group
+    # makes argparse fail-fast (exit 2) with a clear error rather than
+    # silently letting one win — Critic C non-budge from issue #74.
+    install_force_or_dry = install.add_mutually_exclusive_group()
+    install_force_or_dry.add_argument(
         "--force",
         action="store_true",
         help="Overwrite existing installed artifacts.",
+    )
+    install_force_or_dry.add_argument(
+        "--dry-run",
+        action="store_true",
+        dest="dry_run",
+        help=(
+            "Compute the settings.json diff that install WOULD apply and exit "
+            "without writing anything. Pair with --json for machine-parseable "
+            "output suitable for CI policy gates."
+        ),
     )
     install.add_argument(
         "--no-telemetry",
@@ -103,6 +118,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--dedup",
         action="store_true",
         help="Remove duplicate hook entries from settings.json before installing.",
+    )
+    install.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit dry-run results as JSON (only effective with --dry-run).",
     )
 
     init = subparsers.add_parser(
@@ -282,6 +302,44 @@ def build_parser() -> argparse.ArgumentParser:
         choices=supported_platform_ids(),
         help="Platform to uninstall.",
     )
+    uninstall.add_argument(
+        "--dry-run",
+        action="store_true",
+        dest="dry_run",
+        help=(
+            "Compute the settings.json diff that uninstall WOULD apply and exit "
+            "without writing anything or removing files. Pair with --json for "
+            "machine-parseable output."
+        ),
+    )
+    uninstall.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit dry-run results as JSON (only effective with --dry-run).",
+    )
+
+    verify = subparsers.add_parser(
+        "verify",
+        help=(
+            "Synthesize a hook event end-to-end and print a confirmation receipt. "
+            "Closes the trust gap between `install` and the next session firing."
+        ),
+    )
+    verify.add_argument(
+        "--platform",
+        required=False,
+        default=None,
+        choices=supported_platform_ids(),
+        help=(
+            "Platform to verify. If omitted, auto-detects installed agents "
+            "(scans ~/.{platform}/ existence) and verifies each."
+        ),
+    )
+    verify.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the receipt as JSON (one object per platform under `platforms`).",
+    )
 
     checkpoint = subparsers.add_parser(
         "checkpoint",
@@ -382,6 +440,9 @@ def _install(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
     also_repo_hooks = getattr(args, "also_repo_hooks", False)
     telemetry = not getattr(args, "no_telemetry", False)
+
+    if getattr(args, "dry_run", False):
+        return _install_dry_run(args)
 
     if also_repo_hooks and not (repo_root / ".git").exists():
         print("Repo context skipped: target is not a git repository.")
@@ -511,10 +572,205 @@ def _recommend(args: argparse.Namespace) -> int:
 
 
 def _uninstall(args: argparse.Namespace) -> int:
+    if getattr(args, "dry_run", False):
+        return _uninstall_dry_run(args)
     result = uninstall_platform(args.platform)
     for name, status in result.items():
         print(f"- {name}: {status}")
     return 0
+
+
+def _install_dry_run(args: argparse.Namespace) -> int:
+    """Render the settings.json diff that ``install`` would write — no writes.
+
+    Routes through ``runtime.plan_*`` planning functions. Honoured non-budges:
+    Critic A (machine-parseable via --json), Critic B (no _save_json calls
+    anywhere on this path), Critic C (parser-enforced mutex with --force).
+    """
+
+    from .platforms.runtime import plan_deduplicate_hooks, plan_global_hooks
+
+    home = Path.home()
+    if args.platform:
+        platforms_to_install = [args.platform]
+    else:
+        platforms_to_install = _detect_platforms()
+        if not platforms_to_install:
+            platforms_to_install = ["claude"]
+
+    dedup_plan = plan_deduplicate_hooks(home)
+    per_platform = []
+    for platform in platforms_to_install:
+        # Only Claude actually mutates settings.json today; the other 8
+        # adapters install bundles or are manual-step. Reflect that
+        # explicitly in the dry-run output rather than silently no-opping.
+        adapter = get_registry().get(platform)
+        tier = adapter.metadata.support_tier.value
+        if platform == "claude":
+            telemetry = not getattr(args, "no_telemetry", False)
+            plan = plan_global_hooks(home, telemetry=telemetry)
+            per_platform.append({
+                "platform": platform,
+                "support_tier": tier,
+                "settings_path": plan.settings_path.as_posix(),
+                "action": plan.action,
+                "diff": list(plan.diff),
+                "would_write": plan.action == "install",
+            })
+        else:
+            per_platform.append({
+                "platform": platform,
+                "support_tier": tier,
+                "settings_path": "",
+                "action": "skip",
+                "diff": [],
+                "would_write": False,
+                "note": (
+                    f"PARTIAL adapter: bundle copy only, no settings.json mutation. "
+                    f"Run `repo-context-hooks install --platform {platform}` to apply."
+                ),
+            })
+
+    if getattr(args, "json", False):
+        _print_json({
+            "dry_run": True,
+            "dedup": {
+                "settings_path": dedup_plan.settings_path.as_posix(),
+                "removed": dedup_plan.statuses.get("removed", 0),
+                "diff": list(dedup_plan.diff),
+            },
+            "platforms": per_platform,
+        })
+        return 0
+
+    print("=== Dry run (no writes) ===")
+    if dedup_plan.statuses.get("removed", 0) > 0:
+        print(f"Dedup would remove {dedup_plan.statuses['removed']} duplicate hook entries:")
+        print(dedup_plan.diff_text())
+    else:
+        print("Dedup: no duplicate hook entries to remove")
+    for entry in per_platform:
+        print(f"\n--- Platform: {entry['platform']} ({entry['support_tier']}) ---")
+        if entry.get("note"):
+            print(entry["note"])
+            continue
+        if entry["action"] == "skip":
+            print(f"settings.json: no changes (already installed for {entry['platform']})")
+            continue
+        if entry["diff"]:
+            print("".join(entry["diff"]))
+        if entry["would_write"]:
+            print(f"Would write: {entry['settings_path']}")
+    print("\n(Re-run without --dry-run to apply.)")
+    return 0
+
+
+def _uninstall_dry_run(args: argparse.Namespace) -> int:
+    """Render the settings.json diff that ``uninstall`` would write — no writes."""
+
+    from .platforms.runtime import plan_uninstall_global_hooks
+
+    home = Path.home()
+    platform = args.platform
+    if platform != "claude":
+        # Same PARTIAL-adapter explainer as install dry-run. The bundle
+        # directory removal is real (shutil.rmtree) but happens only at
+        # apply time; here we only describe it.
+        if getattr(args, "json", False):
+            _print_json({
+                "dry_run": True,
+                "platform": platform,
+                "action": "skip",
+                "diff": [],
+                "note": "PARTIAL adapter: skill bundle removal only, no settings.json mutation.",
+            })
+            return 0
+        print(f"=== Dry run uninstall: {platform} ===")
+        print(f"PARTIAL adapter: would remove the skill bundle directory; settings.json untouched.")
+        print("(Re-run without --dry-run to apply.)")
+        return 0
+
+    plan = plan_uninstall_global_hooks(home)
+    bundle_dir = home / ".claude" / "skills" / "context-handoff-hooks"
+    bundle_present = bundle_dir.exists()
+
+    if getattr(args, "json", False):
+        _print_json({
+            "dry_run": True,
+            "platform": platform,
+            "settings_path": plan.settings_path.as_posix(),
+            "action": plan.action,
+            "diff": list(plan.diff),
+            "bundle_dir": bundle_dir.as_posix(),
+            "would_remove_bundle": bundle_present,
+        })
+        return 0
+
+    print(f"=== Dry run uninstall: {platform} ===")
+    if bundle_present:
+        print(f"Would remove bundle: {bundle_dir.as_posix()}")
+    else:
+        print(f"Bundle not present at: {bundle_dir.as_posix()}")
+    if plan.action == "uninstall":
+        print("Settings.json diff:")
+        print(plan.diff_text())
+    else:
+        print(f"settings.json: {plan.statuses.get('settings.json', 'no changes')}")
+    print("\n(Re-run without --dry-run to apply.)")
+    return 0
+
+
+def _verify(args: argparse.Namespace) -> int:
+    """Synthesize a hook event end-to-end; print receipts; exit 0/1/2.
+
+    Exit codes:
+      0 — every detected platform verified clean
+      1 — at least one platform's verify failed (event didn't round-trip,
+          schema mismatch, or filesystem error)
+      2 — no platforms detected (cold-start; no install yet)
+    """
+
+    from . import verify as _verify_mod
+
+    if args.platform:
+        platforms_to_verify = [args.platform]
+    else:
+        platforms_to_verify = _detect_platforms()
+        if not platforms_to_verify:
+            if getattr(args, "json", False):
+                _print_json({
+                    "ok": False,
+                    "exit_code": 2,
+                    "error": "no platforms installed",
+                    "fix": "Run: repo-context-hooks install --platform claude",
+                    "platforms": [],
+                })
+            else:
+                print("No platforms installed.")
+                print("Run: repo-context-hooks install --platform claude")
+            return 2
+
+    reports = [_verify_mod.run_verify(p) for p in platforms_to_verify]
+    exit_code = max((0 if r.ok else 1) for r in reports)
+
+    if getattr(args, "json", False):
+        _print_json({
+            "ok": exit_code == 0,
+            "exit_code": exit_code,
+            "platforms": [r.to_dict() for r in reports],
+        })
+        return exit_code
+
+    for i, report in enumerate(reports):
+        if i > 0:
+            print("")
+        print(report.render())
+
+    last_error = _logging_setup.get_last_error()
+    print("")
+    print("Last error:")
+    print(last_error if last_error else "No errors recorded")
+    return exit_code
 
 
 def _resolve_experiment_dir(args: argparse.Namespace, repo_root: Path) -> Path:
@@ -802,6 +1058,8 @@ def main() -> int:
         return _measure(args)
     if args.command == "uninstall":
         return _uninstall(args)
+    if args.command == "verify":
+        return _verify(args)
     if args.command == "checkpoint":
         return _checkpoint(args)
     if args.command == "telemetry":

@@ -49,6 +49,42 @@ repo-context-hooks doctor    # verify contract health
 repo-context-hooks recommend # suggest next steps
 ```
 
+## Verify the Install in <2 Seconds
+
+After `install`, you don't have to wait for the next agent session to know the
+plumbing works. The `verify` command synthesises a hook event end-to-end and
+prints a confirmation receipt:
+
+```bash
+repo-context-hooks verify
+# Platform: claude
+# Agent home: /home/you/.claude
+# Settings path: /home/you/.claude/settings.json
+# Settings sha256 (canonical): a1b2c3...
+# Synthetic event round-trip: OK
+# Last event timestamp: 2026-04-30T12:00:00Z
+# Schema valid: yes
+# Elapsed: 142 ms
+# Status: HEALTHY
+```
+
+`verify` writes its synthetic event to an isolated tmpdir — your real
+telemetry is never touched. Pair with `--json` for machine-parseable output
+suitable for CI policy gates.
+
+## Audit Before You Commit
+
+`install` and `uninstall` accept `--dry-run`, which prints the unified diff
+that would be applied to `~/.claude/settings.json` without writing anything:
+
+```bash
+repo-context-hooks install --platform claude --dry-run
+repo-context-hooks install --platform claude --dry-run --json | jq '.platforms[0].diff'
+```
+
+Use this for security review, change-control workflows, or just to see what
+the tool would do before letting it run.
+
 ## Documentation
 
 - [Install Guide](architecture.md) - architecture and full install reference
