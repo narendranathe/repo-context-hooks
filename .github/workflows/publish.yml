@@ -55,6 +55,18 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Move sigstore bundles out of dist/ before TestPyPI publish
+        # `pypa/gh-action-pypi-publish` invokes twine which scans the entire
+        # dist/ directory and rejects `*.sigstore.json` as "Unknown
+        # distribution format" — observed on the v1.0.0 tag deploy
+        # (run 25242241509). TestPyPI does not store PEP 740 attestations
+        # (only PyPI does), so the bundles are not useful here. Move them
+        # aside; they remain in the artifact for the PyPI step below to use.
+        run: |
+          mkdir -p sigstore-bundles
+          mv dist/*.sigstore.json sigstore-bundles/ 2>/dev/null || true
+          ls -la dist/
+
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

@@ -78,31 +78,52 @@ jobs:
         run: mkdocs build --strict
 
       - name: Resolve docs version
-        # Two trigger paths:
+        # Two trigger paths, with `latest` reserved exclusively as an alias:
         #
-        #   - Push to main (no tag): rebuild the `latest` snapshot in place.
-        #     `mike` treats `latest` as a plain version slot here. No alias
-        #     update — passing `--update-aliases latest latest` errors out
-        #     with "duplicated version and alias" because mike rejects the
-        #     same name in both positions (observed on the first deploy
-        #     after PR #113, run 25224017603).
+        #   - Push to main (no tag): rebuild the `dev` snapshot. `dev` is
+        #     a plain version slot — the tip-of-main preview. The `latest`
+        #     name is NEVER deployed as a version slot, so it can serve
+        #     purely as an alias to whatever the most recent tag is.
         #
         #   - Tag push (v1.0.0 etc.): snapshot the version AND repoint the
-        #     `latest` alias at it atomically.
+        #     `latest` alias at it atomically. `--update-aliases` is safe
+        #     here because `latest` is always an alias, never a version.
+        #
+        # Earlier deploys (pre-v1.0.0) created a `latest` version slot.
+        # The `mike delete latest` step below cleans that up idempotently
+        # so the alias reassignment can proceed. After v1.0.0 ships, the
+        # delete is a no-op every run.
+        #
+        # History: the previous design deployed `latest` as a version slot
+        # on main pushes. The v1.0.0 tag deploy (run 25242241516) failed
+        # with `error: alias 'latest' already specified as a version`
+        # because mike forbids reusing a name as both. This rename to
+        # `dev` resolves that permanently.
         id: version
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
             DEPLOY_ARGS="--update-aliases ${VERSION} latest"
           else
-            VERSION="latest"
+            VERSION="dev"
             DEPLOY_ARGS="${VERSION}"
           fi
           echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "DEPLOY_ARGS=${DEPLOY_ARGS}" >> "$GITHUB_OUTPUT"
 
+      - name: Clean up legacy 'latest' version slot (idempotent)
+        # One-time cleanup: the pre-v1.0.0 workflow deployed a `latest`
+        # version slot, which now blocks `--update-aliases ... latest` on
+        # tag pushes. `mike delete` is idempotent — after the first
+        # successful run on the canonical repo, subsequent runs find no
+        # `latest` version slot and exit cleanly. The `|| true` guard
+        # tolerates the post-cleanup steady state without failing CI.
+        run: |
+          mike delete --push latest 2>/dev/null || \
+            echo "no legacy 'latest' version to delete (steady state)"
+
       - name: Deploy versioned snapshot via mike
-        # On main: `mike deploy --push latest` (rebuilds the `latest` slot).
+        # On main: `mike deploy --push dev` (rebuilds the `dev` slot).
         # On tag:  `mike deploy --push --update-aliases <version> latest`.
         run: mike deploy --push ${{ steps.version.outputs.DEPLOY_ARGS }}
 
