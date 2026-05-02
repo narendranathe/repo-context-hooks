@@ -40,6 +40,8 @@ repo-context-hooks measure --snapshot-dir docs/monitoring
 
 The public snapshot for this repo lives at [docs/monitoring/index.html](monitoring/index.html). It is a checked-in snapshot, while the local hook-generated dashboard keeps updating in the telemetry directory. The public snapshot writer sanitizes local paths and publishes aggregate scores, event counts, lifecycle coverage, and time-series usability only.
 
+For the fleet view across every workspace where you have ever installed `repo-context-hooks`, run `repo-context-hooks measure --all-repos`. It walks the telemetry base read-only and prints tokens-saved, session counts, and the top workspaces. Pair with `--json` for a stable schema (`schema_version: 1`) suitable for dashboards, with `--redact` to hash workspace names before sharing, and with `--include-ghosts` to surface ephemeral / test-run directories that the default filter excludes. The full reference and an example output snippet live in the [Fleet Rollup section of TELEMETRY.md](https://github.com/narendranathe/repo-context-hooks/blob/main/TELEMETRY.md#fleet-rollup).
+
 ## Visualization Tools
 
 The MVP intentionally keeps visualization boring in the best way: one static HTML dashboard plus one portable JSON file. That makes the data easy to inspect without introducing a hosted telemetry service.
