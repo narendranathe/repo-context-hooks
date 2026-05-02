@@ -24,7 +24,8 @@ All notable changes to this project will be documented in this file.
 <!-- none -->
 
 ### Fixed
-<!-- none -->
+- `publish.yml`: TestPyPI publish step now moves `*.sigstore.json` files out of `dist/` before invoking `pypa/gh-action-pypi-publish`. twine inspects the entire dist directory and rejects sigstore bundles as "Unknown distribution format" — observed on the v1.0.0 tag deploy (run 25242241509) when the bundles produced by `sigstore/gh-action-sigstore-python@v3.0.0` collided with the publish action. PyPI publishing still includes the bundles via `attestations: true` (the action handles them natively at the PyPI endpoint; TestPyPI does not store attestations anyway).
+- `pages.yml`: main-push deploys now write to a `dev` version slot rather than `latest`. `latest` is reserved exclusively as an alias, repointed atomically on tag pushes via `mike deploy --update-aliases <version> latest`. The previous design (deploy `latest` as a version slot on main) failed the v1.0.0 tag deploy (run 25242241516) with `error: alias 'latest' already specified as a version` — mike forbids name reuse. An idempotent `mike delete --push latest` step cleans up the legacy version slot once; subsequent runs no-op.
 
 ### Security
 <!-- none -->
