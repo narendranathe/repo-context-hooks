@@ -44,6 +44,7 @@
     },
     {
       "flags": [
+        "--all-repos",
         "--badge",
         "--badge-out",
         "--branches",
@@ -51,6 +52,7 @@
         "--experiment-dir",
         "--forecast",
         "--format",
+        "--include-ghosts",
         "--json",
         "--no-dry-run",
         "--open",
@@ -58,6 +60,7 @@
         "--redact",
         "--repo-root",
         "--snapshot-dir",
+        "--top",
         "-o"
       ],
       "name": "measure"

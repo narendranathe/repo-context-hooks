@@ -263,8 +263,14 @@ def build_parser() -> argparse.ArgumentParser:
     measure.add_argument(
         "--redact",
         action="store_true",
-        default=True,
-        help="Redact local filesystem paths from the export (default: on; always enforced).",
+        default=False,
+        help=(
+            "Redact local filesystem paths and repo names. For `measure export` "
+            "redaction is hardcoded on regardless of this flag (privacy-by-default "
+            "for the shareable export). For `measure --all-repos` this flag is "
+            "opt-in: when set, repo_name in both text and JSON output is replaced "
+            "by sha256(name)[:12]."
+        ),
     )
     measure.add_argument(
         "--output",
@@ -279,6 +285,36 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Directory to store before.json/after.json for experiments "
             "(default: .repo-context-hooks/experiment in the repo root)."
+        ),
+    )
+    # Cross-workspace rollup (#108). Reuses --redact and --json (already
+    # registered above). Wires the rollup core (#107) into the CLI.
+    measure.add_argument(
+        "--all-repos",
+        action="store_true",
+        dest="all_repos",
+        help=(
+            "Walk every workspace under the telemetry base and print a "
+            "fleet-level rollup (tokens saved across all repos)."
+        ),
+    )
+    measure.add_argument(
+        "--include-ghosts",
+        action="store_true",
+        dest="include_ghosts",
+        help=(
+            "Include test-run / ephemeral worktree dirs in the rollup "
+            "(default: filtered out via the same is_ghost_repo classifier "
+            "as `measure --clean-ghosts`)."
+        ),
+    )
+    measure.add_argument(
+        "--top",
+        type=int,
+        default=15,
+        help=(
+            "Number of workspaces to show in the rollup table (default: 15). "
+            "Pass 0 to show all rows."
         ),
     )
 
@@ -864,6 +900,38 @@ def _measure(args: argparse.Namespace) -> int:
                 print("-" * 65)
                 for s in stats:
                     print(f"{s.branch:<30} {s.session_count:>8} {s.avg_score:>9} {s.last_seen[:10]}")
+        return 0
+
+    if getattr(args, "all_repos", False):
+        # Fleet rollup (#108). Reuses rollup_telemetry (#107). The env
+        # opt-out is checked HERE (not just inside rollup_telemetry) so we
+        # can print the friendly opt-out message and short-circuit BEFORE
+        # any filesystem read — issue #108 AC.
+        import os
+        explicit = os.environ.get("REPO_CONTEXT_HOOKS_TELEMETRY")
+        if explicit is not None and explicit.lower() in ("0", "false", "no"):
+            print("Telemetry disabled; rollup is opt-out.")
+            return 0
+
+        from dataclasses import replace
+        from . import telemetry as _telemetry_mod
+        from .telemetry import redact_repo_name
+
+        report = _telemetry_mod.rollup_telemetry(
+            include_ghosts=getattr(args, "include_ghosts", False),
+        )
+
+        if getattr(args, "redact", False):
+            redacted_repos = tuple(
+                replace(r, repo_name=redact_repo_name(r.repo_name))
+                for r in report.repos
+            )
+            report = replace(report, repos=redacted_repos)
+
+        if getattr(args, "json", False):
+            _print_json(report.to_dict())
+        else:
+            print(report.render(top_n=getattr(args, "top", 15)))
         return 0
 
     report = measure_impact(repo_root=repo_root)
