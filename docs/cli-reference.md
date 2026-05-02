@@ -89,9 +89,12 @@ Flags:
 - `--clean-ghosts` — Remove test-run ghost repos from the telemetry store (dry-run by default).
 - `--no-dry-run` — Actually delete ghost repos (use with --clean-ghosts).
 - `--format` {markdown,json} — Output format for 'export' (default: markdown).
-- `--redact` — Redact local filesystem paths from the export (default: on; always enforced).
+- `--redact` — Redact local filesystem paths and repo names. For `measure export` redaction is hardcoded on regardless of this flag (privacy-by-default for the shareable export). For `measure --all-repos` this flag is opt-in: when set, repo_name in both text and JSON output is replaced by sha256(name)[:12].
 - `--output`, `-o` PATH — Write export output to this file path instead of stdout.
 - `--experiment-dir` PATH — Directory to store before.json/after.json for experiments (default: .repo-context-hooks/experiment in the repo root).
+- `--all-repos` — Walk every workspace under the telemetry base and print a fleet-level rollup (tokens saved across all repos).
+- `--include-ghosts` — Include test-run / ephemeral worktree dirs in the rollup (default: filtered out via the same is_ghost_repo classifier as `measure --clean-ghosts`).
+- `--top` TOP — Number of workspaces to show in the rollup table (default: 15). Pass 0 to show all rows.
 
 
 ### `platforms`
