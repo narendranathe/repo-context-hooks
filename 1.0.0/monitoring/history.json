@@ -1,0 +1,46 @@
+{
+  "baseline": 20,
+  "event_counts": {
+    "session-start": 26
+  },
+  "first_seen": "2026-04-27T21:09:50.757559+00:00",
+  "forecast": {
+    "confidence": "low",
+    "daily_rate": 26.0,
+    "projected_active_days": 30,
+    "projected_events": 780,
+    "week_series": [
+      182,
+      182,
+      182,
+      182,
+      52
+    ]
+  },
+  "latest_seen": "2026-04-27T22:32:19.320459+00:00",
+  "observed_events": 26,
+  "repo": "repo-context-hooks",
+  "score": 90,
+  "snapshot_at": "2026-04-28T01:59:06Z",
+  "time_series": [
+    {
+      "date": "2026-04-27",
+      "events": 26,
+      "score": 90
+    }
+  ],
+  "uplift": 70,
+  "usability": {
+    "active_days": 1,
+    "avg_session_duration_minutes": null,
+    "checkpoint_events": 0,
+    "cold_start_time_saved_minutes": 0,
+    "lifecycle_coverage": 25,
+    "max_session_duration_minutes": null,
+    "readiness_minutes_since_last_event": 207,
+    "reload_events": 0,
+    "resume_events": 26,
+    "score_week1_uplift": null,
+    "session_end_events": 0
+  }
+}
