@@ -12,6 +12,40 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+<!-- none -->
+
+### Changed
+<!-- none -->
+
+### Deprecated
+<!-- none -->
+
+### Removed
+<!-- none -->
+
+### Fixed
+<!-- none -->
+
+### Security
+<!-- none -->
+
+### Tests
+<!-- none -->
+
+## [1.0.0] - 2026-05-01
+
+The v1.0 production-readiness release. Closes PRD #68 (10 vertical slices: community
+health, supply-chain hardening, coverage gate, stability contract, self-observability,
+install/uninstall UX, docs depth, release engineering, governance polish, team-scope
+clarity) and PRD #104 (cross-workspace telemetry rollup, 5 vertical slices).
+
+Adopters: this is the first release with a stable public surface contract — see
+`docs/stability.md` and `docs/deprecation-policy.md`. The `__all__` export, every
+documented CLI subcommand and flag, the `--platform` choices, the
+`REPO_CONTEXT_HOOKS_*` environment variable namespace, and the documented file
+locations are all part of the contract from this release forward.
+
+### Added
 - `measure --all-repos`: cross-workspace tokens-saved rollup with `--top`, `--include-ghosts`, `--redact`, and `--json`. Walks every workspace under the telemetry base read-only, applies the same `_build_usability` substring-match formula already used by single-repo `measure`, and prints a fleet summary plus a top-N table. JSON output is a versioned contract (`schema_version: 1`) suitable for CI policy gates and external dashboards. `REPO_CONTEXT_HOOKS_TELEMETRY=0` short-circuits to a one-line opt-out message without reading any files. See `TELEMETRY.md` § Fleet Rollup. (#104, #107, #108, #109, #110)
 - Install/uninstall UX layer (#74): new `repo-context-hooks verify [--platform PLATFORM]` subcommand. Synthesizes a `SessionStart` event into an isolated tmpdir, round-trips it through the local telemetry write/read path, schema-validates against the new `repo_context_hooks.telemetry.CANONICAL_EVENT_KEYS` constant, and prints a confirmation receipt (platform, agent home, settings.json sha256 over the **canonical** JSON form, last event timestamp, elapsed ms). Completes in <2s. Exit code: 0 healthy, 1 broken, 2 cold-start (no platforms detected — receipt names the install command to run). `--json` flag emits machine-parseable output for CI policy gates. The `verify` module's public surface is `VerifyReport` + `run_verify(platform)` — M7 (#75) consumes this for mkdocs-click auto-generation. (#74)
 - `--dry-run` on `install` and `uninstall`. Routes through new pure planning functions (`plan_global_hooks`, `plan_uninstall_global_hooks`, `plan_deduplicate_hooks`) that compute the would-be `settings.json` diff via `difflib.unified_diff` over canonical JSON (`sort_keys=True, indent=2`) and exit without writing. The dry-run guarantee is mechanical: a unit test monkeypatches `_save_json` to raise, asserting zero writes happen on the dry-run path. `--dry-run` and `--force` are parser-mutex on `install` (argparse exits 2 on conflict — Critic C non-budge). PARTIAL adapters (cursor/codex/replit/windsurf/lovable/openclaw/ollama/kimi) get an explicit "PARTIAL adapter: bundle copy only, no settings.json mutation" line rather than silently no-opping. (#74)
