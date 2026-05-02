@@ -63,6 +63,12 @@ This file is the persistent project context for agents and maintainers.
   - 2 new tests: `test_decision_entry_written_to_session_log`, `test_checkpoint_appends_recent_commits`
   - 2 new CLI tests: `test_parser_supports_checkpoint_command`, `test_parser_checkpoint_requires_message`
   - `## Session Log` section now scaffolded in every new workspace contract
+- We shipped cross-workspace telemetry rollup (PRD #104) — `measure --all-repos` walks every workspace under the telemetry base read-only and prints fleet-level tokens-saved, session counts, and a top-N table. The chain landed across five PRs:
+  - `#106` extracts `is_ghost_repo` predicate from `purge_ghost_repos` (side-effect-free classifier the rollup walker reuses)
+  - `#107` adds the rollup core: `RollupReport` + `RollupSummary` + `RollupRepo` frozen dataclasses, `rollup_telemetry()` walker, `redact_repo_name()` helper, `schema_version: 1` JSON contract
+  - `#108` wires the CLI: `measure --all-repos --include-ghosts --top --redact --json` with an env opt-out short-circuit and `public_surface.json` contract update
+  - `#109` adds a regression-grade integration test that locks down headline numbers against by-hand math on a synthetic 3-workspace tree (real / ghost / corrupt-JSONL)
+  - `#110` ships the docs (this entry, `TELEMETRY.md` § Fleet Rollup, and a cross-link from `docs/monitoring.md`)
 
 ### 2026-04-27 21:50 - decision (main)
 
