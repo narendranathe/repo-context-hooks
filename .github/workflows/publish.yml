@@ -102,6 +102,21 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Move sigstore bundles out of dist/ before PyPI publish
+        # Same fix as the TestPyPI step. `pypa/gh-action-pypi-publish` calls
+        # `twine check` on every file in dist/ and rejects `*.sigstore.json`
+        # with "InvalidDistribution: Unknown distribution format" — observed
+        # on the v1.0.0 retagged deploy (run 25242421527). The `attestations:
+        # true` flag below mints fresh PEP 740 attestations via OIDC; it
+        # does not consume the external sigstore bundles produced by
+        # `gh-action-sigstore-python` in the build job. Those bundles are
+        # preserved in the workflow artifact for off-PyPI verification
+        # (`sigstore verify identity ...`).
+        run: |
+          mkdir -p sigstore-bundles
+          mv dist/*.sigstore.json sigstore-bundles/ 2>/dev/null || true
+          ls -la dist/
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
