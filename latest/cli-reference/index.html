@@ -1328,9 +1328,12 @@ v1.0 public contract and follows the
 <li><code>--clean-ghosts</code> — Remove test-run ghost repos from the telemetry store (dry-run by default).</li>
 <li><code>--no-dry-run</code> — Actually delete ghost repos (use with --clean-ghosts).</li>
 <li><code>--format</code> {markdown,json} — Output format for 'export' (default: markdown).</li>
-<li><code>--redact</code> — Redact local filesystem paths from the export (default: on; always enforced).</li>
+<li><code>--redact</code> — Redact local filesystem paths and repo names. For <code>measure export</code> redaction is hardcoded on regardless of this flag (privacy-by-default for the shareable export). For <code>measure --all-repos</code> this flag is opt-in: when set, repo_name in both text and JSON output is replaced by sha256(name)[:12].</li>
 <li><code>--output</code>, <code>-o</code> PATH — Write export output to this file path instead of stdout.</li>
 <li><code>--experiment-dir</code> PATH — Directory to store before.json/after.json for experiments (default: .repo-context-hooks/experiment in the repo root).</li>
+<li><code>--all-repos</code> — Walk every workspace under the telemetry base and print a fleet-level rollup (tokens saved across all repos).</li>
+<li><code>--include-ghosts</code> — Include test-run / ephemeral worktree dirs in the rollup (default: filtered out via the same is_ghost_repo classifier as <code>measure --clean-ghosts</code>).</li>
+<li><code>--top</code> TOP — Number of workspaces to show in the rollup table (default: 15). Pass 0 to show all rows.</li>
 </ul>
 <h3 id="platforms"><code>platforms</code></h3>
 <p>Flags:</p>
