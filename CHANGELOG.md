@@ -24,7 +24,7 @@ All notable changes to this project will be documented in this file.
 <!-- none -->
 
 ### Fixed
-<!-- none -->
+- `verify.run_verify()` now routes `Path.home()` through `_logging_setup._safe_home()` to inherit the cross-platform fallback ladder PR #103 added for `logging_setup`. Without this, verify crashed on Windows SYSTEM accounts, AWS Lambda layers, Nix sandboxes with read-only `$HOME`, and distroless containers without `/etc/passwd` — the same global-adoption population v1.0 targets. Phase 2 portability-axis review of PR #112 surfaced the regression. Bonus fix: `_init_synthetic_repo` now falls back from `git init --initial-branch=verify` (git 2.28+, Aug 2020) to plain `git init --quiet` so RHEL 7/8 / UBI 8 adopters with git 2.20/2.27 are not silently broken. (#74)
 
 ### Security
 <!-- none -->

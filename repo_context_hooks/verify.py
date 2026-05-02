@@ -202,19 +202,26 @@ def _init_synthetic_repo(scratch_root: Path) -> Path:
 
     repo = scratch_root / "repo"
     repo.mkdir(parents=True, exist_ok=True)
-    try:
-        subprocess.run(
-            ["git", "init", "--quiet", "--initial-branch=verify"],
-            cwd=repo,
-            check=False,
-            capture_output=True,
-            timeout=5,
-        )
-    except (OSError, subprocess.SubprocessError):
-        # ``git`` isn't installed (Nix sandbox, distroless). The synthetic
-        # event will still write — verify proves the plumbing works even
-        # when git is absent. Fall through.
-        pass
+    # --initial-branch is git 2.28+ (Aug 2020). RHEL 7/8 / UBI 8 ship
+    # git 2.20/2.27 — the flag exits non-zero with "unknown option"
+    # and leaves the dir uninitialised. Try-modern-then-fallback keeps
+    # the comment's deterministic-branch claim true on 2.28+ AND keeps
+    # verify working on older git. OSError covers "git not on PATH".
+    for argv in (
+        ["git", "init", "--quiet", "--initial-branch=verify"],
+        ["git", "init", "--quiet"],  # git < 2.28 fallback
+    ):
+        try:
+            result = subprocess.run(
+                argv, cwd=repo, check=False,
+                capture_output=True, timeout=5,
+            )
+            if result.returncode == 0:
+                break
+        except (OSError, subprocess.SubprocessError):
+            # git absent entirely; synthetic event still writes — verify
+            # proves the plumbing works even when git is missing.
+            break
     return repo
 
 
@@ -281,7 +288,18 @@ def run_verify(
     """
 
     start = time.perf_counter()
-    h = home or Path.home()
+    # Path.home() raises RuntimeError on Windows SYSTEM accounts (no
+    # USERPROFILE), AWS Lambda layers (no /home), Nix sandboxes with
+    # read-only $HOME, and distroless containers without /etc/passwd.
+    # PR #103 fixed this in logging_setup via _safe_home() — route
+    # through the same helper to inherit the cross-platform fallback
+    # ladder (USERPROFILE -> HOME -> tempdir). Without this guard,
+    # verify crashes BEFORE the try-block can convert the failure into
+    # a receipt — defeating verify's contract.
+    if home is not None:
+        h = home
+    else:
+        h = _logging_setup._safe_home()
     agent_home = h / f".{platform}"
     settings_path = _platform_settings_path(platform, h)
 
