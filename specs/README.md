@@ -74,6 +74,34 @@ This file is the persistent project context for agents and maintainers.
 
 Built: repo-context-hooks checkpoint --message CLI command + Session Log section in workspace contracts + write_decision_entry() in repo_specs_memory.py. Decided: keep session-start as read-only (no auto-scaffold) to preserve degradation contract — init is the explicit setup step. Decided: Session Log (agent-written semantic entries) stays separate from Session Checkpoints (automated mechanical data). Decided: SKILL.md rewritten with hard PreCompact/SessionEnd write-back steps + checkpoint message format template so the agent knows exactly what to write. Built: richer automated checkpoints now include last 3 git commits. 253/253 tests pass. Synced to ~/.claude/skills. Next: cut a release (v0.6.0) with these changes.
 
+### 2026-05-01 23:03 - decision (docs/demo-session-log-checkpoints)
+
+Built: docs/cli-reference.md auto-rendered from cli.py:build_parser via stdlib script (scripts/render_cli_reference.py + drift gate in tests/contract/test_docs_contract.py). Decided: amend issue #75's mkdocs-click spec because mkdocs-click is Click-only and build_parser returns argparse.ArgumentParser; porting to Click would break docs/stability.md's v1.0 surface contract. Stdlib pre-render + diff gives the same 'no drift possible' guarantee with zero new build deps. Three layers of drift gating: contract test re-runs the renderer in-process, --check step in pages.yml + ci.yml, plus a literal-subcommand assertion. Next: shipped as PR #113 (M7 docs depth).
+
+### 2026-05-01 23:03 - decision (docs/demo-session-log-checkpoints)
+
+Built: pages.yml splits deploys by trigger — main pushes write to a 'dev' version slot, tag pushes use 'mike deploy --push --update-aliases <version> latest'. Decided: 'latest' is reserved exclusively as an alias because mike forbids reusing a name as both version slot and alias (fails with 'error: alias latest already specified as a version'). Idempotent 'mike delete --push latest' step handles the one-time legacy cleanup. Caught when v1.0.0 tag deploy run 25242241516 failed against the previous design that deployed 'latest' as a version slot on every main push. Next: shipped as PR #119 (release-engineering fix).
+
+### 2026-05-01 23:03 - decision (docs/demo-session-log-checkpoints)
+
+Built: publish.yml moves *.sigstore.json out of dist/ before BOTH TestPyPI and PyPI publish steps; passes skip-existing: true to both. Decided: pypa/gh-action-pypi-publish's 'attestations: true' flag mints fresh PEP 740 attestations via OIDC at publish time — it does NOT consume external sigstore bundles produced by gh-action-sigstore-python. The bundles trip twine's check on every file in dist/ before any attestation logic runs. Bundles are kept in the workflow artifact for off-PyPI verification only. Decided: skip-existing on TestPyPI is essentially mandatory for retag idempotency (every retag re-uploads the same filename); on PyPI it just suppresses action-level error so downstream gh release edit still runs. Caught when v1.0.0 retag chain hit InvalidDistribution then 400 File already exists. Next: shipped as PRs #121 and #122.
+
+### 2026-05-01 23:03 - decision (docs/demo-session-log-checkpoints)
+
+Built: --redact CLI flag default flipped from True to False as part of measure --all-repos wiring. Decided: the original default=True was vestigial — measure export hardcoded redact=True regardless of the flag, so the default carried no observable behavior. The new opt-in semantics for 'measure --all-repos --redact' give the flag actual meaning (replace repo_name with sha256(name)[:12] in both text and JSON output via redact_repo_name). measure export is unchanged (still always redacts via the hardcoded call site). Verified by tests/test_cli.py::test_measure_export_redact_default continuing to pass — the redact flag was never the source-of-truth for export, only for the new --all-repos rollup. Next: shipped as PR #116 (M5+M6 CLI surface).
+
+### 2026-05-01 23:04 - decision (docs/demo-session-log-checkpoints)
+
+Built: 3-workspace synthetic test fixture for cross-workspace rollup integration test. Decided: keep _build_three_workspace_tree LOCAL to tests/test_telemetry_rollup_integration.py rather than promoting to tests/conftest.py. conftest.py is currently scoped tightly to isolation concerns (Hypothesis storage, profile, env-var stripping); adding a workspace-fixture builder for a single consumer would expand its surface prematurely. When a second consumer materializes, the helper imports cleanly from the test module or can be lifted then. Trade-off: minor duplication risk if PRD #104 grows more integration tests vs cleaner conftest.py boundary today. Next: shipped as PR #117 (M7 integration).
+
+### 2026-05-01 23:04 - decision (docs/demo-session-log-checkpoints)
+
+Built: codified when to use Phase-1+Phase-2 critic-and-ALT pattern vs pure TDD. Decided: Phase-1 (3 critics: global-adoption / repo-conventions / failure-modes lens) + Phase-2 (5 parallel ALT implementations in worktrees, judged on Repo fit / Global-adoption / Maintenance / Pain-relief, total /20) is the right tool for HIGH-STAKES shippables — used for issues #73 (self-observability), #74 (verify command), #75 (docs depth). Phase 1 won every time (19/20, 20/20) but ALTs surfaced real concerns the consensus would have missed (e.g., ALT 1 caught the Path.home() regression now scheduled as the May 8 follow-up routine). Decided: pure TDD red-green-refactor in a single session is sufficient for SMALLER single-issue feature slices like the PRD #104 chain (#107 / #108 / #109 / #110) — the fortress is overkill for <300 line slices. Next: heuristic captured in this Session Log entry so future sessions can route by complexity without re-litigating.
+
+### 2026-05-01 23:04 - decision (docs/demo-session-log-checkpoints)
+
+Built: shipped v1.0.0 to PyPI with Sigstore + PEP 740 attestations after THREE retag cycles. Decided: capture the release-engineering tax explicitly so v1.0.1 onward is one-shot. Tax was three separable bugs that only surface on the first real tag: (1) PR #119 — pages.yml mike collision, latest reserved as alias not version slot; (2) PR #121 — publish.yml had to move sigstore bundles out of dist/ before PyPI step (PR #119 only patched TestPyPI; my misdiagnosis assumed attestations: true would consume external bundles, but it mints fresh attestations via OIDC); (3) PR #122 — skip-existing: true on both publish targets for retag idempotency (TestPyPI rejects same-filename re-upload). Each fix unblocked the next stage and exposed the next gotcha. Verified live: PyPI 1.0.0 published, docs site /1.0.0/ renders, latest alias points at 1.0.0, GitHub Release notes auto-populated from CHANGELOG. Next: hold the v1.0 surface; v1.0.1 will ship from the same workflow without retag cycles.
+
 ## Delivery Timeline
 
 ### Phase 1: Product Identity
