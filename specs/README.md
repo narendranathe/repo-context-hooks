@@ -24,6 +24,25 @@ This file is the persistent project context for agents and maintainers.
 - Treat `README.md`, `specs/README.md`, and `UBIQUITOUS_LANGUAGE.md` as durable source-of-truth files, not disposable bootstrap output.
 - Prefer platform-specific adapters and playbooks over generic "supports every agent" language.
 
+## Product Positioning (USPs)
+
+Source of truth for how we describe `repo-context-hooks` externally. When in doubt, write the next blog post, README section, or PR description against this list. Every USP must point at a falsifiable artifact (a CLI command, a file path, or a metric) so we never drift into vague "AI memory" claims.
+
+1. **Your agent's memory lives in `git`, not `~/.claude/`.** `specs/README.md` and `UBIQUITOUS_LANGUAGE.md` are checked in, diff-able, and PR-reviewable. Anthropic Auto Memory, claude-mem, and Context Mode all store machine-local blobs that no teammate can review.
+2. **Deterministic, not lossy.** PreCompact appends an exact snapshot (branch, last 3 commits, working changes) to `specs/README.md`. Competitors use LLM summarization that drops 20-30% of detail per session.
+3. **Bound to the four Anthropic hook events.** `SessionStart`, `PreCompact`, `PostCompact`, `SessionEnd` are wired by `repo_context_hooks/bundle/hooks.json`. Directly addresses anthropics/claude-code#13112, which Anthropic closed as Not Planned.
+4. **Cross-harness with one contract.** 9 platform adapters (Claude, Codex, Cursor, Replit, Windsurf, Ollama, Kimi, Lovable, OpenClaw) read and write the same workspace contract. Switch agents without re-onboarding.
+5. **Self-measuring with public proof.** Every install produces `continuity_score`, `cold_start_time_saved_minutes`, `tokens_saved`, `cost_saved_usd`, and a three-color SVG badge auto-rendered to `docs/badge.svg`. Not a vibes pitch.
+6. **Before/after experiment mode.** `repo-context-hooks measure experiment start | finish` captures a baseline score, computes the uplift delta, and exports a redacted impact report you can paste straight into a PR or a LinkedIn post.
+7. **Zero runtime dependencies. One-line install.** `pip install repo-context-hooks && repo-context-hooks install --platform claude`. `pyproject.toml` declares `dependencies = []`. No venv hell, no transitive CVEs.
+8. **Privacy by design.** SHA-256 hashed repo IDs, no source code or prompts or PR bodies collected, no remote collector configured. `--no-telemetry` bakes opt-out into the hook command string itself so it survives shell restarts.
+9. **CI-ready operational tooling.** `doctor --all-platforms`, `recommend --json`, `verify`, `--dry-run`, `--clean-ghosts`, `public_surface` contract. Drops cleanly into a CI gate, not a 50-line shell script.
+10. **Supply-chain integrity by default.** GitHub Actions OIDC trusted publishing, Sigstore attestations, `gh attestation verify`, Dependabot, CodeQL. Installable inside enterprise procurement without an exception.
+
+**Defensible angle that survives Anthropic shipping more native memory:** Auto Memory already chose `~/.claude/` as storage. That decision is locked. Our bet on a *repo-tracked, PR-reviewable workspace contract* is the seam none of Auto Memory, claude-mem, or Context Mode occupies.
+
+**Hard non-goals (never position around these):** team aggregation server, hosted dashboard, remote telemetry collector, "universal AI memory layer," automatic prompt rewriting.
+
 ## Built So Far
 
 - We turned an internal continuity workflow into a public open source product named `repo-context-hooks`.

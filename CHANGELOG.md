@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-<!-- none -->
+- `specs/README.md`: new "Product Positioning (USPs)" section. 10 falsifiable USPs (each pinned to a CLI command, file path, or metric) plus the defensible-angle note and the hard non-goals list. Source of truth for external positioning so future blog posts, README sections, and PR descriptions anchor to the same claims.
 
 ### Changed
 <!-- none -->
