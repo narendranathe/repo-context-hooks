@@ -84,8 +84,40 @@ def extract_repo_summary(repo_root: Path) -> str:
             "README and engineering memory synchronized."
         )
 
+    # Track multi-line HTML comments. `clean_line` only strips single-line
+    # `<...>` tags via `re.sub(r"<[^>]+>", "", line)`, which doesn't match
+    # `<!--` or `-->` when they sit on different lines. Without this guard,
+    # the comment body (e.g. the README's `<!-- BADGES:START -->` block
+    # describing badge conventions) passes the prose filters and clobbers
+    # the AUTO:REPO_CONTEXT summary on every SessionStart fire. (#124)
+    in_html_comment = False
+
     lines: list[str] = []
     for raw in readme.read_text(encoding="utf-8", errors="ignore").splitlines():
+        stripped = raw.strip()
+
+        # Detect comment-block boundaries on the raw line, before clean_line
+        # strips tags. A line can both open and close a comment in either
+        # order (`<!-- foo -->` or even `--> ... <!--`); evaluate the last
+        # marker to decide the trailing state.
+        if "<!--" in stripped or "-->" in stripped:
+            last_open = stripped.rfind("<!--")
+            last_close = stripped.rfind("-->")
+            if last_close > last_open:
+                # Comment closes on this line. Skip it (the prose body would
+                # already have been seen on prior lines if it were valid).
+                in_html_comment = False
+                continue
+            if last_open > last_close:
+                # Comment opens and does NOT close on this line.
+                in_html_comment = True
+                continue
+            # Equal positions only happen when both are -1 (impossible
+            # given the outer `in` check) — fall through to the cleaner.
+
+        if in_html_comment:
+            continue
+
         line = clean_line(raw)
         if not line:
             continue
