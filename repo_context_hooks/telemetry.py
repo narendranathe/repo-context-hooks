@@ -820,6 +820,38 @@ def render_monitoring_dashboard(
     else:
         uplift_str = str(uplift)
 
+    savings_row = f"""
+      <!-- Private modeling aids: not included in public snapshots -->
+      <div class="savings-row">
+        <div class="savings-card">
+          <span>Tokens injected</span>
+          <strong>{tokens_injected_str}</strong>
+          <em>~4,500 tok/session-start event x {report.usability.resume_events}</em>
+        </div>
+        <div class="savings-card">
+          <span>Tokens saved (est.)</span>
+          <strong>{tokens_saved_str}</strong>
+          <em>Modeling assumption: 30% avoid 2,000-token re-orientation</em>
+        </div>
+        <div class="savings-card">
+          <span>Est. cost saved</span>
+          <strong>{cost_saved_str}</strong>
+          <em>Modeling assumption: Claude Sonnet $3/M input tokens</em>
+        </div>
+        <div class="savings-card">
+          <span>Cold starts prevented (est.)</span>
+          <strong>{cold_start_str}</strong>
+          <em>Based on observed post-compact reload events</em>
+        </div>
+        <div class="savings-card">
+          <span>Week-1 uplift</span>
+          <strong>{uplift_str}</strong>
+          <em>Score gain from day 0 to day 7</em>
+        </div>
+      </div>"""
+    if public:
+        savings_row = ""
+
     # lifecycle donut
     donut = _lifecycle_donut_svg(report.usability.lifecycle_coverage)
 
@@ -850,7 +882,7 @@ def render_monitoring_dashboard(
         <section class="panel" style="grid-column:1/-1">
           <h2>Branch health</h2>
           <table class="btable">
-            <thead><tr><th>Branch</th><th>Sessions</th><th>Avg score</th><th>Last seen</th></tr></thead>
+            <thead><tr><th>Branch</th><th>Session-start events</th><th>Avg score</th><th>Last seen</th></tr></thead>
             <tbody>{branch_rows}</tbody>
           </table>
         </section>
@@ -868,7 +900,7 @@ def render_monitoring_dashboard(
         forecast_panel = f"""
       <div class="grid">
         <section class="panel">
-          <h2>30-day forecast <small style="font-size:14px;font-weight:400;opacity:.6">confidence: {html.escape(forecast.confidence)}</small></h2>
+          <h2>30-day projection <small style="font-size:14px;font-weight:400;opacity:.6">from current local sample; confidence: {html.escape(forecast.confidence)}</small></h2>
           <div class="metrics4">
             <div class="metric"><span>Daily rate</span><strong>{forecast.daily_rate:.1f}</strong></div>
             <div class="metric"><span>Projected events</span><strong>{forecast.projected_events:,}</strong></div>
@@ -877,7 +909,7 @@ def render_monitoring_dashboard(
           <div class="fc-grid">{fc_rows}</div>
         </section>
         <section class="panel">
-          <h2>Platform proof</h2>
+          <h2>Platform surface</h2>
           <div class="events">
             <div><span>Claude native hooks</span><strong>ready</strong></div>
             <div><span>Repo contract score</span><strong>{report.current_score}</strong></div>
@@ -894,7 +926,7 @@ def render_monitoring_dashboard(
         f"Local-only telemetry. Evidence log: {html.escape(str(report.telemetry_path))}"
     )
 
-    return f"""<!doctype html>
+    page = f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -1057,7 +1089,7 @@ def render_monitoring_dashboard(
     <section class="hero">
       <div class="eyebrow">repo-context-hooks · continuity telemetry</div>
       <h1>Continuity Impact Monitor</h1>
-      <p class="lede">Live evidence that AI sessions are preserving repo context — score, lifecycle coverage, token savings, branch health, and 30-day trajectory in one view.</p>
+      <p class="lede">Checked-in local evidence that AI sessions are preserving repo context: score, observed events, lifecycle coverage, and sample trajectory in one view.</p>
 
       <!-- Primary metrics row -->
       <div class="metrics">
@@ -1118,7 +1150,7 @@ def render_monitoring_dashboard(
               <p style="margin:0 0 12px;opacity:.7;font-size:14px">
                 {report.usability.lifecycle_coverage}% of the 4-event lifecycle is instrumented.
                 {'All four hooks are firing.' if report.usability.lifecycle_coverage == 100
-                 else 'session-start is active. session-end, pre-compact, and post-compact will populate after longer sessions.' if report.usability.lifecycle_coverage == 25
+                 else 'session-start is active. session-end, pre-compact, and post-compact are not yet observed in this snapshot.' if report.usability.lifecycle_coverage == 25
                  else 'Some lifecycle events are missing.'}
               </p>
               <div class="lc-grid">{lifecycle_pills}</div>
@@ -1141,7 +1173,7 @@ def render_monitoring_dashboard(
           <h2>Usability metrics</h2>
           <div class="usability">
             <div><span>Active days</span><strong>{report.usability.active_days}</strong></div>
-            <div><span>Sessions</span><strong>{report.usability.resume_events}</strong></div>
+            <div><span>Session-start events</span><strong>{report.usability.resume_events}</strong></div>
             <div><span>Checkpoints</span><strong>{report.usability.checkpoint_events}</strong></div>
             <div><span>Reloads</span><strong>{report.usability.reload_events}</strong></div>
             <div><span>Session ends</span><strong>{report.usability.session_end_events}</strong></div>
@@ -1159,6 +1191,12 @@ def render_monitoring_dashboard(
 </body>
 </html>
 """
+    if public:
+        start = page.find("      <!-- Context savings row -->")
+        end = page.find("      <!-- Activity + event mix -->")
+        if start != -1 and end != -1 and start < end:
+            page = page[:start] + page[end:]
+    return page
 
 
 def write_monitoring_dashboard(report: ImpactReport) -> Path:
@@ -1955,7 +1993,7 @@ def export_impact_report(
         ("Observed events", _val(report.observed_events)),
         ("Active days", _val(u.active_days)),
         ("Lifecycle coverage", f"{u.lifecycle_coverage}%"),
-        ("Sessions (resume events)", _val(u.resume_events)),
+        ("Session-start events", _val(u.resume_events)),
         ("Checkpoint events", _val(u.checkpoint_events)),
         ("Context reloads (post-compact)", _val(u.reload_events)),
         ("Avg session duration (min)", _val(u.avg_session_duration_minutes)),

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="420" viewBox="0 0 1120 420" role="img" aria-labelledby="title desc">
+  <title id="title">Platform Support Surfaces</title>
+  <desc id="desc">repo-context-hooks platform support surfaces showing Claude with native lifecycle hooks and Codex, Cursor, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi with partial repo context surfaces that share the same repo contract.</desc>
+
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff8e8"/>
+      <stop offset="62%" stop-color="#f2d6a4"/>
+      <stop offset="100%" stop-color="#c98d50"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#203a33"/>
+      <stop offset="100%" stop-color="#101820"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="128%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#3a2410" flood-opacity=".16"/>
+    </filter>
+  </defs>
+
+  <style>
+    .eyebrow { font: 800 14px Aptos, Segoe UI, sans-serif; letter-spacing: 2px; text-transform: uppercase; fill: #8f3d22; }
+    .headline { font: 800 38px Georgia, serif; letter-spacing: 0; fill: #17120b; }
+    .card-title { font: 800 24px Georgia, serif; letter-spacing: 0; fill: #17120b; }
+    .card-title-light { font: 800 24px Georgia, serif; letter-spacing: 0; fill: #fff8e8; }
+    .body { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #4f3e2d; }
+    .body-light { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #efe2c8; }
+    .small { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #6e5943; }
+    .small-light { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #d8c7a8; }
+    .pill { font: 800 13px Aptos, Segoe UI, sans-serif; letter-spacing: 1px; text-transform: uppercase; fill: #fff8e8; }
+  </style>
+
+  <rect width="1120" height="420" rx="28" fill="url(#paper)"/>
+  <text class="eyebrow" x="64" y="60">same repo contract, different platform surfaces</text>
+  <text class="headline" x="64" y="110">Platform Support Surfaces</text>
+
+  <rect x="72" y="166" width="330" height="164" rx="8" fill="url(#ink)" filter="url(#soft)"/>
+  <text class="card-title-light" x="104" y="214">Claude</text>
+  <rect x="104" y="236" width="206" height="30" rx="8" fill="#2f6f5e"/>
+  <text class="pill" x="124" y="256">native lifecycle hooks</text>
+  <text class="body-light" x="104" y="296">SessionStart, PreCompact,</text>
+  <text class="body-light" x="104" y="322">PostCompact, SessionEnd</text>
+
+  <rect x="466" y="166" width="582" height="164" rx="8" fill="#fffaf0" stroke="#17120b" stroke-opacity=".14" filter="url(#soft)"/>
+  <text class="card-title" x="500" y="214">Partial repo context surfaces</text>
+  <text class="body" x="500" y="248">Codex, Cursor, Replit, Windsurf</text>
+  <text class="body" x="500" y="276">Lovable, OpenClaw, Ollama, Kimi</text>
+  <text class="small" x="500" y="310">AGENTS.md, platform rules/files, repo knowledge, local templates</text>
+
+  <line x1="406" y1="248" x2="458" y2="248" stroke="#2f6f5e" stroke-width="7" stroke-linecap="round"/>
+  <rect x="192" y="344" width="736" height="34" rx="8" fill="#fff8e8" stroke="#17120b" stroke-opacity=".12"/>
+  <text class="body" x="224" y="367">same repo contract: README.md, specs/README.md, UBIQUITOUS_LANGUAGE.md, AGENTS.md</text>
+</svg>

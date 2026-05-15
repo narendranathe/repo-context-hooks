@@ -1,85 +1,102 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
   <title id="title">Context Continuity Engine</title>
-  <desc id="desc">A repo-context-hooks hero image showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, +70 uplift, and the next agent resumes warm.</desc>
+  <desc id="desc">repo-context-hooks proof hero showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, score 90, baseline 20, +70 uplift, 108 observed events, 3 active days, 25% coverage, local operational telemetry, and the next agent resumes warm.</desc>
 
   <defs>
     <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#fff8e8"/>
-      <stop offset="58%" stop-color="#f2d6a4"/>
+      <stop offset="62%" stop-color="#ecd09a"/>
       <stop offset="100%" stop-color="#c98d50"/>
     </linearGradient>
     <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#203a33"/>
       <stop offset="100%" stop-color="#101820"/>
     </linearGradient>
-    <linearGradient id="heat" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#b54720"/>
-      <stop offset="48%" stop-color="#e6a92f"/>
+      <stop offset="50%" stop-color="#e6a92f"/>
       <stop offset="100%" stop-color="#2f6f5e"/>
     </linearGradient>
-    <filter id="soft" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#3a2410" flood-opacity=".18"/>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="128%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#3a2410" flood-opacity=".18"/>
     </filter>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 1 1 L 9 5 L 1 9 z" fill="#2f6f5e"/>
     </marker>
   </defs>
 
-
   <style>
-    .eyebrow { font: 800 15px Aptos, Segoe UI, sans-serif; letter-spacing: 3px; text-transform: uppercase; fill: #8f3d22; }
-    .headline { font: 800 44px Georgia, serif; letter-spacing: -1.8px; fill: #17120b; }
+    .eyebrow { font: 800 15px Aptos, Segoe UI, sans-serif; letter-spacing: 2px; text-transform: uppercase; fill: #8f3d22; }
+    .headline { font: 800 43px Georgia, serif; letter-spacing: 0; fill: #17120b; }
     .subhead { font: 600 19px Aptos, Segoe UI, sans-serif; fill: #5d4630; }
-    .card-title { font: 800 23px Georgia, serif; fill: #17120b; }
-    .card-title-light { font: 800 23px Georgia, serif; fill: #fff8e8; }
-    .label { font: 800 13px Aptos, Segoe UI, sans-serif; letter-spacing: 2px; text-transform: uppercase; fill: #8f3d22; }
+    .card-title { font: 800 22px Georgia, serif; letter-spacing: 0; fill: #17120b; }
+    .card-title-light { font: 800 22px Georgia, serif; letter-spacing: 0; fill: #fff8e8; }
+    .metric { font: 800 33px Georgia, serif; letter-spacing: 0; fill: #fff8e8; }
+    .label { font: 800 13px Aptos, Segoe UI, sans-serif; letter-spacing: 1px; text-transform: uppercase; fill: #8f3d22; }
     .body { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #4f3e2d; }
     .body-light { font: 600 16px Aptos, Segoe UI, sans-serif; fill: #efe2c8; }
     .small { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #6e5943; }
     .small-light { font: 600 14px Aptos, Segoe UI, sans-serif; fill: #d8c7a8; }
+    .tiny { font: 700 12px Aptos, Segoe UI, sans-serif; fill: #6e5943; }
   </style>
 
-  <rect width="1280" height="640" rx="42" fill="url(#paper)"/>
-  <circle cx="1090" cy="140" r="210" fill="#2f6f5e" opacity=".16"/>
-  <circle cx="180" cy="520" r="230" fill="#b54720" opacity=".14"/>
-  <text class="eyebrow" x="72" y="76">repo-context-hooks</text>
-  <text class="headline" x="72" y="126">Context Continuity Engine</text>
-  <text class="subhead" x="76" y="164">Repo memory becomes measurable agent momentum without leaving git.</text>
+  <rect width="1280" height="640" rx="32" fill="url(#paper)"/>
+  <rect x="48" y="42" width="1184" height="556" rx="8" fill="#fffaf0" fill-opacity=".34" stroke="#17120b" stroke-opacity=".08"/>
 
-  <rect x="72" y="230" width="250" height="176" rx="28" fill="#fffaf0" stroke="#17120b" stroke-opacity=".12" filter="url(#soft)"/>
-  <text class="card-title" x="104" y="280">README.md</text>
-  <text class="body" x="104" y="315">Public product story</text>
-  <text class="small" x="104" y="344">what it does</text>
-  <text class="small" x="104" y="370">who it supports</text>
+  <text class="eyebrow" x="72" y="78">repo-context-hooks</text>
+  <text class="headline" x="72" y="128">Agents lose context at session boundaries</text>
+  <text class="subhead" x="76" y="164">Repo-native continuity, measured by local operational telemetry.</text>
 
-  <rect x="380" y="206" width="280" height="224" rx="30" fill="url(#ink)" filter="url(#soft)"/>
-  <text class="card-title-light" x="412" y="260">specs/README.md</text>
-  <text class="body-light" x="412" y="296">Engineering memory</text>
-  <text class="small-light" x="412" y="330">decisions</text>
-  <text class="small-light" x="412" y="356">failed attempts</text>
-  <text class="small-light" x="412" y="382">next work</text>
+  <rect x="72" y="218" width="234" height="78" rx="8" fill="#fffaf0" stroke="#17120b" stroke-opacity=".14" filter="url(#soft)"/>
+  <text class="card-title" x="98" y="252">README.md</text>
+  <text class="small" x="98" y="278">public product story</text>
 
-  <rect x="718" y="230" width="232" height="176" rx="28" fill="#fffaf0" stroke="#17120b" stroke-opacity=".12" filter="url(#soft)"/>
-  <text class="card-title" x="750" y="280">AGENTS.md</text>
-  <text class="body" x="750" y="315">Agent entry rules</text>
-  <text class="small" x="750" y="344">same repo boundary</text>
-  <text class="small" x="750" y="370">different agents</text>
+  <rect x="72" y="318" width="234" height="92" rx="8" fill="url(#ink)" filter="url(#soft)"/>
+  <text class="card-title-light" x="98" y="354">specs/README.md</text>
+  <text class="small-light" x="98" y="382">decisions, failed attempts, next work</text>
 
-  <line x1="326" y1="318" x2="372" y2="318" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
-  <line x1="664" y1="318" x2="710" y2="318" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
-  <line x1="954" y1="318" x2="1002" y2="318" stroke="url(#heat)" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="72" y="432" width="234" height="78" rx="8" fill="#f0f7f4" stroke="#2f6f5e" stroke-opacity=".46" filter="url(#soft)"/>
+  <text class="card-title" x="98" y="466">AGENTS.md</text>
+  <text class="small" x="98" y="492">agent re-entry rules</text>
 
-  <rect x="1008" y="194" width="210" height="270" rx="32" fill="url(#ink)" filter="url(#soft)"/>
-  <text class="card-title-light" x="1038" y="250">Impact</text>
-  <text class="card-title-light" x="1038" y="280">monitor</text>
-  <text class="label" x="1038" y="324" fill="#e6a92f">SCORE 90</text>
-  <rect x="1038" y="342" width="134" height="12" rx="6" fill="#2b3935"/>
-  <rect x="1038" y="342" width="120" height="12" rx="6" fill="url(#heat)"/>
-  <text class="label" x="1038" y="386" fill="#e6a92f">+70 UPLIFT</text>
-  <polyline points="1038,426 1066,404 1094,414 1122,386 1150,392 1176,374" fill="none" stroke="#f2d6a4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="310" y1="257" x2="366" y2="272" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <line x1="310" y1="365" x2="366" y2="333" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <line x1="310" y1="470" x2="366" y2="392" stroke="#2f6f5e" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"/>
 
-  <rect x="104" y="506" width="1072" height="70" rx="28" fill="#fff8e8" fill-opacity=".72" stroke="#17120b" stroke-opacity=".12"/>
-  <text class="card-title" x="136" y="550">hook events</text>
-  <text class="body" x="296" y="550">session-start -> pre-compact -> post-compact -> session-end</text>
-  <text class="card-title" x="850" y="550" fill="#2f6f5e">next agent resumes warm</text>
+  <rect x="374" y="214" width="258" height="300" rx="8" fill="#fffaf0" stroke="#17120b" stroke-opacity=".14" filter="url(#soft)"/>
+  <text class="label" x="404" y="252">hook events</text>
+  <text class="card-title" x="404" y="286">Observed entry signals</text>
+  <rect x="404" y="316" width="192" height="36" rx="8" fill="#ecfdf5" stroke="#2f6f5e" stroke-opacity=".45"/>
+  <text class="body" x="426" y="340">session-start 107</text>
+  <rect x="404" y="366" width="146" height="36" rx="8" fill="#fff7ed" stroke="#b54720" stroke-opacity=".4"/>
+  <text class="body" x="426" y="390">decision 1</text>
+  <rect x="404" y="416" width="208" height="44" rx="8" fill="#f8ead6" stroke="#8f3d22" stroke-opacity=".32"/>
+  <text class="tiny" x="416" y="442">checkpoint/reload/session-end events 0</text>
+  <text class="small" x="404" y="486">25% coverage keeps the proof honest.</text>
+
+  <line x1="636" y1="364" x2="700" y2="364" stroke="url(#signal)" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <rect x="708" y="180" width="270" height="364" rx="8" fill="url(#ink)" filter="url(#soft)"/>
+  <text class="card-title-light" x="738" y="228">Impact monitor</text>
+  <text class="small-light" x="738" y="256">local operational telemetry</text>
+  <text class="metric" x="738" y="310">score 90</text>
+  <text class="small-light" x="738" y="338">baseline 20</text>
+  <rect x="738" y="360" width="188" height="12" rx="6" fill="#2b3935"/>
+  <rect x="738" y="360" width="170" height="12" rx="6" fill="url(#signal)"/>
+  <text class="metric" x="738" y="422">+70 uplift</text>
+  <text class="body-light" x="738" y="462">108 observed events</text>
+  <text class="body-light" x="738" y="492">3 active days</text>
+  <text class="body-light" x="738" y="522">25% coverage</text>
+
+  <line x1="982" y1="364" x2="1034" y2="364" stroke="#2f6f5e" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <rect x="1040" y="250" width="168" height="174" rx="8" fill="#ecfdf5" stroke="#2f6f5e" stroke-opacity=".5" filter="url(#soft)"/>
+  <text class="card-title" x="1064" y="292">Next agent</text>
+  <text class="body" x="1064" y="326">resumes warm</text>
+  <text class="small" x="1064" y="358">from checked-in</text>
+  <text class="small" x="1064" y="384">repo state</text>
+
+  <rect x="72" y="548" width="1136" height="40" rx="8" fill="#fff8e8" stroke="#17120b" stroke-opacity=".12"/>
+  <text class="label" x="96" y="574">continuity audit</text>
+  <text class="body" x="258" y="574">estimated uplift, observed events, and lifecycle gaps stay visible in git</text>
 </svg>

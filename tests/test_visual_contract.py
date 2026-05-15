@@ -157,14 +157,41 @@ def test_context_engine_hero_mentions_continuous_monitoring() -> None:
 
     expected_snippets = [
         "context continuity engine",
+        "baseline 20",
         "hook events",
         "impact monitor",
         "score 90",
         "+70 uplift",
+        "108 observed events",
+        "3 active days",
+        "25% coverage",
+        "local operational telemetry",
         "next agent resumes warm",
     ]
     for snippet in expected_snippets:
         assert snippet in text, f"missing context engine hero detail: {snippet}"
+
+
+def test_platform_support_diagram_marks_native_and_partial_surfaces() -> None:
+    text = (ROOT / "assets" / "diagrams" / "platform-support.svg").read_text(encoding="utf-8").lower()
+
+    expected_snippets = [
+        "platform support surfaces",
+        "claude",
+        "native lifecycle hooks",
+        "partial repo context surfaces",
+        "codex",
+        "cursor",
+        "replit",
+        "windsurf",
+        "lovable",
+        "openclaw",
+        "ollama",
+        "kimi",
+        "same repo contract",
+    ]
+    for snippet in expected_snippets:
+        assert snippet in text, f"missing platform support detail: {snippet}"
 
 
 def test_platform_roadmap_doc_links_planned_platforms() -> None:

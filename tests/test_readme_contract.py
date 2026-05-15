@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 
@@ -113,6 +114,32 @@ def test_readme_documents_impact_measurement() -> None:
     assert (ROOT / "docs" / "monitoring.md").exists()
 
 
+def test_readme_uses_latest_local_telemetry_proof_values() -> None:
+    text = readme_text()
+    history = json.loads((ROOT / "docs" / "monitoring" / "history.json").read_text(encoding="utf-8"))
+    event_counts = history["event_counts"]
+    usability = history["usability"]
+
+    expected_snippets = [
+        "Local operational telemetry",
+        f"{history['score']} / 100",
+        f"Baseline without hooks | {history['baseline']} / 100",
+        f"Continuity uplift | **+{history['uplift']} points**",
+        f"Hook events recorded | {history['observed_events']}",
+        f"Active days | {usability['active_days']}",
+        f"Lifecycle coverage | {usability['lifecycle_coverage']}%",
+        f"Session-start events | {event_counts.get('session-start', 0)}",
+        f"Decision events | {event_counts.get('decision', 0)}",
+        (
+            "Checkpoint/reload/session-end events | "
+            f"{event_counts.get('pre-compact', 0) + event_counts.get('post-compact', 0) + event_counts.get('session-end', 0)}"
+        ),
+        "session-start continuity is strong; compact/end coverage is not yet evidenced",
+    ]
+    for snippet in expected_snippets:
+        assert snippet in text, f"missing latest telemetry proof snippet: {snippet}"
+
+
 def test_readme_keeps_internal_docs_out_of_primary_links() -> None:
     text = readme_text()
     assert "docs/platform-playbooks.md" not in text
@@ -136,6 +163,7 @@ def test_readme_embeds_required_diagrams() -> None:
     expected_assets = [
         "assets/brand/repo-context-hooks-logo.png",
         "assets/diagrams/context-continuity-engine.svg",
+        "assets/diagrams/platform-support.svg",
         "assets/diagrams/lifecycle-flow.svg",
         "assets/diagrams/repo-contract.svg",
         "assets/diagrams/before-after-continuity.svg",

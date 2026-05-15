@@ -60,12 +60,12 @@ A platform can still be valuable at `partial` tier. The product promise is not "
 
 That is why the current support story is intentionally narrow:
 
-- Claude proves the strongest native path.
-- Cursor proves the repo contract matters even without full hook parity.
-- Codex proves repo-native continuity still helps when the workflow is driven by checked-in instructions, `AGENTS.md`, and manual resume steps.
-- Replit proves the repo contract still matters when the platform reads `replit.md` from the repo root instead of exposing native lifecycle hooks.
-- Windsurf proves repo-native continuity also works when a platform consumes root `AGENTS.md` and `.windsurf/rules` through a rules engine instead of hooks.
-- Lovable proves the repo can remain canonical even when the platform also requires manual Project Knowledge and Workspace Knowledge in a hosted UI.
-- OpenClaw proves repo-native continuity can also map into workspace-loaded Markdown files such as `SOUL.md`, `USER.md`, and `TOOLS.md` without pretending the tool can verify active runtime configuration.
-- Ollama proves local-model users can still get a repeatable repo-context prompt through `Modelfile.repo-context`, without claiming Ollama can inspect the repo or manage lifecycle events by itself.
-- Kimi proves the repo contract can support Kimi Code CLI project context through root `AGENTS.md`, while keeping generic Kimi API support out of scope.
+- Claude supports the strongest native path.
+- Cursor shows the repo contract matters even without full hook parity.
+- Codex shows repo-native continuity still helps when the workflow is driven by checked-in instructions, `AGENTS.md`, and manual resume steps.
+- Replit shows the repo contract still matters when the platform reads `replit.md` from the repo root instead of exposing native lifecycle hooks.
+- Windsurf shows repo-native continuity also works when a platform consumes root `AGENTS.md` and `.windsurf/rules` through a rules engine instead of hooks.
+- Lovable shows the repo can remain canonical even when the platform also requires manual Project Knowledge and Workspace Knowledge in a hosted UI.
+- OpenClaw shows repo-native continuity can also map into workspace-loaded Markdown files such as `SOUL.md`, `USER.md`, and `TOOLS.md` without pretending the tool can verify active runtime configuration.
+- Ollama shows local-model users can still get a repeatable repo-context prompt through `Modelfile.repo-context`, without claiming Ollama can inspect the repo or manage lifecycle events by itself.
+- Kimi shows the repo contract can support Kimi Code CLI project context through root `AGENTS.md`, while keeping generic Kimi API support out of scope.
