@@ -184,3 +184,17 @@ def test_readme_links_supporting_docs_and_examples() -> None:
     for link_text, link_path in expected_links:
         assert link_text in text, f"missing supporting link: {link_text}"
         assert link_path.exists(), f"missing supporting path: {link_path}"
+
+
+def test_readme_documents_dependency_and_maintainer_posture() -> None:
+    text = readme_text()
+    assert "Zero runtime dependencies" in text
+    assert "Maintainer status" in text
+    assert "solo-maintained" in text
+
+
+def test_readme_documents_single_developer_scope() -> None:
+    text = readme_text()
+    assert "## Scope" in text, "missing ## Scope section"
+    assert "single-developer scope" in text, "missing single-developer scope callout"
+    assert "#26" in text, "missing roadmap link to issue #26"

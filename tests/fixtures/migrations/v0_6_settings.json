@@ -1,0 +1,75 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/repo_specs_memory.py session-start",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/session_context.py session-start",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/bin/notify-team session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/repo_specs_memory.py pre-compact",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/repo_specs_memory.py post-compact",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/session_context.py post-compact",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /home/legacy/.claude/skills/context-handoff-hooks/scripts/repo_specs_memory.py session-end",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": ["Read", "Edit", "Bash"]
+  }
+}

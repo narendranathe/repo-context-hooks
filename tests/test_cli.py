@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 from repo_context_hooks.cli import (
+    _checkpoint,
     _detect_platforms,
     _doctor,
     _init,
@@ -14,7 +15,10 @@ from repo_context_hooks.cli import (
     _measure,
     _platforms,
     _recommend,
+    _resolve_experiment_dir,
+    _telemetry_cmd,
     build_parser,
+    main,
 )
 from repo_context_hooks.doctor import DoctorReport
 
@@ -33,6 +37,16 @@ def test_build_parser_uses_public_name() -> None:
     parser = build_parser()
     assert parser.prog == "repo-context-hooks"
     assert "repo context continuity" in parser.description.lower()
+
+
+def test_parser_accepts_global_debug_flag() -> None:
+    """``--debug`` is a top-level flag (issue #73) and propagates via
+    ``args.debug`` to every subcommand without needing per-subparser
+    duplication. Mirrors the ``--version`` convention."""
+    parser = build_parser()
+    assert parser.parse_args(["--debug", "platforms"]).debug is True
+    assert parser.parse_args(["platforms"]).debug is False
+    assert parser.parse_args(["--debug", "doctor", "--platform", "claude"]).debug is True
 
 
 def test_parser_supports_platforms_and_doctor_commands() -> None:
@@ -878,3 +892,881 @@ def test_parser_checkpoint_requires_message() -> None:
     parser = build_parser()
     with pytest.raises(SystemExit):
         parser.parse_args(["checkpoint"])
+
+
+# ===========================================================================
+# Issue #92 — backfill cli.py to >=85% line+branch coverage.
+# Tests appended (not split into a new file) per the repo's grep-locality
+# convention: every cli dispatch test lives in this file. All tests follow
+# the existing pattern (Namespace + monkeypatch + capsys); none invoke the
+# CLI as a subprocess.
+# ===========================================================================
+
+import subprocess
+
+import pytest
+
+import repo_context_hooks.cli as cli_mod
+import repo_context_hooks.consent as consent_mod
+import repo_context_hooks.telemetry as telemetry_mod
+
+
+# ---------------------------------------------------------------------------
+# Section 1 — _measure --clean-ghosts (cli.py ~489-502)
+# ---------------------------------------------------------------------------
+# `purge_ghost_repos` is imported lazily *inside* `_measure` via
+# `from .telemetry import purge_ghost_repos`, so patches must target the
+# source module `telemetry.purge_ghost_repos` — `cli.purge_ghost_repos` is
+# not bound at module level and patching it is a no-op.
+
+def test_measure_clean_ghosts_dry_run_lists_dirs_and_hint(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.setattr(
+        telemetry_mod,
+        "purge_ghost_repos",
+        lambda dry_run=True: {"removed": 2, "bytes_freed": 4096, "dirs": ["a", "b"]},
+    )
+
+    args = Namespace(clean_ghosts=True, dry_run=True, repo_root=str(_tmp_dir()))
+
+    assert _measure(args) == 0
+    out = capsys.readouterr().out
+    assert "Would remove 2 ghost repo dirs (4 KB freed)" in out
+    assert "  - a" in out
+    assert "  - b" in out
+    assert "Re-run with --no-dry-run" in out
+
+
+def test_measure_clean_ghosts_no_dry_run_says_removed(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.setattr(
+        telemetry_mod,
+        "purge_ghost_repos",
+        lambda dry_run=True: {"removed": 1, "bytes_freed": 1024, "dirs": ["x"]},
+    )
+
+    args = Namespace(clean_ghosts=True, dry_run=False, repo_root=str(_tmp_dir()))
+
+    assert _measure(args) == 0
+    out = capsys.readouterr().out
+    assert "Removed 1 ghost repo dirs (1 KB freed)" in out
+    assert "Re-run with --no-dry-run" not in out
+
+
+def test_measure_clean_ghosts_zero_removed_omits_hint(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.setattr(
+        telemetry_mod,
+        "purge_ghost_repos",
+        lambda dry_run=True: {"removed": 0, "bytes_freed": 0, "dirs": []},
+    )
+
+    args = Namespace(clean_ghosts=True, dry_run=True, repo_root=str(_tmp_dir()))
+
+    assert _measure(args) == 0
+    out = capsys.readouterr().out
+    assert "Would remove 0 ghost repo dirs" in out
+    assert "Re-run with --no-dry-run" not in out
+
+
+def test_measure_clean_ghosts_default_dry_run_true_when_attr_missing(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """Pin `getattr(args, 'dry_run', True)` — flipping the default to False
+    would silently make `--clean-ghosts` destructive on first invocation."""
+    captured: dict = {}
+
+    def fake_purge(dry_run: bool = True) -> dict:
+        captured["dry_run"] = dry_run
+        return {"removed": 0, "bytes_freed": 0, "dirs": []}
+
+    monkeypatch.setattr(telemetry_mod, "purge_ghost_repos", fake_purge)
+
+    args = Namespace(clean_ghosts=True, repo_root=str(_tmp_dir()))
+
+    assert _measure(args) == 0
+    assert captured["dry_run"] is True
+    out = capsys.readouterr().out
+    assert "Would remove" in out
+    assert "Removed " not in out
+
+
+# ---------------------------------------------------------------------------
+# Section 2 — _measure export (cli.py ~508-521)
+# ---------------------------------------------------------------------------
+
+def _fake_measure_impact(repo_root, telemetry_base=None):
+    return SimpleNamespace(current_score=0.5)
+
+
+def test_measure_export_markdown_to_stdout(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.setattr(cli_mod, "measure_impact", _fake_measure_impact)
+    monkeypatch.setattr(
+        cli_mod,
+        "export_impact_report",
+        lambda report, format="markdown", redact=True: f"# Impact ({format})\nbody",
+    )
+
+    args = Namespace(
+        positional_args=["export"],
+        format="markdown",
+        output=None,
+        repo_root=str(_tmp_dir()),
+    )
+
+    assert _measure(args) == 0
+    out = capsys.readouterr().out
+    assert "# Impact (markdown)" in out
+    assert "Export written to:" not in out
+
+
+def test_measure_export_writes_to_file_and_announces_path(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.setattr(cli_mod, "measure_impact", _fake_measure_impact)
+    monkeypatch.setattr(
+        cli_mod,
+        "export_impact_report",
+        lambda report, format="markdown", redact=True: f"## json export\n{format}",
+    )
+
+    tmp = _tmp_dir()
+    out_path = tmp / "out.md"
+    args = Namespace(
+        positional_args=["export"],
+        format="json",
+        output=str(out_path),
+        repo_root=str(tmp),
+    )
+
+    assert _measure(args) == 0
+    assert out_path.exists()
+    assert "json" in out_path.read_text(encoding="utf-8")
+    out = capsys.readouterr().out
+    assert "Export written to:" in out
+    assert str(out_path) in out
+
+
+def test_measure_export_default_format_is_markdown_when_attr_missing(
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Pin `getattr(args, "format", "markdown")` — flipping the default to
+    "json" would silently change export output for callers that omit the
+    flag."""
+    captured: dict = {}
+
+    def fake_export(report, format="markdown", redact=True):
+        captured["format"] = format
+        captured["redact"] = redact
+        return "EXPORTED"
+
+    monkeypatch.setattr(cli_mod, "measure_impact", _fake_measure_impact)
+    monkeypatch.setattr(cli_mod, "export_impact_report", fake_export)
+
+    args = Namespace(
+        positional_args=["export"], output=None, repo_root=str(_tmp_dir())
+    )
+
+    assert _measure(args) == 0
+    assert captured["format"] == "markdown"
+    assert captured["redact"] is True
+
+
+# ---------------------------------------------------------------------------
+# Section 3 — _measure experiment {start, finish, status}
+# (cli.py ~523-546) and _resolve_experiment_dir (cli.py ~481-486)
+# ---------------------------------------------------------------------------
+
+def test_measure_experiment_start_prints_before_path(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    tmp = _tmp_dir()
+    before = tmp / "before.json"
+    monkeypatch.setattr(cli_mod, "experiment_start", lambda root, exp_dir: before)
+
+    args = Namespace(
+        positional_args=["experiment", "start"],
+        experiment_dir=str(tmp / "exp"),
+        repo_root=str(tmp),
+    )
+
+    assert _measure(args) == 0
+    out = capsys.readouterr().out
+    assert "Before snapshot:" in out
+    assert str(before) in out
+
+
+def test_measure_experiment_start_existing_returns_one(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    def raise_exists(root, exp_dir):
+        raise FileExistsError("already started")
+
+    monkeypatch.setattr(cli_mod, "experiment_start", raise_exists)
+
+    args = Namespace(
+        positional_args=["experiment", "start"],
+        experiment_dir=None,
+        repo_root=str(_tmp_dir()),
+    )
+
+    assert _measure(args) == 1
+    assert "Error: already started" in capsys.readouterr().out
+
+
+def test_measure_experiment_finish_missing_returns_one(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    def raise_missing(root, exp_dir):
+        raise FileNotFoundError("no before snapshot")
+
+    monkeypatch.setattr(cli_mod, "experiment_finish", raise_missing)
+
+    args = Namespace(
+        positional_args=["experiment", "finish"],
+        experiment_dir=None,
+        repo_root=str(_tmp_dir()),
+    )
+
+    assert _measure(args) == 1
+    out = capsys.readouterr().out
+    assert "Error:" in out
+    assert "no before snapshot" in out
+
+
+def test_measure_experiment_status_prints_message(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.setattr(
+        cli_mod,
+        "experiment_status",
+        lambda exp_dir: {"message": "no experiment in progress"},
+    )
+
+    args = Namespace(
+        positional_args=["experiment", "status"],
+        experiment_dir=None,
+        repo_root=str(_tmp_dir()),
+    )
+
+    assert _measure(args) == 0
+    assert "no experiment in progress" in capsys.readouterr().out
+
+
+def test_measure_experiment_unknown_subcommand_returns_one(capsys) -> None:
+    args = Namespace(
+        positional_args=["experiment", "bogus"],
+        experiment_dir=None,
+        repo_root=str(_tmp_dir()),
+    )
+
+    assert _measure(args) == 1
+    out = capsys.readouterr().out
+    assert "Unknown experiment subcommand: 'bogus'" in out
+    assert "Usage: repo-context-hooks measure experiment" in out
+
+
+def test_measure_experiment_no_subcommand_defaults_to_status(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """Pin the `positional[1] if len(positional) > 1 else "status"` default
+    so a refactor to "start" or "finish" can't sneak in."""
+    captured: dict = {"called": False}
+
+    def fake_status(exp_dir):
+        captured["called"] = True
+        return {"message": "default-status-routed"}
+
+    monkeypatch.setattr(cli_mod, "experiment_status", fake_status)
+
+    args = Namespace(
+        positional_args=["experiment"],
+        experiment_dir=None,
+        repo_root=str(_tmp_dir()),
+    )
+
+    assert _measure(args) == 0
+    assert captured["called"] is True
+    assert "default-status-routed" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("raw", [None, "", "custom/exp", "nested/relative/dir"])
+def test_resolve_experiment_dir_relative_or_default(raw) -> None:
+    """Pin `getattr(args, "experiment_dir", None)` default + relative-path
+    branch on Windows + POSIX."""
+    repo_root = Path(_tmp_dir())
+    args = Namespace(experiment_dir=raw)
+
+    resolved = _resolve_experiment_dir(args, repo_root)
+
+    assert resolved.is_absolute()
+    if not raw:
+        assert resolved == repo_root / ".repo-context-hooks" / "experiment"
+    else:
+        assert resolved == repo_root / raw
+
+
+def test_resolve_experiment_dir_absolute_returned_verbatim() -> None:
+    repo_root = Path(_tmp_dir())
+    abs_path = (repo_root.parent / "absolute_exp").resolve()
+    args = Namespace(experiment_dir=str(abs_path))
+
+    resolved = _resolve_experiment_dir(args, repo_root)
+    assert resolved == abs_path
+
+
+def test_resolve_experiment_dir_attr_missing_uses_default() -> None:
+    """Pin `getattr(args, "experiment_dir", None)` — Namespace without attr."""
+    repo_root = Path(_tmp_dir())
+    args = Namespace()
+    resolved = _resolve_experiment_dir(args, repo_root)
+    assert resolved == repo_root / ".repo-context-hooks" / "experiment"
+
+
+# ---------------------------------------------------------------------------
+# Section 4 — _checkpoint (cli.py ~618-656)
+# ---------------------------------------------------------------------------
+# All tests stub `subprocess.run`. We never invoke real git or the bundled
+# script — that's a smoke-test concern, out of scope for #92's unit-coverage
+# ratchet.
+
+def _git_rev_parse_path(p: Path) -> str:
+    """Mimic `git rev-parse --show-toplevel` actual output: forward-slash
+    path with trailing newline. Real git emits forward slashes on Windows
+    too — using `str(p)` would test a path shape git never produces."""
+    return str(p).replace("\\", "/") + "\n"
+
+
+def test_checkpoint_no_git_repo_returns_one(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    def fake_run(*args, **kwargs):
+        raise subprocess.CalledProcessError(1, "git")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    args = Namespace(message="msg", path=str(_tmp_dir()))
+
+    assert _checkpoint(args) == 1
+    assert "no git repo found" in capsys.readouterr().out
+
+
+def test_checkpoint_git_binary_missing_returns_one(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """Pin user-visible behaviour when `git` is not on PATH (broken-install
+    territory)."""
+
+    def fake_run(*args, **kwargs):
+        raise FileNotFoundError("git not found")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    args = Namespace(message="msg", path=str(_tmp_dir()))
+
+    assert _checkpoint(args) == 1
+    assert "no git repo found" in capsys.readouterr().out
+
+
+def test_checkpoint_no_specs_readme_returns_one(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    tmp = _tmp_dir()  # Do NOT create tmp/specs/README.md.
+
+    def fake_run(*args, **kwargs):
+        return SimpleNamespace(
+            stdout=_git_rev_parse_path(tmp), returncode=0, stderr=""
+        )
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    args = Namespace(message="m", path=str(tmp))
+
+    assert _checkpoint(args) == 1
+    out = capsys.readouterr().out
+    assert "no workspace contract found" in out
+    assert "repo-context-hooks init" in out
+
+
+def test_checkpoint_calls_repo_specs_memory_with_message(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    tmp = _tmp_dir()
+    (tmp / "specs").mkdir(parents=True, exist_ok=True)
+    (tmp / "specs" / "README.md").write_text("# specs\n", encoding="utf-8")
+
+    captured: list = []
+
+    def fake_run(args_list, **kwargs):
+        captured.append(list(args_list))
+        if len(captured) == 1:
+            assert "rev-parse" in args_list
+            return SimpleNamespace(
+                stdout=_git_rev_parse_path(tmp), returncode=0, stderr=""
+            )
+        return SimpleNamespace(returncode=0, stdout="Decision recorded\n", stderr="")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    args = Namespace(message="Built X. Decided Y. Next: Z.", path=str(tmp))
+
+    assert _checkpoint(args) == 0
+    assert "Decision recorded" in capsys.readouterr().out
+
+    assert len(captured) == 2
+    second = captured[1]
+    assert "decision" in second
+    assert "--message" in second
+    assert "Built X. Decided Y. Next: Z." in second
+
+
+def test_checkpoint_propagates_subprocess_failure(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    tmp = _tmp_dir()
+    (tmp / "specs").mkdir(parents=True, exist_ok=True)
+    (tmp / "specs" / "README.md").write_text("# specs\n", encoding="utf-8")
+
+    call_idx = {"i": 0}
+
+    def fake_run(args_list, **kwargs):
+        call_idx["i"] += 1
+        if call_idx["i"] == 1:
+            return SimpleNamespace(
+                stdout=_git_rev_parse_path(tmp), returncode=0, stderr=""
+            )
+        return SimpleNamespace(returncode=2, stdout="", stderr="boom\n")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    args = Namespace(message="m", path=str(tmp))
+
+    assert _checkpoint(args) == 2
+    assert "boom" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# Section 5 — _telemetry_cmd (cli.py ~659-722)
+# ---------------------------------------------------------------------------
+# CRITICAL global-adoption requirement: every test in this class redirects
+# `consent._CONFIG_PATH_OVERRIDE` to a tmp path via class-scoped autouse
+# fixture. Without it, `_telemetry_cmd enable --yes` would silently write
+# to the developer's real `%LOCALAPPDATA%\repo-context-hooks\consent.json`
+# (or `~/.config/repo-context-hooks/consent.json`), corrupting their actual
+# telemetry consent state and accumulating fake install_ids in their user
+# profile every time they run `pytest`. The class boundary makes it
+# impossible to forget — every method inherits the override.
+
+class TestTelemetryCli:
+    """All `_telemetry_cmd` tests live here. The autouse fixture below is
+    the safety boundary — do not move tests outside the class without
+    setting `_CONFIG_PATH_OVERRIDE` manually."""
+
+    @pytest.fixture(autouse=True)
+    def _redirect_consent_config(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            consent_mod, "_CONFIG_PATH_OVERRIDE", tmp_path / "consent.json"
+        )
+
+    # ---- status -----------------------------------------------------------
+
+    def test_status_not_set_prints_three_lines(self, capsys) -> None:
+        args = Namespace(telemetry_subcommand="status")
+        assert _telemetry_cmd(args) == 0
+        out = capsys.readouterr().out
+        assert "Remote telemetry: not configured" in out
+        assert "Install ID: (will be generated" in out
+        assert "Config:" in out
+
+    def test_status_enabled_prints_install_id(self, capsys) -> None:
+        consent_mod.enable_consent()
+        args = Namespace(telemetry_subcommand="status")
+
+        assert _telemetry_cmd(args) == 0
+        out = capsys.readouterr().out
+        assert "Remote telemetry: enabled" in out
+        assert "Install ID:" in out
+        assert "Enabled at:" in out
+        assert "collector endpoint not yet configured" in out
+
+    def test_status_disabled_prints_config(self, capsys) -> None:
+        consent_mod.enable_consent()
+        consent_mod.disable_consent()
+        args = Namespace(telemetry_subcommand="status")
+
+        assert _telemetry_cmd(args) == 0
+        out = capsys.readouterr().out
+        assert "Remote telemetry: disabled" in out
+        assert "Config:" in out
+
+    # ---- enable -----------------------------------------------------------
+
+    def test_enable_yes_writes_consent_and_install_id(
+        self, capsys, tmp_path: Path
+    ) -> None:
+        args = Namespace(telemetry_subcommand="enable", yes=True)
+
+        assert _telemetry_cmd(args) == 0
+        out = capsys.readouterr().out
+        assert "Remote telemetry enabled." in out
+        assert "Install ID:" in out
+
+        cfg_path = tmp_path / "consent.json"
+        assert cfg_path.exists()
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        assert cfg["consented"] is True
+        from uuid import UUID
+        UUID(cfg["install_id"])
+
+    def test_enable_attr_missing_enters_interactive(
+        self, monkeypatch: pytest.MonkeyPatch, capsys, tmp_path: Path
+    ) -> None:
+        """Pin `getattr(args, 'yes', False)` — flipping to True would
+        auto-enable telemetry without consent."""
+        monkeypatch.setattr("builtins.input", lambda _prompt="": "n")
+        args = Namespace(telemetry_subcommand="enable")
+
+        assert _telemetry_cmd(args) == 0
+        out = capsys.readouterr().out
+        assert "Telemetry remains disabled." in out
+        assert not (tmp_path / "consent.json").exists()
+
+    @pytest.mark.parametrize(
+        "user_input,enabled",
+        [
+            ("y", True),
+            ("Y", True),
+            ("yes", True),
+            ("YES", True),
+            ("  yes  ", True),
+            ("n", False),
+            ("N", False),
+            ("", False),
+            ("no", False),
+            ("maybe", False),
+        ],
+    )
+    def test_enable_interactive_input_table(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        user_input: str,
+        enabled: bool,
+    ) -> None:
+        """Single parametrize over the four contracts of
+        `input().strip().lower()`: whitespace strip, case fold,
+        set-membership (`y`/`yes`), and the [y/N] capital-N convention
+        (empty → no)."""
+        monkeypatch.setattr("builtins.input", lambda _prompt="": user_input)
+        args = Namespace(telemetry_subcommand="enable", yes=False)
+
+        assert _telemetry_cmd(args) == 0
+
+        cfg_path = tmp_path / "consent.json"
+        if enabled:
+            assert cfg_path.exists()
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            assert cfg["consented"] is True
+        else:
+            assert not cfg_path.exists()
+
+    def test_enable_eof_returns_zero_disabled(
+        self, monkeypatch: pytest.MonkeyPatch, capsys, tmp_path: Path
+    ) -> None:
+        def raise_eof(_prompt=""):
+            raise EOFError
+
+        monkeypatch.setattr("builtins.input", raise_eof)
+        args = Namespace(telemetry_subcommand="enable", yes=False)
+
+        assert _telemetry_cmd(args) == 0
+        out = capsys.readouterr().out
+        assert "Non-interactive environment detected." in out
+        assert not (tmp_path / "consent.json").exists()
+
+    def test_enable_os_error_treated_as_eof(
+        self, monkeypatch: pytest.MonkeyPatch, capsys, tmp_path: Path
+    ) -> None:
+        def raise_oserror(_prompt=""):
+            raise OSError
+
+        monkeypatch.setattr("builtins.input", raise_oserror)
+        args = Namespace(telemetry_subcommand="enable", yes=False)
+
+        assert _telemetry_cmd(args) == 0
+        out = capsys.readouterr().out
+        assert "Non-interactive environment detected." in out
+        assert not (tmp_path / "consent.json").exists()
+
+    # ---- disable ----------------------------------------------------------
+
+    def test_disable_writes_false_and_preserves_install_id(
+        self, capsys, tmp_path: Path
+    ) -> None:
+        consent_mod.enable_consent()
+        cfg_path = tmp_path / "consent.json"
+        original_id = json.loads(cfg_path.read_text(encoding="utf-8"))["install_id"]
+
+        args = Namespace(telemetry_subcommand="disable")
+        assert _telemetry_cmd(args) == 0
+        assert "Remote telemetry disabled." in capsys.readouterr().out
+
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        assert cfg["consented"] is False
+        # install_id MUST be preserved across disable — privacy-relevant.
+        assert cfg["install_id"] == original_id
+
+    # ---- preview ----------------------------------------------------------
+
+    def test_preview_no_repo_root_returns_payload(self, capsys) -> None:
+        args = Namespace(telemetry_subcommand="preview", repo_root=None)
+        assert _telemetry_cmd(args) == 0
+
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["install_id"] == "not-yet-generated"
+        assert "package_version" in payload
+        assert "disclaimer" in payload
+        assert payload["continuity_score"] is None
+
+    def test_preview_attr_missing_returns_payload(self, capsys) -> None:
+        """Pin `getattr(args, 'repo_root', None)` — Namespace without attr."""
+        args = Namespace(telemetry_subcommand="preview")
+        assert _telemetry_cmd(args) == 0
+
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["continuity_score"] is None
+        assert payload["disclaimer"].startswith("This is a preview")
+
+
+# ---------------------------------------------------------------------------
+# Section 6 — main() dispatch routing for new subcommands
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "argv,private_attr",
+    [
+        (["repo-context-hooks", "checkpoint", "--message", "x"], "_checkpoint"),
+        (["repo-context-hooks", "telemetry", "status"], "_telemetry_cmd"),
+    ],
+)
+def test_main_dispatches_new_subcommands(
+    monkeypatch: pytest.MonkeyPatch,
+    argv: list,
+    private_attr: str,
+) -> None:
+    """If the parser→dispatch wiring for `checkpoint` or `telemetry` ever
+    breaks, every unit test still passes and the CLI is broken for users.
+    This integration test pins the wiring."""
+    sentinel = {"called": False}
+
+    def fake_dispatch(args):
+        sentinel["called"] = True
+        return 7
+
+    monkeypatch.setattr(cli_mod, private_attr, fake_dispatch)
+    monkeypatch.setattr("sys.argv", argv)
+
+    assert main() == 7
+    assert sentinel["called"] is True
+
+
+# ===========================================================================
+# verify subcommand + --dry-run wiring (issue #74)
+# ===========================================================================
+
+
+class TestVerifySubcommand:
+    """Wiring for the `verify` subcommand and its dispatch path."""
+
+    def test_main_dispatches_verify_subcommand(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sentinel = {"called": False, "args_seen": None}
+
+        def fake_verify(args):
+            sentinel["called"] = True
+            sentinel["args_seen"] = args
+            return 0
+
+        monkeypatch.setattr(cli_mod, "_verify", fake_verify)
+        monkeypatch.setattr("sys.argv", ["repo-context-hooks", "verify"])
+        assert main() == 0
+        assert sentinel["called"] is True
+
+    def test_verify_subcommand_accepts_platform_flag(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen: dict = {}
+
+        def fake_verify(args):
+            seen["platform"] = args.platform
+            seen["json"] = args.json
+            return 0
+
+        monkeypatch.setattr(cli_mod, "_verify", fake_verify)
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "verify", "--platform", "claude", "--json"],
+        )
+        assert main() == 0
+        assert seen["platform"] == "claude"
+        assert seen["json"] is True
+
+    def test_verify_cold_start_exits_2_with_clear_message(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture
+    ) -> None:
+        """No platforms detected → exit 2 with install command in output."""
+        # Force _detect_platforms to return empty.
+        monkeypatch.setattr(cli_mod, "_detect_platforms", lambda: [])
+        monkeypatch.setattr("sys.argv", ["repo-context-hooks", "verify"])
+        assert main() == 2
+        out = capsys.readouterr().out
+        assert "No platforms installed" in out
+        assert "install --platform claude" in out
+
+
+class TestInstallDryRunMutex:
+    """`--force` and `--dry-run` are parser-mutex (Critic C non-budge)."""
+
+    def test_install_dry_run_and_force_are_mutually_exclusive(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "claude",
+             "--dry-run", "--force"],
+        )
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        # argparse exits 2 on mutex violation.
+        assert excinfo.value.code == 2
+
+    def test_install_dry_run_alone_routes_to_dry_run_helper(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sentinel = {"called": False}
+
+        def fake_dry_run(args):
+            sentinel["called"] = True
+            return 0
+
+        monkeypatch.setattr(cli_mod, "_install_dry_run", fake_dry_run)
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "claude", "--dry-run"],
+        )
+        assert main() == 0
+        assert sentinel["called"] is True
+
+    def test_uninstall_dry_run_routes_to_dry_run_helper(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sentinel = {"called": False}
+
+        def fake_dry_run(args):
+            sentinel["called"] = True
+            return 0
+
+        monkeypatch.setattr(cli_mod, "_uninstall_dry_run", fake_dry_run)
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "uninstall", "--platform", "claude", "--dry-run"],
+        )
+        assert main() == 0
+        assert sentinel["called"] is True
+
+
+class TestDryRunOutputs:
+    """Receipt format checks. The dry-run path MUST NEVER write."""
+
+    def test_install_dry_run_json_output_is_machine_parseable(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        """Critic A non-budge: --json output for CI policy gates."""
+        fake_home = tmp_path / "fake-home"
+        (fake_home / ".claude").mkdir(parents=True)
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(lambda: fake_home))
+
+        # Refuse any disk write outside `mkdir`/the fake home — use the
+        # planner-side _save_json fail-fast.
+        from repo_context_hooks.platforms import runtime as _runtime
+        monkeypatch.setattr(
+            _runtime,
+            "_save_json",
+            lambda *a, **k: pytest.fail("dry-run wrote to disk via _save_json"),
+        )
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "claude",
+             "--dry-run", "--json"],
+        )
+        assert main() == 0
+        captured = capsys.readouterr().out
+        payload = json.loads(captured)
+        assert payload["dry_run"] is True
+        assert "platforms" in payload
+        assert payload["platforms"][0]["platform"] == "claude"
+        assert payload["platforms"][0]["would_write"] is True
+        assert isinstance(payload["platforms"][0]["diff"], list)
+        assert payload["dedup"]["removed"] == 0  # nothing to dedup yet
+
+    def test_install_dry_run_text_output_is_human_readable(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        fake_home = tmp_path / "fake-home"
+        (fake_home / ".claude").mkdir(parents=True)
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(lambda: fake_home))
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "claude", "--dry-run"],
+        )
+        assert main() == 0
+        out = capsys.readouterr().out
+        assert "Dry run" in out
+        assert "Re-run without --dry-run to apply" in out
+
+    def test_install_dry_run_partial_adapter_explains_no_settings_mutation(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        """Critic A non-budge: PARTIAL adapters must NOT silently no-op."""
+        fake_home = tmp_path / "fake-home"
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(lambda: fake_home))
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "install", "--platform", "cursor", "--dry-run"],
+        )
+        assert main() == 0
+        out = capsys.readouterr().out
+        assert "PARTIAL adapter" in out
+
+    def test_uninstall_dry_run_does_not_remove_bundle(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        fake_home = tmp_path / "fake-home"
+        bundle = fake_home / ".claude" / "skills" / "context-handoff-hooks"
+        bundle.mkdir(parents=True)
+        (bundle / "marker.txt").write_text("present")
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(lambda: fake_home))
+        monkeypatch.setattr(
+            "sys.argv",
+            ["repo-context-hooks", "uninstall", "--platform", "claude", "--dry-run"],
+        )
+        assert main() == 0
+        # Bundle still on disk — dry-run did NOT remove it.
+        assert (bundle / "marker.txt").exists()

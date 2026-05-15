@@ -1,31 +1,134 @@
 name: Deploy docs to GitHub Pages
 
+# Deploy strategy (issue #75):
+#
+# - Every push to main rebuilds the live `latest` snapshot via `mike` so doc
+#   edits ship without waiting for a tagged release. The deploy job is
+#   gated to the canonical repo so forks that have not configured a
+#   gh-pages branch do not red-X their CI on every merge to their main.
+#
+# - On a tagged release (e.g. `v1.0.0`), the same job ALSO snapshots that
+#   tag's docs as a versioned slice and points the `latest` alias at it
+#   via `mike set-default --push latest`. The first such snapshot is
+#   `1.0.0` — that is the cutover from the flat `mkdocs gh-deploy` layout
+#   to a versioned `mike` layout.
+#
+# - `concurrency` serializes deploys so two near-simultaneous merges do
+#   not race and clobber `versions.json`.
+#
+# - Forks: this workflow is a no-op on forks. To run your own version of
+#   the docs from a fork, change the `if:` predicate below to your slug
+#   and ensure your fork's gh-pages branch is enabled.
+
 on:
   push:
     branches: [main]
+    tags: ["v*"]
     paths:
       - "docs/**"
       - "mkdocs.yml"
       - "README.md"
       - "TELEMETRY.md"
       - "CHANGELOG.md"
+      - "repo_context_hooks/cli.py"
+      - "scripts/render_cli_reference.py"
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+env:
+  CANONICAL_REPO: narendranathe/repo-context-hooks
 
 jobs:
   deploy:
+    if: github.repository == 'narendranathe/repo-context-hooks'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - uses: actions/checkout@v4
         with:
+          # mike commits to the gh-pages branch; needs full history.
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
-      - name: Install MkDocs
-        run: pip install mkdocs-material
+      - name: Configure git for mike commits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force
+      - name: Install package and docs extras
+        run: pip install -e ".[docs]"
+
+      - name: Verify cli-reference.md is up to date
+        # Drift gate: the rendered file must match what build_parser
+        # would produce right now. If it does not, the contributor forgot
+        # to run `python scripts/render_cli_reference.py --write` and we
+        # block the deploy.
+        run: python scripts/render_cli_reference.py --check
+
+      - name: Build docs strictly (precheck)
+        # `--strict` promotes every nav/link warning to an error so a
+        # broken docs PR cannot ship a half-rendered site.
+        run: mkdocs build --strict
+
+      - name: Resolve docs version
+        # Two trigger paths, with `latest` reserved exclusively as an alias:
+        #
+        #   - Push to main (no tag): rebuild the `dev` snapshot. `dev` is
+        #     a plain version slot — the tip-of-main preview. The `latest`
+        #     name is NEVER deployed as a version slot, so it can serve
+        #     purely as an alias to whatever the most recent tag is.
+        #
+        #   - Tag push (v1.0.0 etc.): snapshot the version AND repoint the
+        #     `latest` alias at it atomically. `--update-aliases` is safe
+        #     here because `latest` is always an alias, never a version.
+        #
+        # Earlier deploys (pre-v1.0.0) created a `latest` version slot.
+        # The `mike delete latest` step below cleans that up idempotently
+        # so the alias reassignment can proceed. After v1.0.0 ships, the
+        # delete is a no-op every run.
+        #
+        # History: the previous design deployed `latest` as a version slot
+        # on main pushes. The v1.0.0 tag deploy (run 25242241516) failed
+        # with `error: alias 'latest' already specified as a version`
+        # because mike forbids reusing a name as both. This rename to
+        # `dev` resolves that permanently.
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            DEPLOY_ARGS="--update-aliases ${VERSION} latest"
+          else
+            VERSION="dev"
+            DEPLOY_ARGS="${VERSION}"
+          fi
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "DEPLOY_ARGS=${DEPLOY_ARGS}" >> "$GITHUB_OUTPUT"
+
+      - name: Clean up legacy 'latest' version slot (idempotent)
+        # One-time cleanup: the pre-v1.0.0 workflow deployed a `latest`
+        # version slot, which now blocks `--update-aliases ... latest` on
+        # tag pushes. `mike delete` is idempotent — after the first
+        # successful run on the canonical repo, subsequent runs find no
+        # `latest` version slot and exit cleanly. The `|| true` guard
+        # tolerates the post-cleanup steady state without failing CI.
+        run: |
+          mike delete --push latest 2>/dev/null || \
+            echo "no legacy 'latest' version to delete (steady state)"
+
+      - name: Deploy versioned snapshot via mike
+        # On main: `mike deploy --push dev` (rebuilds the `dev` slot).
+        # On tag:  `mike deploy --push --update-aliases <version> latest`.
+        run: mike deploy --push ${{ steps.version.outputs.DEPLOY_ARGS }}
+
+      - name: Set default alias to latest
+        # Idempotent — safe to run on every deploy. Without it, the live
+        # site loads with a blank version selector if the gh-pages branch
+        # has never had a default set.
+        run: mike set-default --push latest

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo-context-hooks"
-version = "0.6.0"
+version = "1.0.0"
 description = "Hook-based repo context continuity for coding agents."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -18,7 +18,15 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+# Upper bounds prevent a compromised future major release from auto-installing
+# in CI/contributor environments. (audit F3.4) Bump alongside Dependabot.
+dev = ["pytest>=7,<9", "pytest-cov>=4,<8", "hypothesis>=6,<7"]
+# Docs build chain. Kept SEPARATE from `dev` so contributors who only run
+# pytest do not pull mkdocs into their venv. The pages.yml workflow installs
+# this extra; the docs-build CI gate installs it on every PR. Same upper-bound
+# discipline as `dev` — a compromised major release of mkdocs-material or
+# mike cannot auto-install. (#75)
+docs = ["mkdocs-material>=9,<10", "mike>=2,<3"]
 
 [project.urls]
 Homepage = "https://github.com/narendranathe/repo-context-hooks"
@@ -41,3 +49,56 @@ repo_context_hooks = ["bundle/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Plain ``pytest`` produces the coverage report locally — contributors don't
+# need to remember --cov flags. CI inherits the same behaviour. The gate
+# (``fail_under = 80``) is enforced by the [tool.coverage.report] section
+# below, not by anything on this CLI. (audit F2.7)
+addopts = [
+    "--strict-markers",
+    "--cov=repo_context_hooks",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=xml",
+]
+
+[tool.coverage.run]
+source = ["repo_context_hooks"]
+branch = true
+relative_files = true
+omit = [
+    # CLI boilerplate that just delegates to repo_context_hooks.cli.main
+    "repo_context_hooks/__main__.py",
+    # Hook scripts shipped into agent_home and executed as subprocesses by Claude/Codex.
+    # Coverage of these is asserted by the install-smoke-test CI job AND the
+    # py_compile smoke test (tests/test_bundle_scripts_compile.py). NEW CLI
+    # commands belong in repo_context_hooks/ proper, NOT under bundle/scripts/,
+    # so they remain coverage-gated. (audit F4.7)
+    "repo_context_hooks/bundle/scripts/*",
+]
+
+# Path equivalences so Codecov can map paths consistently across:
+#   - editable installs (`pip install -e .`)
+#   - wheel installs into site-packages
+#   - monorepo adopters who vendor at packages/repo-context-hooks/
+# Without this, monorepo adopters see Codecov 404s on the line-by-line view.
+# (audit F2.3)
+[tool.coverage.paths]
+source = [
+    "repo_context_hooks/",
+    "*/repo_context_hooks/",
+    "*/site-packages/repo_context_hooks/",
+]
+
+[tool.coverage.report]
+# Coverage floor at 85% — ratcheted from 80% in #92 once cli.py was
+# backfilled (project total 87.75%, cli.py 87%). The gate exists to
+# PREVENT REGRESSION below the current line. Adopters who fork this repo:
+# `[tool.coverage.run] source = ["repo_context_hooks"]` scopes the gate to
+# OUR code only; your own modules are unaffected. (audit F4.3, F5.1)
+fail_under = 85
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

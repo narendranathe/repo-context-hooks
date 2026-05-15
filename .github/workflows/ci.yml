@@ -1,33 +1,82 @@
 name: CI
 
+# SECURITY: This workflow uses `pull_request`, NOT `pull_request_target`.
+# `pull_request` runs in the FORK's context — secrets are not exposed and the
+# checked-out code is the PR's own changes. Do NOT migrate to
+# `pull_request_target` without also gating every step that runs untrusted PR
+# code behind `if: github.event.pull_request.head.repo.full_name == github.repository`.
+# `pull_request_target` runs in the BASE repo context with secrets exposed and
+# is the root cause of nearly every "GitHub Actions code execution" CVE.
 on:
   push:
     branches: [main, "feat/**", "fix/**", "release/**"]
   pull_request:
     branches: [main]
 
+# Default to read-only token. Individual jobs escalate explicitly when needed
+# (e.g. the test job needs `id-token: write` for Codecov OIDC). This means a
+# compromised step or third-party action cannot, by default, push code, edit
+# branch protections, or create releases.
+permissions:
+  contents: read
+
+# Single source of truth for the "canonical repo + one matrix cell" gate that
+# multiple workflows need (Codecov upload here, mkdocs deploy in #75, PyPI
+# publish in #76). Reference these env vars in step `if:` predicates instead
+# of hardcoding the slug or matrix axes. (audit F4.6)
+env:
+  CANONICAL_REPO: narendranathe/repo-context-hooks
+  PRIMARY_OS: ubuntu-latest
+  PRIMARY_PYTHON: "3.12"
+
 jobs:
   test:
+    permissions:
+      contents: read
+      id-token: write   # Codecov tokenless OIDC upload only
+
     name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.9", "3.11", "3.12"]
+        # Python 3.13 added per audit F1.7 — gate must run on the latest stable.
+        python-version: ["3.9", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install package and test deps
         run: pip install -e ".[dev]"
 
-      - name: Run tests
-        run: python -m pytest tests/ -q --tb=short
+      - name: Run tests with coverage
+        # Coverage gate (`fail_under = 80`) is enforced via `[tool.coverage.report]`
+        # in pyproject.toml — single source of truth, no `--cov-fail-under` here.
+        # See ``docs/coverage-and-property-tests.md`` for the threshold rationale
+        # and the planned ratchet to 85%. (audit F5.3)
+        run: python -m pytest tests/ -q --tb=short --cov=repo_context_hooks --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        # Only upload from the canonical repo + a single matrix cell to avoid Nx uploads
+        # and to keep fork CIs green (forks have no Codecov enrollment).
+        if: github.repository == env.CANONICAL_REPO && matrix.os == env.PRIMARY_OS && matrix.python-version == env.PRIMARY_PYTHON
+        # Pinned to a 40-char SHA (v4.6.0) so a moved tag cannot inject malicious
+        # JS into our CI. Bump via Dependabot or manual SHA refresh.
+        uses: codecov/codecov-action@0f8570b1a125f4937846a11fcfa3bcd548bd8c97  # v4.6.0
+        # Locked-down corporate / mirrored CI runners can hard-fail on TLS to
+        # codecov.io. The gate is informational, not load-bearing — never block
+        # a green test run on the upload.
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          files: ./coverage.xml
+          slug: narendranathe/repo-context-hooks
+          fail_ci_if_error: false
 
   install-smoke-test:
     name: Smoke test (${{ matrix.os }})
@@ -39,7 +88,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -150,6 +199,65 @@ jobs:
           }
           Write-Host "No backslash paths - OK"
 
+  public-surface-guard:
+    # Stability-contract enforcement (issue #72). Compares the introspected
+    # public surface of the package against the committed snapshot at
+    # `tests/contract/public_surface.json`, then -- in `--verify-removals`
+    # mode -- diffs against the snapshot at the previous release tag and
+    # requires every removal to be excused by a matching `### Deprecated`
+    # bullet (in some prior version) plus a `### Removed` bullet under
+    # `[Unreleased]` in CHANGELOG.md. See docs/stability.md.
+    name: Public surface guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Required so the gate can `git show <prior-tag>:tests/contract/public_surface.json`.
+          # `fetch-depth: 1` (the default) hides every prior tag and the gate would
+          # silently pass on a shallow clone -- exactly the failure mode this job
+          # exists to prevent.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PRIMARY_PYTHON }}
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Verify drift + verify removals against prior release tag
+        run: python scripts/check_public_surface.py --verify-removals
+
+  docs-build:
+    # Strict mkdocs build + CLI-reference drift gate (issue #75). Catches
+    # broken nav links, malformed Markdown, and CLI/docs drift before they
+    # reach the live site. Ubuntu-only, single Python version — the docs
+    # are platform-agnostic and re-running them across the matrix is wasted
+    # CI time. Forks: this job installs `mkdocs-material` and `mike` from
+    # PyPI; if your fork is air-gapped or behind a TLS-intercepting proxy,
+    # mark this job as `continue-on-error` in your fork's branch protection
+    # rather than removing the gate (the live site still benefits from it
+    # on canonical-repo PRs).
+    name: Docs build (strict)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PRIMARY_PYTHON }}
+
+      - name: Install package and docs extras
+        run: pip install -e ".[docs]"
+
+      - name: Verify cli-reference.md is up to date
+        run: python scripts/render_cli_reference.py --check
+
+      - name: Build docs strictly
+        run: mkdocs build --strict
+
   platform-matrix:
     name: Platform matrix (${{ matrix.platform }})
     runs-on: ubuntu-latest
@@ -161,7 +269,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 

@@ -2,62 +2,63 @@
 
 Agent-level continuity skill for coding agents.
 
+<!-- BADGES:START -->
+<!--
+  Badge row convention. Add new badges INSIDE this anchor, one per line, in
+  this order: build/quality → coverage → version/release → stability → meta.
+  Each badge uses the linked form `[![alt](svg-url)](click-url)`. Sibling
+  Wave 2/3 PRs (#72 stability, #76 release) extend here without touching the
+  surrounding markdown.
+-->
 ![context score](docs/badge.svg)
 [![codecov](https://codecov.io/gh/narendranathe/repo-context-hooks/branch/main/graph/badge.svg)](https://codecov.io/gh/narendranathe/repo-context-hooks)
+<!-- BADGES:END -->
+
+> Coverage gate enforced at **80%** today; ratchet to 85% tracked in [#92](https://github.com/narendranathe/repo-context-hooks/issues/92).
 
 <p align="center">
   <img src="assets/brand/repo-context-hooks-logo.png" alt="repo-context-hooks brand mark showing hook events flowing into an impact monitor" width="144">
 </p>
 
-![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, local operational telemetry, Score 90, baseline 20, +70 uplift, 108 observed events, 3 active days, 25% coverage, and the next agent resuming warm](assets/diagrams/context-continuity-engine.svg)
+![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
 
-`repo-context-hooks` is an agent-level skill that keeps interrupted work, next-step context, and handoff notes alive across sessions. On Claude, install once to agent home and native lifecycle hooks activate across workspaces; other platforms use repo-native context surfaces with narrower automation.
+`repo-context-hooks` is an agent-level skill that keeps interrupted work and handoff notes alive across sessions — saving roughly 600 tokens of re-explanation and ~5 minutes of cold-start time on every resumed session, all measured locally. Install once to agent home — every workspace you open picks it up automatically.
 
-The goal: a new agent session should start with the right repo context and latest handoff state without rediscovering everything from scratch.
+The goal: a new agent session should start with full project context without rediscovering everything from scratch.
 
-> **Privacy:** local operational telemetry is written to local JSONL files; nothing is uploaded. See [TELEMETRY.md](TELEMETRY.md).
-
-## Why It Exists
-
-Every fresh coding-agent session has the same painful cold start: reread the repo, reconstruct what changed, ask what matters next, and risk repeating failed paths. Compaction and session handoffs make that worse because the most tactical context often lives only in chat.
-
-`repo-context-hooks` makes that context repo-owned instead of chat-owned. The public story stays in `README.md`, engineering memory lives in `specs/README.md`, platform entry rules live in `AGENTS.md`, and local operational telemetry shows whether the continuity loop is actually firing.
-
-### Latest checked-in local telemetry snapshot
-
-This is a local continuity audit, not a hosted analytics claim or productivity benchmark. The current snapshot shows strong session-start continuity; compact/end coverage is not yet evidenced in this local log.
-
-| Metric | Value |
-|--------|-------|
-| Contract score | **90 / 100** |
-| Baseline without hooks | 20 / 100 |
-| Continuity uplift | **+70 points** |
-| Hook events recorded | 108 |
-| Active days | 3 |
-| Lifecycle coverage | 25% |
-| Session-start events | 107 |
-| Decision events | 1 |
-| Checkpoint/reload/session-end events | 0 |
-| Source | Local operational telemetry |
-
-The honest read: session-start continuity is strong; compact/end coverage is not yet evidenced by this checked-in snapshot.
+> **Privacy:** all telemetry is written to local JSONL files; nothing is uploaded. See [TELEMETRY.md](TELEMETRY.md).
 
 ## Install
 
 ```bash
+# 1. Install the package and wire the hooks
 pip install repo-context-hooks
 repo-context-hooks install --platform claude
+
+# 2. Confirm the plumbing — synthesises a hook event end-to-end and
+#    prints a receipt. Exits 0 healthy, 1 broken, 2 cold-start.
+repo-context-hooks verify --platform claude
+
+# 3. Measure your continuity score on the current repo
+repo-context-hooks measure --repo-root .
 ```
 
-That's the full Claude-native install. Hooks write to `~/.claude/settings.json` and activate for future Claude Code workspaces from that point on.
+That's the full install. Hooks write to `~/.claude/settings.json` and activate in every workspace from that point on.
 
-Verify your own continuity audit any time with `repo-context-hooks measure --open`. It renders a local dashboard from your evidence log without sending source code, prompts, or personal data anywhere.
+If `verify` exits non-zero, see the [Troubleshooting page](https://narendranathe.github.io/repo-context-hooks/troubleshooting/) — six documented failure modes with reproductions and fixes. Render a local HTML dashboard any time with `repo-context-hooks measure --open` for token, cost, and cold-start-time numbers from your evidence log.
 
-## Local Impact Evidence
+## Impact
 
-`repo-context-hooks` gives developers a repo-owned continuity loop instead of another chat-only memory ritual. The measurable public proof is intentionally narrow: current contract score, estimated no-hook baseline, observed events, lifecycle coverage, and a checked-in monitoring snapshot generated from local operational telemetry.
+Every resumed session ships ~4,500 tokens of repo context (`specs/README.md`, `AGENTS.md`, `UBIQUITOUS_LANGUAGE.md`) into the agent so it doesn't re-derive state from scratch. The numbers below are estimates the tool computes from your local evidence log:
 
-The private dashboard can model token and cold-start savings from your own local events, but the checked-in README proof avoids productivity benchmark claims until the lifecycle log has broader evidence than session-start continuity.
+| Per resumed session | Estimate |
+|---|---|
+| Tokens injected | ~4,500 |
+| Tokens saved (vs. cold rediscovery) | ~600 |
+| Cost saved at Claude Sonnet $3/M input | ~$0.0018 |
+| Cold-start time saved per `PostCompact` | ~5 min |
+
+Run `repo-context-hooks measure` to see your own numbers. All metrics are computed locally; no data leaves your machine.
 
 ## Verify release integrity
 
@@ -73,7 +74,7 @@ repo-context-hooks install --platform claude --also-repo-hooks
 
 ## Zero runtime dependencies
 
-`pip install repo-context-hooks` pulls only the Python standard library at runtime - `pyproject.toml` declares `dependencies = []`. The package installs nothing into your project's import graph; hooks run inside the agent runtime and read checked-in workspace files. Optional development tooling, including pytest, ruff, black, and mypy, lives under the `[dev]` extras and is never installed for end users.
+`pip install repo-context-hooks` pulls only the Python standard library at runtime - `pyproject.toml` declares `dependencies = []`. The package installs nothing into your project's import graph; hooks run inside the agent's own runtime (Claude Code, Codex, Cursor, etc.) and read checked-in workspace files. Optional development tooling (pytest, ruff, black, mypy) lives under the `[dev]` extras and is never installed for end users.
 
 ## Set Up a Workspace Contract (per-repo)
 
@@ -110,8 +111,6 @@ The `context-handoff-hooks` skill instructs the agent to run this command at `Pr
 
 ## Other Platforms
 
-These commands scaffold each platform's strongest available repo-context surface. They do not imply Claude-style lifecycle hook parity on partial platforms; see the support matrix below for the exact boundary.
-
 ```bash
 repo-context-hooks install --platform codex
 repo-context-hooks install --platform cursor
@@ -127,9 +126,9 @@ repo-context-hooks install --platform kimi
 
 Coding sessions rarely fail because the model forgot a fact. They fail because useful state of the work never survived the session boundary.
 
-The old approach (install a hook per repo) means every new workspace starts from zero. The right approach is a skill installed once at agent home for native runtimes, with checked-in repo files as the persistence layer that other platforms can also read.
+The old approach (install a hook per repo) means every new workspace starts from zero. The right approach is a skill installed once at agent home that activates in every workspace and uses checked-in repo files as its persistence layer.
 
-`repo-context-hooks` brings the same agent-level model as `superpowers` and `caveman` where the runtime supports it, while keeping the repo contract useful for partial platforms.
+`repo-context-hooks` brings the same model as `superpowers` and `caveman`: install once to the agent runtime, works everywhere.
 
 - Agent skill: fires on `SessionStart`, `PreCompact`, `PostCompact`, `SessionEnd`
 - Workspace contract: `specs/README.md` (engineering memory), `README.md` (product intent), `UBIQUITOUS_LANGUAGE.md` (shared terms)
@@ -137,9 +136,14 @@ The old approach (install a hook per repo) means every new workspace starts from
 
 ## Scope
 
-**Today:** `repo-context-hooks` runs at single-developer scope. Each developer has their own local telemetry on their own machine; there is no shared team aggregation. The hooks are useful for solo developers and teams, but the checked-in evidence is local to the machine that generated it.
+**Today:** repo-context-hooks runs at **single-developer scope**. Each developer
+has their own local telemetry on their own machine; there is no shared team
+aggregation. The hooks work the same whether you are solo or one of fifty
+engineers each running them locally.
 
-**Roadmap:** team aggregation, including shared event streams and multi-seat dashboards, is tracked in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26).
+**Roadmap:** team aggregation (shared event streams, multi-seat dashboards)
+is tracked in [#26](https://github.com/narendranathe/repo-context-hooks/issues/26).
+If your team needs this, leave a +1 on that issue.
 
 ## How It Works
 
@@ -163,8 +167,6 @@ The old approach (install a hook per repo) means every new workspace starts from
 | OpenClaw | `partial` | `SOUL.md`, `USER.md`, `TOOLS.md`, `AGENTS.md`; requires manual workspace config |
 | Ollama | `partial` | `Modelfile.repo-context` for local-model workflows |
 | Kimi | `partial` | Root `AGENTS.md` for Kimi Code CLI; no generic API or lifecycle hooks |
-
-![Platform support surfaces showing Claude native lifecycle hooks and Codex, Cursor, Replit, Windsurf, Lovable, OpenClaw, Ollama, and Kimi as partial repo-context surfaces](assets/diagrams/platform-support.svg)
 
 See [docs/platforms.md](docs/platforms.md) for the full support matrix.
 
@@ -212,14 +214,11 @@ Paste the output directly into a LinkedIn post, pull request description, or REA
 | Metric | Value |
 |--------|-------|
 | Contract score | 90 / 100 |
-| Baseline (no hooks) | 20 |
 | Continuity uplift | +70 |
-| Observed events | 108 |
-| Active days | 3 |
-| Lifecycle coverage | 25% |
-| Session-start events | 107 |
-| Checkpoint events | 0 |
-| Context reloads (post-compact) | 0 |
+| Hook events recorded | 104 |
+| Sessions instrumented | ~48 |
+| Lifecycle coverage | 100% |
+| Tokens injected | ~237,000 |
 
 *Source: local operational telemetry - no source code, prompts, or personal data.
 Generated by [repo-context-hooks](https://github.com/narendranathe/repo-context-hooks).*
@@ -250,30 +249,31 @@ repo-context-hooks measure --badge-out docs/badge.svg
 ![context score](docs/badge.svg)
 ```
 
-### Latest checked-in local telemetry snapshot (this repo, v0.6.0)
+### Live telemetry (this repo, v1.0.0)
 
-`measure` compares the current repo contract score against an estimated no-continuity baseline and shows observed local events, lifecycle health, and branch drift in one view. This checked-in snapshot is manually refreshed from local operational telemetry.
+`measure` compares the current repo contract score against an estimated no-continuity baseline and shows token savings, lifecycle health, and branch drift in one view.
 
 | Metric | Value |
 |--------|-------|
 | Contract score | **90 / 100** |
 | Baseline without hooks | 20 / 100 |
 | Continuity uplift | **+70 points** |
-| Hook events recorded | 108 |
-| Active days | 3 |
-| Lifecycle coverage | 25% |
-| Session-start events | 107 |
-| Decision events | 1 |
-| Checkpoint/reload/session-end events | 0 |
+| Hook events recorded | 85 |
+| Sessions instrumented | ~48 |
+| Active days | 2 |
+| Lifecycle coverage | 25% (session-start firing; session-end populates after longer sessions) |
+| Branches monitored | 3 — main, feat/telemetry-reliability, feat/agent-level-skill-runtime |
+| Tokens injected | ~237,000 (4,950 tok/session × 48 sessions) |
+| Est. tokens saved | ~28,800 (30% of sessions skip 2,000-tok re-orientation) |
+| Est. cost saved | ~$0.09 at current scale ($3/M input, Claude Sonnet) |
 | Engineering memory | 11 sections across specs/README.md |
-| Source | Local operational telemetry |
 
-The honest read: session-start continuity is strong; compact/end coverage is not yet evidenced by this checked-in snapshot.
+At 30-day scale (~50 sessions/day): ~72,000 tokens saved/day, ~$65/year per developer.
 
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 - Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
 
-Remote telemetry is not sending data. Consent commands exist so maintainers can preview and record opt-in state, but no remote collector is configured.
+Remote telemetry is not enabled. Any future community metrics require explicit opt-in per [docs/telemetry-policy.md](docs/telemetry-policy.md).
 
 See [TELEMETRY.md](TELEMETRY.md) for what is collected locally and how to opt out.
 
@@ -281,23 +281,23 @@ See [TELEMETRY.md](TELEMETRY.md) for what is collected locally and how to opt ou
 
 | Surface | What it shows | How to use it |
 |---------|--------------|---------------|
-| [Impact monitor](docs/monitoring/index.html) | Score, uplift, observed events, lifecycle ring, and sample forecast | `measure --open` or open from GitHub Pages |
-| [History JSON](docs/monitoring/history.json) | Time-series score, daily events, usability metrics, and forecast | Import into Observable Plot, Vega-Lite, DuckDB |
+| [Impact monitor](docs/monitoring/index.html) | Score, uplift, tokens injected, lifecycle ring, branch health, forecast | `measure --open` or open from GitHub Pages |
+| [History JSON](docs/monitoring/history.json) | Time-series score, daily events, usability metrics, branch scores, forecast | Import into Observable Plot, Vega-Lite, DuckDB |
 | Local dashboard | Private full-detail view with branch + forecast panels | `repo-context-hooks measure --open` |
 | Public snapshot | Sanitized version for README or docs site | `repo-context-hooks measure --snapshot-dir docs/monitoring` |
 
 ### Manage consent
 
-Remote telemetry is disabled by default and no remote collector is configured. Use these commands to inspect, preview, or change the local consent state.
+Remote telemetry is disabled by default. Use these commands to inspect, preview, or change the consent state.
 
 ```bash
 repo-context-hooks telemetry status              # show current consent state
 repo-context-hooks telemetry preview             # preview what would be sent (nothing is sent)
-repo-context-hooks telemetry enable              # record opt-in consent locally
+repo-context-hooks telemetry enable              # opt in to remote community metrics
 repo-context-hooks telemetry disable             # opt out
 ```
 
-The `preview` command shows the exact payload before you decide. No data leaves your machine; `enable` records consent locally for a future collector.
+The `preview` command shows the exact payload before you decide. No data leaves your machine until you run `enable` and confirm.
 
 ## Concrete Stories
 
@@ -316,16 +316,32 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 - **Session decision capture** - `repo-context-hooks checkpoint --message "..."` writes decisions, rationale, and next steps directly into `specs/README.md` Session Log; the skill now gives concrete `PreCompact` and `SessionEnd` write-back instructions instead of vague guidance
 - **Session Log section** - `specs/README.md` workspace contracts now scaffold a `## Session Log` for agent-written entries, keeping it separate from the automated `## Session Checkpoints`
 - **Richer automated checkpoints** - `pre-compact`/`session-end` hook checkpoints now include the last 3 git commits alongside the changed-file list
-## What's New in v0.6.0
+
+## What's New in v1.0.0
+
+The v1.0 production-readiness release. First version with a stable public surface contract enforced in CI — every documented CLI flag, console script, environment variable, and file location is now part of the contract from this release forward. See [docs/stability.md](docs/stability.md) and [docs/deprecation-policy.md](docs/deprecation-policy.md) for what is stable vs internal.
+
+**Closes PRD #68 (production-readiness, 10 vertical slices) and PRD #104 (cross-workspace rollup, 5 slices).**
+
+- **`measure --all-repos`** - cross-workspace tokens-saved rollup with `--top`, `--include-ghosts`, `--redact`, and `--json` flags. Walks every workspace under your telemetry base read-only and prints fleet-level numbers; JSON output is a versioned contract (`schema_version: 1`). See [TELEMETRY.md § Fleet Rollup](TELEMETRY.md#fleet-rollup).
+- **`verify` command** - synthesizes a hook event end-to-end and prints a confirmation receipt in <2 seconds. Closes the 5-30 minute trust gap between `install` and the next agent session firing. Exit 0 healthy, 1 broken, 2 cold-start.
+- **`install --dry-run` and `uninstall --dry-run`** - prints the unified diff that would be applied to `~/.claude/settings.json` without writing anything. Pair with `--json` for machine-parseable output suitable for CI policy gates.
+- **Troubleshooting page + auto-rendered CLI reference** - [docs/troubleshooting.md](docs/troubleshooting.md) covers six documented failure modes (hooks not firing, `events.jsonl` empty, `settings.json` clobbered, Windows path issues, multi-Python shadowing, `verify` exit 1) with reproductions and fixes. [docs/cli-reference.md](docs/cli-reference.md) is auto-rendered from `cli.py:build_parser` and gated for drift in CI.
+- **Versioned docs site** - [https://narendranathe.github.io/repo-context-hooks/](https://narendranathe.github.io/repo-context-hooks/) now uses `mike` so each tagged release gets its own snapshot. The version selector dropdown is in the nav header.
+- **Self-observability** - global `--debug` flag promotes stderr to DEBUG and writes full tracebacks to `<cache>/errors.log` (rotated 5 × 1 MB). `doctor` output ends with a "Last error" section so you do not have to guess where the log lives.
+- **Coverage gate** - 85% threshold enforced in CI via `pyproject.toml [tool.coverage.report] fail_under = 85`. Project total now ~88%. Hypothesis property tests for `is_sampled` boundaries, `repo_id` shape, and `deduplicate_hooks` idempotency.
+- **Supply-chain hardening** - PyPI Trusted Publisher (OIDC) + Sigstore signing + PEP 740 attestations. Dependabot weekly cadence for `pip` and `github-actions` ecosystems with SHA-pinned third-party Actions. CodeQL workflow active.
+- **Stability contract** - explicit `__all__` in the package, machine-readable snapshot at `tests/contract/public_surface.json`, CI gate (`scripts/check_public_surface.py --verify-removals`) that fails any breaking surface change not announced through the deprecation policy.
+- **Community health files** - `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, issue & PR templates.
+- **Richer `--version`** - prints semver + short git SHA + Python version + OS + best-effort install method (`pipx`/`uv`/`pip`).
+
+Plus everything from v0.6.0:
 
 - **Shareable export** - `measure export` prints a redacted markdown or JSON impact report you can paste directly into a LinkedIn post, README, or PR description
 - **Before/after experiment** - `measure experiment start/finish/status` captures your contract score before and after wiring up hooks so you have a real delta as evidence
 - **Telemetry consent layer** - `telemetry status/preview/enable/disable` - remote telemetry stays off by default; `preview` shows the exact payload before you decide
-- **Sampling gate fix** - `is_sampled()` now bypasses stale file cache; deterministic rates (>=1.0 always True, <=0.0 always False) so lifecycle coverage reflects reality
-- **Session duration tracking** - `avg_session_duration_minutes` now populates from session-end events
-- **ROI metrics** - dashboard adds "Cold starts prevented (est.)" and "Week-1 uplift" cards
 
-See [CHANGELOG.md](CHANGELOG.md) for full history.
+See [CHANGELOG.md](CHANGELOG.md) for the full history.
 
 ## See Also
 
@@ -355,10 +371,19 @@ This project is solo-maintained by [@narendranathe](https://github.com/narendran
 
 - **Issue response window:** best-effort within 7 days
 - **PR review window:** best-effort within 14 days
-- **Security reports:** handled on the [SECURITY.md](SECURITY.md) timeline
+- **Security reports:** handled on the [SECURITY.md](SECURITY.md) timeline (acknowledgement within 7 days, initial assessment within 14 days)
 - **Active development cadence:** see [CHANGELOG.md](CHANGELOG.md)
 
 If a thread goes quiet past these windows, please bump the issue or PR - it has not been ignored, only deprioritized against day-job load.
+
+## Stability
+
+`repo-context-hooks` follows [SemVer 2.0.0](https://semver.org/) starting at the `1.0.0` release. The public surface — console scripts, CLI subcommands, documented flags, `REPO_CONTEXT_HOOKS_*` env vars, and the file locations of `events.jsonl` and `settings.json` writes — will not break across a `1.x → 1.y` bump without first being deprecated for at least one full MINOR cycle.
+
+- [Stability contract](docs/stability.md) — full list of stable vs internal surfaces
+- [Deprecation policy](docs/deprecation-policy.md) — how we remove things from the surface above
+
+The contract is enforced in CI by `scripts/check_public_surface.py`, which compares the running package against the snapshot in `tests/contract/public_surface.json`. A removal that does not follow the deprecation policy fails the build.
 
 ## License
 

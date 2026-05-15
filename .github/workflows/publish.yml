@@ -5,8 +5,14 @@ on:
     tags:
       - "v*"
 
+# Top-level token is read-only. Each job escalates exactly the writes it needs.
+# The `publish` job needs `contents: write` to call `gh release edit` AFTER a
+# successful PyPI publish — see the comment above that job's `permissions:`.
+# Do NOT promote `contents: write` here.
 permissions:
-  id-token: write  # required for PyPI Trusted Publisher (OIDC)
+  contents: read
+  id-token: write    # required for PyPI Trusted Publisher (OIDC) and Sigstore
+  attestations: write  # required for gh-action-sigstore-python and PEP 740 provenance
 
 jobs:
   build:
@@ -16,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -25,6 +31,11 @@ jobs:
 
       - name: Build wheel and sdist
         run: python -m build
+
+      - name: Sign distributions with Sigstore
+        uses: sigstore/gh-action-sigstore-python@v3.0.0
+        with:
+          inputs: ./dist/*.whl ./dist/*.tar.gz
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
@@ -44,12 +55,31 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Move sigstore bundles out of dist/ before TestPyPI publish
+        # `pypa/gh-action-pypi-publish` invokes twine which scans the entire
+        # dist/ directory and rejects `*.sigstore.json` as "Unknown
+        # distribution format" — observed on the v1.0.0 tag deploy
+        # (run 25242241509). TestPyPI does not store PEP 740 attestations
+        # (only PyPI does), so the bundles are not useful here. Move them
+        # aside; they remain in the artifact for the PyPI step below to use.
+        run: |
+          mkdir -p sigstore-bundles
+          mv dist/*.sigstore.json sigstore-bundles/ 2>/dev/null || true
+          ls -la dist/
+
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          # Re-tag scenarios upload the same filename twice; without this,
+          # the second push fails with "400 File already exists" — observed
+          # when the v1.0.0 retag chain re-uploaded a wheel TestPyPI had
+          # already accepted on the first failed run (run 25242670986).
+          # TestPyPI is for verifying installability, not for unique-version
+          # gating; skipping is the documented PEP-recommended behavior.
+          skip-existing: true
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -63,6 +93,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-on-testpypi
     environment: pypi
+    # JOB-SCOPED escalation: `contents: write` is REQUIRED for `gh release edit`
+    # to populate the GitHub Release page with notes from CHANGELOG.md after a
+    # successful PyPI publish. NEVER promote this to top-level — keep it here so
+    # only this single job (running maintainer-tagged code, gated by the
+    # `pypi` deployment environment) can write to the repo.
+    permissions:
+      id-token: write
+      attestations: write
+      contents: write
 
     steps:
       - uses: actions/download-artifact@v4
@@ -70,5 +109,63 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Move sigstore bundles out of dist/ before PyPI publish
+        # Same fix as the TestPyPI step. `pypa/gh-action-pypi-publish` calls
+        # `twine check` on every file in dist/ and rejects `*.sigstore.json`
+        # with "InvalidDistribution: Unknown distribution format" — observed
+        # on the v1.0.0 retagged deploy (run 25242421527). The `attestations:
+        # true` flag below mints fresh PEP 740 attestations via OIDC; it
+        # does not consume the external sigstore bundles produced by
+        # `gh-action-sigstore-python` in the build job. Those bundles are
+        # preserved in the workflow artifact for off-PyPI verification
+        # (`sigstore verify identity ...`).
+        run: |
+          mkdir -p sigstore-bundles
+          mv dist/*.sigstore.json sigstore-bundles/ 2>/dev/null || true
+          ls -la dist/
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          attestations: true
+          # Retag-safe: if a previous retag cycle uploaded the wheel
+          # successfully, skip re-uploading rather than failing the
+          # workflow. PyPI rejects overwrites unconditionally; this
+          # only suppresses the action error so the downstream
+          # `gh release edit` step still runs.
+          skip-existing: true
+
+      # --- Auto release notes from CHANGELOG.md (issue #76) ---
+      # Runs ONLY after PyPI publish succeeds. Failure here does not retract
+      # the published artifact — a maintainer can re-run this job or manually
+      # `gh release edit "$TAG" --notes-file -` from a local checkout.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install package for changelog extractor
+        # The CHANGELOG section parser ships in the wheel; install it so the
+        # workflow uses the SAME logic that adopters can import. (Repo
+        # convention: every non-trivial logic lives under coverage in a
+        # tested module, not in opaque YAML.)
+        run: pip install -e .
+
+      - name: Populate GitHub Release notes from CHANGELOG
+        # Fail-loud contract:
+        #   - Section missing or empty -> exit 1, surfaces in workflow log.
+        #   - `gh release edit` failure -> exit 1, log shows `gh` error.
+        # Never silently fall back to "(auto-generated)" because that would
+        # mask broken release-time CHANGELOG discipline.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VER="${TAG#v}"
+          python -m repo_context_hooks.changelog extract "$VER" CHANGELOG.md > /tmp/notes.md
+          test -s /tmp/notes.md
+          gh release view "$TAG" >/dev/null 2>&1 \
+            || gh release create "$TAG" --title "$TAG" --notes "(populating from CHANGELOG...)"
+          gh release edit "$TAG" --notes-file /tmp/notes.md

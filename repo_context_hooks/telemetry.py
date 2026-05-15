@@ -4,6 +4,7 @@ import datetime as dt
 import hashlib
 import html
 import json
+import math
 import os
 import random
 import subprocess
@@ -20,6 +21,25 @@ _SESSION_ID_FILE = "current-session-id"
 _SESSION_SAMPLED_FILE = "current-session-sampled"
 _SESSION_START_TS_FILE = "current-session-start-ts"
 _SESSION_STATE_DIR = ".repo-context-hooks"
+
+# Canonical key set every event written by ``record_event`` carries.
+# Verify (issue #74) imports this constant to schema-validate the dummy
+# event it round-trips, so a future change to the event shape forces a
+# corresponding update here — single source of truth for drift detection.
+# ``duration_minutes`` is intentionally NOT in this tuple; it is conditional
+# (only present for `*-end` events).
+CANONICAL_EVENT_KEYS: tuple[str, ...] = (
+    "timestamp",
+    "event_name",
+    "session_id",
+    "source",
+    "repo_id",
+    "repo_name",
+    "branch",
+    "repo_contract_score",
+    "estimated_baseline_score",
+    "details",
+)
 
 
 def _git_output(repo_root: Path, *args: str) -> str:
@@ -146,6 +166,14 @@ def is_sampled(repo_root: Path, rate: float = 1.0) -> bool:
             rate = float(rate_str)
         except ValueError:
             pass
+
+    # Coerce NaN to a safe-default opt-out. Without this, NaN falls through both
+    # boundary comparisons (NaN >= 1.0 is False AND NaN <= 0.0 is False), reaches
+    # `random.random() < NaN` which is always False, and the user gets a silent
+    # permanent opt-out with no diagnostic. Treating NaN as rate=0.0 makes the
+    # behaviour intentional (and matches the telemetry-off safe default).
+    if math.isnan(rate):
+        rate = 0.0
 
     # Deterministic rates bypass the file cache to avoid stale-false poisoning the
     # session.  We still write the canonical value so clear_session_state() and
@@ -1429,6 +1457,23 @@ def branch_scores(
 _GHOST_REPO_NAMES: frozenset[str] = frozenset({"repo", "tmp", "temp", "test"})
 
 
+def is_ghost_repo(repo_dir: Path) -> bool:
+    """Return True if a telemetry workspace dir is a ghost (test-run residue).
+
+    Ghost iff the dir has fewer than 2 events AND its repo_name (from the
+    first event's `repo_name` field, or the directory's basename if there
+    are no events) is in `_GHOST_REPO_NAMES`. Side-effect-free; never
+    deletes or mutates anything. Used by `purge_ghost_repos` to choose
+    which dirs to remove and by the cross-workspace rollup walker (#107)
+    to choose which dirs to skip.
+    """
+    events = _read_events(repo_dir / EVENTS_FILE)
+    if len(events) >= 2:
+        return False
+    repo_name = events[0].get("repo_name", "") if events else repo_dir.name
+    return repo_name in _GHOST_REPO_NAMES
+
+
 def purge_ghost_repos(
     telemetry_base: Path | None = None,
     dry_run: bool = True,
@@ -1451,12 +1496,7 @@ def purge_ghost_repos(
     for entry in base.iterdir():
         if not entry.is_dir():
             continue
-        events_file = entry / EVENTS_FILE
-        events = _read_events(events_file)
-        if len(events) >= 2:
-            continue
-        repo_name = events[0].get("repo_name", "") if events else entry.name
-        if repo_name not in _GHOST_REPO_NAMES:
+        if not is_ghost_repo(entry):
             continue
         dir_size = sum(f.stat().st_size for f in entry.rglob("*") if f.is_file())
         removed_dirs.append(str(entry))
@@ -1466,6 +1506,265 @@ def purge_ghost_repos(
             shutil.rmtree(entry, ignore_errors=True)
 
     return {"removed": removed, "bytes_freed": bytes_freed, "dirs": removed_dirs}
+
+
+# ---------------------------------------------------------------------------
+# Cross-workspace rollup (#107) — data + formula core for `measure --all-repos`
+#
+# Walks every workspace under a telemetry base, applies the same
+# `_build_usability` substring-match formula already used by `measure_impact`,
+# and produces a stable versioned report. The CLI surface (`measure
+# --all-repos`) is wired in #108; docs in #110. Public surface is
+# `RollupReport`, `RollupSummary`, `RollupRepo`, `rollup_telemetry`,
+# `redact_repo_name` — all consumed by the CLI slice.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class RollupSummary:
+    telemetry_base: str
+    workspaces_total: int
+    workspaces_real: int
+    workspaces_ghost: int
+    sessions_distinct: int
+    events_total: int
+    event_counts: dict[str, int]
+    session_starts: int
+    tokens_injected: int
+    tokens_saved: int
+    cost_saved_usd: float
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "telemetry_base": self.telemetry_base,
+            "workspaces_total": self.workspaces_total,
+            "workspaces_real": self.workspaces_real,
+            "workspaces_ghost": self.workspaces_ghost,
+            "sessions_distinct": self.sessions_distinct,
+            "events_total": self.events_total,
+            "event_counts": dict(self.event_counts),
+            "session_starts": self.session_starts,
+            "tokens_injected": self.tokens_injected,
+            "tokens_saved": self.tokens_saved,
+            "cost_saved_usd": self.cost_saved_usd,
+        }
+
+
+@dataclass(frozen=True)
+class RollupRepo:
+    repo_id: str
+    repo_name: str
+    sessions: int
+    session_starts: int
+    tokens_saved: int
+    is_ghost: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "repo_id": self.repo_id,
+            "repo_name": self.repo_name,
+            "sessions": self.sessions,
+            "session_starts": self.session_starts,
+            "tokens_saved": self.tokens_saved,
+            "is_ghost": self.is_ghost,
+        }
+
+
+@dataclass(frozen=True)
+class RollupReport:
+    summary: RollupSummary
+    repos: tuple[RollupRepo, ...]
+    schema_version: int = 1
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "summary": self.summary.to_dict(),
+            "repos": [repo.to_dict() for repo in self.repos],
+        }
+
+    def render(self, top_n: int = 15) -> str:
+        # Header + summary block. Mirrors the PRD §Detailed Description text
+        # rendering — kept narrow enough to fit a 78-col terminal.
+        lines: list[str] = []
+        bar = "=" * 78
+        lines.append(bar)
+        lines.append("repo-context-hooks  Fleet Rollup")
+        lines.append(bar)
+        s = self.summary
+        ghost_note = (
+            f"  ({s.workspaces_ghost} ghosts excluded; --include-ghosts to show)"
+            if s.workspaces_ghost
+            else ""
+        )
+        lines.append(f"Telemetry root          : {s.telemetry_base}")
+        lines.append(f"Workspaces (real)       : {s.workspaces_real}{ghost_note}")
+        lines.append(f"Distinct sessions       : {s.sessions_distinct}")
+        lines.append(f"Total events            : {s.events_total}")
+        lines.append(f"session-start           : {s.session_starts}")
+        lines.append(f"Tokens injected (ctx)   : {s.tokens_injected:,}")
+        lines.append(
+            f"Tokens SAVED (vs cold)  : {s.tokens_saved:,}      "
+            f"(30% × 2,000 tok re-orient avoided)"
+        )
+        lines.append(f"Cost saved (Claude in)  : ${s.cost_saved_usd:.2f}")
+        lines.append("")
+
+        # Top-N table. top_n=0 means "show all".
+        if not self.repos:
+            lines.append("No workspaces found.")
+            return "\n".join(lines)
+
+        visible = self.repos if top_n == 0 else self.repos[:top_n]
+        title = (
+            "Top all workspaces by tokens saved"
+            if top_n == 0
+            else f"Top {len(visible)} workspaces by tokens saved"
+        )
+        lines.append(title)
+        lines.append("-" * 78)
+        lines.append(
+            f"{'repo_id':<18}{'name':<28}{'sess':>6}{'starts':>8}{'saved':>10}"
+        )
+        for repo in visible:
+            lines.append(
+                f"{repo.repo_id:<18}{repo.repo_name[:27]:<28}"
+                f"{repo.sessions:>6}{repo.session_starts:>8}{repo.tokens_saved:>10,}"
+            )
+        return "\n".join(lines)
+
+
+def redact_repo_name(name: str) -> str:
+    """Return `sha256(name)[:12]` — deterministic 12-char hex digest.
+
+    Used by the `--redact` flag (lands in #108) so repo names can be hashed
+    in shareable exports without changing the JSON schema. Stable across
+    Python versions; safe on empty strings (returns `e3b0c44298fc`).
+    """
+    return hashlib.sha256(name.encode("utf-8")).hexdigest()[:12]
+
+
+def _empty_rollup(base_str: str) -> RollupReport:
+    return RollupReport(
+        summary=RollupSummary(
+            telemetry_base=base_str,
+            workspaces_total=0,
+            workspaces_real=0,
+            workspaces_ghost=0,
+            sessions_distinct=0,
+            events_total=0,
+            event_counts={},
+            session_starts=0,
+            tokens_injected=0,
+            tokens_saved=0,
+            cost_saved_usd=0.0,
+        ),
+        repos=(),
+    )
+
+
+def rollup_telemetry(
+    *,
+    base: Path | None = None,
+    include_ghosts: bool = False,
+) -> RollupReport:
+    """Walk every workspace under `base` and produce a fleet-rollup report.
+
+    `base=None` resolves via `_default_telemetry_base()` (which honors
+    `REPO_CONTEXT_HOOKS_TELEMETRY_DIR`). When the
+    `REPO_CONTEXT_HOOKS_TELEMETRY=0` opt-out is set, an empty report is
+    returned without reading the filesystem — callers can short-circuit
+    safely. Corrupt JSONL lines are silently skipped (via `_read_events`).
+
+    Tokens-saved formula matches `_build_usability` exactly:
+    `tokens_saved = round(session_starts * 0.30 * 2000)` where
+    `session_starts = sum(1 for n in names if "session-start" in n)`.
+    """
+    resolved_base = base if base is not None else _default_telemetry_base()
+    base_str = str(resolved_base)
+
+    # Hard opt-out — same convention as `is_sampled` reads of the env var.
+    explicit = os.environ.get("REPO_CONTEXT_HOOKS_TELEMETRY")
+    if explicit is not None and explicit.lower() in ("0", "false", "no"):
+        return _empty_rollup(base_str)
+
+    if not resolved_base.exists():
+        return _empty_rollup(base_str)
+
+    repos: list[RollupRepo] = []
+    workspaces_total = 0
+    workspaces_ghost = 0
+    sessions: set[str] = set()
+    events_total = 0
+    event_counts: dict[str, int] = {}
+    session_starts = 0
+
+    for entry in sorted(resolved_base.iterdir()):
+        if not entry.is_dir():
+            continue
+        workspaces_total += 1
+        is_ghost = is_ghost_repo(entry)
+        if is_ghost:
+            workspaces_ghost += 1
+        if is_ghost and not include_ghosts:
+            continue
+
+        events = _read_events(entry / EVENTS_FILE)
+        events_total += len(events)
+        for event in events:
+            name = _event_name(event)
+            event_counts[name] = event_counts.get(name, 0) + 1
+            sid = event.get("session_id")
+            if sid:
+                sessions.add(str(sid))
+
+        names = [_event_name(e) for e in events]
+        repo_starts = sum(1 for n in names if "session-start" in n)
+        session_starts += repo_starts
+
+        # repo_name comes from the first event; fallback to dir basename
+        # (matches `is_ghost_repo`'s rule).
+        repo_name = events[0].get("repo_name", "") if events else entry.name
+        # repo_session_count = distinct session_ids in this workspace
+        repo_sessions = {
+            str(e.get("session_id"))
+            for e in events
+            if e.get("session_id") is not None
+        }
+
+        repos.append(
+            RollupRepo(
+                repo_id=entry.name,
+                repo_name=str(repo_name),
+                sessions=len(repo_sessions),
+                session_starts=repo_starts,
+                tokens_saved=round(repo_starts * 0.30 * 2000),
+                is_ghost=is_ghost,
+            )
+        )
+
+    repos.sort(key=lambda r: r.tokens_saved, reverse=True)
+
+    workspaces_real = workspaces_total - workspaces_ghost
+    tokens_injected = session_starts * 4500
+    tokens_saved = round(session_starts * 0.30 * 2000)
+    cost_saved_usd = round(tokens_saved / 1_000_000 * 3.0, 3)
+
+    summary = RollupSummary(
+        telemetry_base=base_str,
+        workspaces_total=workspaces_total,
+        workspaces_real=workspaces_real,
+        workspaces_ghost=workspaces_ghost,
+        sessions_distinct=len(sessions),
+        events_total=events_total,
+        event_counts=event_counts,
+        session_starts=session_starts,
+        tokens_injected=tokens_injected,
+        tokens_saved=tokens_saved,
+        cost_saved_usd=cost_saved_usd,
+    )
+
+    return RollupReport(summary=summary, repos=tuple(repos))
 
 
 def measure_impact(repo_root: Path, telemetry_base: Path | None = None) -> ImpactReport:
