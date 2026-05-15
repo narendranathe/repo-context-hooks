@@ -445,3 +445,55 @@ def test_is_subpath_returns_true_for_descendant() -> None:
     parent = Path("/tmp/parent")
     child = Path("/tmp/parent/child/leaf")
     assert verify_mod._is_subpath(child, parent) is True
+
+
+class TestVerifyPortability:
+    """Portability-axis regressions: Path.home() crash, old-git fallback."""
+
+    def test_run_verify_survives_path_home_runtimeerror(
+        self, monkeypatch, tmp_path
+    ):
+        """SYSTEM-account Windows / Lambda / Nix-sandbox: ``Path.home()``
+        raises ``RuntimeError``. Verify must NOT propagate it — the receipt
+        is the contract. Regression for the M5/PR #103 bug repeating in
+        verify.py.
+        """
+        from repo_context_hooks import verify
+
+        def boom():
+            raise RuntimeError("Could not determine home directory")
+
+        monkeypatch.setattr("pathlib.Path.home", staticmethod(boom))
+        # No `home=` kwarg — exercises the fallback path through
+        # _logging_setup._safe_home().
+        report = verify.run_verify(
+            "claude",
+            telemetry_base_override=tmp_path / "ev",
+        )
+        # Either succeeded via tempdir fallback, or returned a receipt
+        # with a failure_reason — but did NOT raise.
+        assert isinstance(report, verify.VerifyReport)
+
+    def test_init_synthetic_repo_falls_back_on_old_git(
+        self, monkeypatch, tmp_path
+    ):
+        """RHEL 7/8 ship git 2.20/2.27 — ``--initial-branch`` exits non-zero.
+        Verify falls back to plain ``git init`` so the synthetic repo still
+        gets created.
+        """
+        import subprocess
+        from repo_context_hooks import verify
+
+        calls = []
+        real_run = subprocess.run
+
+        def fake_run(argv, **kw):
+            calls.append(argv)
+            if "--initial-branch=verify" in argv:
+                return subprocess.CompletedProcess(argv, 129, b"", b"unknown option")
+            return real_run(argv, **kw)
+
+        monkeypatch.setattr("repo_context_hooks.verify.subprocess.run", fake_run)
+        verify._init_synthetic_repo(tmp_path)
+        assert len(calls) == 2  # tried modern, fell back to plain
+        assert "--initial-branch=verify" not in calls[1]
