@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-<!-- none -->
+- Docs: example Session Log demonstrating the `checkpoint --message` workflow with 7 real v1.0.0 session decisions. Documents the canonical decision-capture pattern so adopters can see what a populated `## Session Log` looks like in practice.
 
 ### Changed
 <!-- none -->
