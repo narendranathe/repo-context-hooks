@@ -154,6 +154,80 @@ def test_decision_entry_written_to_session_log() -> None:
     assert "decision (" in specs
 
 
+def test_extract_repo_summary_skips_multi_line_html_comments() -> None:
+    """Regression for #124. The README often opens with a `<!-- BADGES:START -->`
+    block followed by a multi-line HTML comment whose body is plain prose
+    (badge ordering convention, etc.). The pre-fix parser's `clean_line`
+    only stripped single-line HTML tags, so the comment body survived the
+    prose filters and got concatenated into the AUTO:REPO_CONTEXT_END block
+    summary on every SessionStart fire — overwriting the real summary.
+
+    This test synthesises a README with the same shape as `repo-context-hooks`
+    own README and asserts the AUTO summary captures the prose paragraph that
+    follows the comment block, not the comment body itself.
+    """
+    temp_root = _tmp_dir()
+    repo = temp_root / "repo"
+    repo.mkdir()
+
+    subprocess.run(
+        ["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True
+    )
+
+    # Note line 3 is short enough to contribute the first prose line, then a
+    # multi-line HTML comment whose body LOOKS like prose (>25 chars, no
+    # markdown-list prefix). The actual prose paragraph that should be
+    # picked up follows below.
+    (repo / "README.md").write_text(
+        "# Demo Repo\n"
+        "\n"
+        "Tagline-style description of demo repo.\n"
+        "\n"
+        "<!-- BADGES:START -->\n"
+        "<!--\n"
+        "  Badge row convention. Add new badges INSIDE this anchor, one per line, in\n"
+        "  this order: build/quality / coverage / version. Each badge uses the linked\n"
+        "  form `[![alt](svg-url)](click-url)`.\n"
+        "-->\n"
+        "![demo badge](docs/badge.svg)\n"
+        "<!-- BADGES:END -->\n"
+        "\n"
+        "This demo repo exists purely so the AUTO summary can be exercised against a "
+        "realistic README shape. It is the canonical second prose paragraph the "
+        "parser should pick up.\n",
+        encoding="utf-8",
+    )
+
+    subprocess.run(
+        [sys.executable, str(SCRIPT), "session-start"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    specs = (repo / "specs" / "README.md").read_text(encoding="utf-8")
+
+    auto_start = "<!-- AUTO:REPO_CONTEXT_START -->"
+    auto_end = "<!-- AUTO:REPO_CONTEXT_END -->"
+    assert auto_start in specs and auto_end in specs
+    auto_block = specs.split(auto_start, 1)[1].split(auto_end, 1)[0]
+
+    # The bug: comment body leaks into the AUTO summary.
+    assert "Badge row convention" not in auto_block, (
+        "AUTO:REPO_CONTEXT block was clobbered by HTML-comment body — "
+        "extract_repo_summary did not skip multi-line HTML comments. "
+        "Regression for #124."
+    )
+
+    # Positive shape: the actual prose paragraph below the badge block lands in
+    # the summary. The "tagline" line on its own is acceptable as line 1; the
+    # second line of summary should be the real prose paragraph, not the
+    # comment body.
+    assert "Tagline-style description" in auto_block
+    assert "canonical second prose paragraph" in auto_block
+
+
 def test_checkpoint_appends_recent_commits() -> None:
     temp_root = _tmp_dir()
     repo = temp_root / "repo"

@@ -12,10 +12,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Docs: example Session Log demonstrating the `checkpoint --message` workflow with 7 real v1.0.0 session decisions. Documents the canonical decision-capture pattern so adopters can see what a populated `## Session Log` looks like in practice.
 - `specs/README.md`: new "Product Positioning (USPs)" section. 10 falsifiable USPs (each pinned to a CLI command, file path, or metric) plus the defensible-angle note and the hard non-goals list. Source of truth for external positioning so future blog posts, README sections, and PR descriptions anchor to the same claims.
 
 ### Changed
-<!-- none -->
+- `README.md` and `specs/README.md` refreshed to reflect the v1.0.0 ship: install snippet, badge row, USP framing, and the closed PRD #68 + PRD #104 milestones. No code or behavior change.
 
 ### Deprecated
 <!-- none -->
@@ -24,6 +25,7 @@ All notable changes to this project will be documented in this file.
 <!-- none -->
 
 ### Fixed
+- `extract_repo_summary()` in both copies of `repo_specs_memory.py` now skips lines inside multi-line HTML comment blocks (#124). The previous implementation's `clean_line` helper only stripped single-line `<...>` tags via a regex that requires the opening and closing markers on the same line, so a multi-line `<!-- ... -->` block (e.g. the `BADGES:START` convention header in this repo's own README) had its body pass the prose filters and got concatenated into the AUTO:REPO_CONTEXT summary. The bug clobbered the AUTO block on every `SessionStart` fire — surfaced repeatedly during the v1.0.0 release session as `specs/README.md` drift in unrelated PRs. Regression test in `tests/test_repo_memory_contract.py::test_extract_repo_summary_skips_multi_line_html_comments` synthesises a README with the exact shape that triggered the bug. Both bundle script copies updated; `tests/test_bundle_integrity.py` enforces they stay in sync. (#124)
 - `publish.yml`: both publish steps now pass `skip-existing: true` to `pypa/gh-action-pypi-publish`. Without this, retag scenarios fail with "400 File already exists" when the prior cycle already uploaded a given filename (observed when the v1.0.0 retag chain re-uploaded a wheel TestPyPI had already accepted on the first failed run). The TestPyPI flag is essentially mandatory; the PyPI flag makes the retag flow idempotent — PyPI still rejects overwrites unconditionally, the flag just suppresses the action-level error so downstream steps (`gh release edit`) still run.
 - `publish.yml`: BOTH the TestPyPI and PyPI publish steps now move `*.sigstore.json` files out of `dist/` before invoking `pypa/gh-action-pypi-publish`. twine inspects the entire dist directory and rejects sigstore bundles as "Unknown distribution format" — observed first on TestPyPI (run 25242241509), then again on PyPI (run 25242421527) after the TestPyPI-only fix. The `attestations: true` flag mints fresh PEP 740 attestations via OIDC at publish time; it does not consume external sigstore bundles. Those bundles are still produced by the `Sign distributions with Sigstore` step in the build job and remain in the workflow artifact for off-PyPI verification (`sigstore verify identity ...`).
 - `pages.yml`: main-push deploys now write to a `dev` version slot rather than `latest`. `latest` is reserved exclusively as an alias, repointed atomically on tag pushes via `mike deploy --update-aliases <version> latest`. The previous design (deploy `latest` as a version slot on main) failed the v1.0.0 tag deploy (run 25242241516) with `error: alias 'latest' already specified as a version` — mike forbids name reuse. An idempotent `mike delete --push latest` step cleans up the legacy version slot once; subsequent runs no-op.

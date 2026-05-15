@@ -249,7 +249,7 @@ repo-context-hooks measure --badge-out docs/badge.svg
 ![context score](docs/badge.svg)
 ```
 
-### Live telemetry (this repo, v0.6.0)
+### Live telemetry (this repo, v1.0.0)
 
 `measure` compares the current repo contract score against an estimated no-continuity baseline and shows token savings, lifecycle health, and branch drift in one view.
 
@@ -316,16 +316,32 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 - **Session decision capture** - `repo-context-hooks checkpoint --message "..."` writes decisions, rationale, and next steps directly into `specs/README.md` Session Log; the skill now gives concrete `PreCompact` and `SessionEnd` write-back instructions instead of vague guidance
 - **Session Log section** - `specs/README.md` workspace contracts now scaffold a `## Session Log` for agent-written entries, keeping it separate from the automated `## Session Checkpoints`
 - **Richer automated checkpoints** - `pre-compact`/`session-end` hook checkpoints now include the last 3 git commits alongside the changed-file list
-## What's New in v0.6.0
+
+## What's New in v1.0.0
+
+The v1.0 production-readiness release. First version with a stable public surface contract enforced in CI — every documented CLI flag, console script, environment variable, and file location is now part of the contract from this release forward. See [docs/stability.md](docs/stability.md) and [docs/deprecation-policy.md](docs/deprecation-policy.md) for what is stable vs internal.
+
+**Closes PRD #68 (production-readiness, 10 vertical slices) and PRD #104 (cross-workspace rollup, 5 slices).**
+
+- **`measure --all-repos`** - cross-workspace tokens-saved rollup with `--top`, `--include-ghosts`, `--redact`, and `--json` flags. Walks every workspace under your telemetry base read-only and prints fleet-level numbers; JSON output is a versioned contract (`schema_version: 1`). See [TELEMETRY.md § Fleet Rollup](TELEMETRY.md#fleet-rollup).
+- **`verify` command** - synthesizes a hook event end-to-end and prints a confirmation receipt in <2 seconds. Closes the 5-30 minute trust gap between `install` and the next agent session firing. Exit 0 healthy, 1 broken, 2 cold-start.
+- **`install --dry-run` and `uninstall --dry-run`** - prints the unified diff that would be applied to `~/.claude/settings.json` without writing anything. Pair with `--json` for machine-parseable output suitable for CI policy gates.
+- **Troubleshooting page + auto-rendered CLI reference** - [docs/troubleshooting.md](docs/troubleshooting.md) covers six documented failure modes (hooks not firing, `events.jsonl` empty, `settings.json` clobbered, Windows path issues, multi-Python shadowing, `verify` exit 1) with reproductions and fixes. [docs/cli-reference.md](docs/cli-reference.md) is auto-rendered from `cli.py:build_parser` and gated for drift in CI.
+- **Versioned docs site** - [https://narendranathe.github.io/repo-context-hooks/](https://narendranathe.github.io/repo-context-hooks/) now uses `mike` so each tagged release gets its own snapshot. The version selector dropdown is in the nav header.
+- **Self-observability** - global `--debug` flag promotes stderr to DEBUG and writes full tracebacks to `<cache>/errors.log` (rotated 5 × 1 MB). `doctor` output ends with a "Last error" section so you do not have to guess where the log lives.
+- **Coverage gate** - 85% threshold enforced in CI via `pyproject.toml [tool.coverage.report] fail_under = 85`. Project total now ~88%. Hypothesis property tests for `is_sampled` boundaries, `repo_id` shape, and `deduplicate_hooks` idempotency.
+- **Supply-chain hardening** - PyPI Trusted Publisher (OIDC) + Sigstore signing + PEP 740 attestations. Dependabot weekly cadence for `pip` and `github-actions` ecosystems with SHA-pinned third-party Actions. CodeQL workflow active.
+- **Stability contract** - explicit `__all__` in the package, machine-readable snapshot at `tests/contract/public_surface.json`, CI gate (`scripts/check_public_surface.py --verify-removals`) that fails any breaking surface change not announced through the deprecation policy.
+- **Community health files** - `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, issue & PR templates.
+- **Richer `--version`** - prints semver + short git SHA + Python version + OS + best-effort install method (`pipx`/`uv`/`pip`).
+
+Plus everything from v0.6.0:
 
 - **Shareable export** - `measure export` prints a redacted markdown or JSON impact report you can paste directly into a LinkedIn post, README, or PR description
 - **Before/after experiment** - `measure experiment start/finish/status` captures your contract score before and after wiring up hooks so you have a real delta as evidence
 - **Telemetry consent layer** - `telemetry status/preview/enable/disable` - remote telemetry stays off by default; `preview` shows the exact payload before you decide
-- **Sampling gate fix** - `is_sampled()` now bypasses stale file cache; deterministic rates (>=1.0 always True, <=0.0 always False) so lifecycle coverage reflects reality
-- **Session duration tracking** - `avg_session_duration_minutes` now populates from session-end events
-- **ROI metrics** - dashboard adds "Cold starts prevented (est.)" and "Week-1 uplift" cards
 
-See [CHANGELOG.md](CHANGELOG.md) for full history.
+See [CHANGELOG.md](CHANGELOG.md) for the full history.
 
 ## See Also
 
