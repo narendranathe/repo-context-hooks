@@ -56,6 +56,9 @@ This file is the persistent project context for agents and maintainers.
   - `v0.2.1`: canonical repo memory contract plus repo-first onboarding
   - `v0.2.4`: continuity impact monitoring, public telemetry snapshots, and README brand/visibility polish
   - `v0.3.0`: agent-level skill runtime, session metrics sampling, CI/CD matrix, PyPI OIDC publish
+  - `v0.5.0`: telemetry reliability — sampling gate fixes, lifecycle coverage repair, session duration
+  - `v0.6.0`: session decision capture (`checkpoint`), shareable export, before/after experiment, telemetry consent layer
+  - `v1.0.0`: production-readiness release — first stable public surface contract; closes PRD #68 (10 slices) + PRD #104 (cross-workspace rollup, 5 slices). PyPI 1.0.0 published with Sigstore + PEP 740 attestations; docs site versioned via `mike`
 - We shipped semantic decision capture: `repo-context-hooks checkpoint --message "..."` writes agent decisions and rationale into `## Session Log` in `specs/README.md`.
   - `write_decision_entry()` in `repo_specs_memory.py` appends timestamped, branch-stamped entries under the Session Log heading
   - Automated checkpoints (`pre-compact`, `session-end`) now include the last 3 git commits alongside changed files
@@ -69,6 +72,17 @@ This file is the persistent project context for agents and maintainers.
   - `#108` wires the CLI: `measure --all-repos --include-ghosts --top --redact --json` with an env opt-out short-circuit and `public_surface.json` contract update
   - `#109` adds a regression-grade integration test that locks down headline numbers against by-hand math on a synthetic 3-workspace tree (real / ghost / corrupt-JSONL)
   - `#110` ships the docs (this entry, `TELEMETRY.md` § Fleet Rollup, and a cross-link from `docs/monitoring.md`)
+- We shipped the v1.0 production-readiness sprint (PRD #68) — closes ten vertical slices and ships the first stable public surface contract:
+  - `#69` community health files (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`, issue/PR templates)
+  - `#70` supply-chain hardening (Sigstore signing, Dependabot weekly cadence with SHA pins, CodeQL workflow)
+  - `#71` coverage gate (85% via `pyproject.toml`) + Hypothesis property tests for `is_sampled` / `repo_id` / `deduplicate_hooks`
+  - `#72` stability contract — explicit `__all__`, `tests/contract/public_surface.json` snapshot, `scripts/check_public_surface.py --verify-removals` CI gate, `docs/stability.md` and `docs/deprecation-policy.md`
+  - `#73` self-observability — `repo_context_hooks.logging_setup` module, global `--debug` flag, `doctor` "Last error" surface
+  - `#74` install/uninstall UX — `verify` command, `--dry-run` on install/uninstall, version-migration tests against real v0.5/v0.6 fixtures
+  - `#75` docs depth — troubleshooting page, auto-rendered CLI reference, `mike` versioned docs, copy-paste quickstart
+  - `#76` release engineering — changelog gate, auto-populated GitHub Release notes, richer `--version`
+  - `#77` legal/governance polish (`NOTICE`, zero-deps callout, maintainer-status section)
+  - `#78` team-scope clarity (link `#26` from README, single-dev scope callout)
 
 ### 2026-04-27 21:50 - decision (main)
 
@@ -212,31 +226,39 @@ Built: shipped v1.0.0 to PyPI with Sigstore + PEP 740 attestations after THREE r
 
 ## Releases, PRs, and Current State
 
-- `main` currently includes all shipped work through `v0.3.0`:
-  - platform foundation and polish
+- `main` currently includes all shipped work through `v1.0.0`:
+  - platform foundation, polish, and adapters for nine platforms
   - canonical repo memory contract and repo-first onboarding
   - continuity impact monitoring and local evidence loop
   - agent-level skill runtime, session metrics, CI/CD matrix
-- Latest release: `v0.3.0` — live on PyPI (`pip install repo-context-hooks`)
-- PR #50 merged: agent-level skill runtime feature
-- CI: 174 tests, 6 matrix jobs (ubuntu + windows, Python 3.9/3.11/3.12) — all green
-- Next phase starts from fresh `main`
+  - session decision capture (`checkpoint --message`) + Session Log scaffolding
+  - cross-workspace telemetry rollup (PRD #104)
+  - v1.0 production-readiness (PRD #68): community files, supply-chain hardening, coverage gate, stability contract, self-observability, install/uninstall UX, docs depth, release engineering, legal/governance polish
+- Latest release: `v1.0.0` — live on PyPI (`pip install repo-context-hooks`) with Sigstore signature and PEP 740 attestations
+- Docs site: [https://narendranathe.github.io/repo-context-hooks/1.0.0/](https://narendranathe.github.io/repo-context-hooks/1.0.0/) (versioned via `mike`; `latest` alias points at 1.0.0)
+- CI: 611 tests, matrix jobs (ubuntu + windows, Python 3.9/3.11/3.12/3.13), coverage 88%+ enforced at 85% gate
+- Public surface contract enforced by `tests/contract/public_surface.json` + `scripts/check_public_surface.py --verify-removals` so any breaking change without a deprecation cycle fails CI
 
 ## Open Issues and Next Work
 
-Next: cut v0.6.0 release with session decision capture.
+PRD #68 (v1.0 production-readiness) and PRD #104 (cross-workspace rollup) both shipped via v1.0.0 on 2026-05-01. The repo is now in steady state.
 
-Priority backlog:
+Priority backlog (next-action items):
 
-- **Release v0.6.0** - checkpoint command + Session Log + SKILL.md rewrite are shippable; cut the release
-- **#43** - Auto-detect platform (`--platform` flag should be optional): biggest DX win
-- **#42** - `uninstall` command: developers need a clean exit
-- **#45** - First-run "what just happened" output: reduces churn on first install
-- **#47** - GitHub Pages docs site: needed before any public launch
+- **#74 portability follow-up** - scheduled remote agent (`trig_01BekHmLKcYnZahPCoQaKMLg`) opens a PR routing `verify.run_verify()`'s `Path.home()` through `_logging_setup._safe_home()` to inherit the cross-platform fallback ladder PR #103 added for `logging_setup`. Bonus: `_init_synthetic_repo` falls back from `git init --initial-branch=verify` to plain `git init` for RHEL 7/8 / UBI 8 with git 2.20/2.27.
+- **#97** - Property-test argparse graph for stability-gate top-level-flag regressions
+- **#96** - Drop git dependency in public-surface gate `--verify-removals` (frozen baseline file)
+- **#101** - Tighten SECURITY.md cross-link test
+- **#82 / #83** - Dependabot github_actions bumps for `setup-python` and `checkout` (close the Node.js 20 deprecation gap)
+- **Long-tail (post-v1.x)**:
+  - **#26** - Build consented remote telemetry and MCP reporting (the v1.x successor to PRD #104)
+  - **#25** - Investigate Codex hook telemetry when hook support stabilizes
+  - **#23** - Improve guided before/after impact experiment flow
 
 Ongoing:
 - Keep the repo memory contract canonical and low-noise.
 - Continue raising platform quality through real support surfaces, not expanded marketing copy.
+- Hold the public surface contract — any change to the v1.0 surface needs a deprecation cycle through `docs/deprecation-policy.md`.
 
 ## How To Work in This Repo
 
@@ -252,6 +274,30 @@ Ongoing:
 - Append decision summaries and handoff notes here at session end and compaction.
 - Each entry records what was built, key decisions made, and the next step.
 - Written by the agent via `repo-context-hooks checkpoint --message '...'`.
+
+### 2026-05-01 - decision (main): v1.0.0 release sprint
+
+**Built**: Closed PRD #68 (10 vertical slices) and PRD #104 (5 slices) and shipped v1.0.0 to PyPI with Sigstore + PEP 740 attestations. Live docs site at `/1.0.0/` with `latest` alias via `mike`. 611 tests, coverage 88.4%.
+
+**Key decisions and trade-offs surfaced this session:**
+
+- **CLI reference rendering** — issue #75 specified `mkdocs-click` for auto-rendering `cli.py:build_parser`, but `mkdocs-click` is Click-only and `build_parser` returns `argparse.ArgumentParser`. Three resolutions considered: (a) port to Click, rejected because it would break `docs/stability.md`'s v1.0 surface contract; (b) `mkdocs-argparse` plugin, rejected because third-party / unmaintained on PyPI; (c) stdlib pre-render script + drift gate. **Picked (c)**: `scripts/render_cli_reference.py` introspects argparse via `_actions` + `_SubParsersAction.choices`, emits markdown deterministically, and `tests/contract/test_docs_contract.py` asserts the committed file matches the renderer's output. Same "no drift possible" guarantee as `mkdocs-click` would have given, with zero new build deps.
+
+- **`--redact` default flip from `True` to `False` (PR #116, M5+M6 CLI surface)** — the existing `--redact` flag was vestigial: `measure export` hardcoded `redact=True` regardless of the flag, so the `default=True` carried no observable behavior. The new opt-in semantics for `--all-repos --redact` give the flag actual meaning. `measure export` is unchanged (still always redacts via the hardcoded call site). Verified by `test_measure_export_redact_default` continuing to pass.
+
+- **`mike` deploy: `dev` vs `latest` separation (PR #119)** — the original pages.yml deployed every push to a version slot named `latest`. When the v1.0.0 tag fired `mike deploy --update-aliases 1.0.0 latest`, mike rejected it: `error: alias 'latest' already specified as a version` because aliases and versions share a namespace. **Decision**: reserve `latest` exclusively as an alias; main pushes deploy to a `dev` version slot instead. Idempotent `mike delete --push latest` step handles the one-time legacy cleanup.
+
+- **Sigstore bundles vs. twine (PRs #119, #121)** — `sigstore/gh-action-sigstore-python` produces `*.sigstore.json` bundles in `dist/`; `pypa/gh-action-pypi-publish` invokes `twine check` on every file in `dist/` and rejects unknown extensions. Initial misdiagnosis: I assumed `attestations: true` on the publish action would consume the external bundles. Wrong — that flag mints **fresh** PEP 740 attestations via OIDC. **Fix**: move `*.sigstore.json` out of `dist/` before BOTH the TestPyPI and the PyPI publish steps. Bundles still exist in the workflow artifact for off-PyPI verification (`sigstore verify identity ...`).
+
+- **`skip-existing: true` on both publish targets (PR #122)** — retag scenarios upload the same filename twice. TestPyPI rejects duplicate filenames; the failed-bundle-but-wheel-uploaded state on the first cycle made every retag fail with "400 File already exists". Fix is essentially mandatory for TestPyPI. Added to PyPI too for retag idempotency (PyPI still rejects overwrites unconditionally; the flag just keeps the action from erroring so the downstream `gh release edit` step still runs).
+
+- **Synthetic-base test fixture: keep local, do NOT promote to `conftest.py` (PR #117)** — issue #109 left this open as a maintainer judgment call. Decision: keep `_build_three_workspace_tree` local to `tests/test_telemetry_rollup_integration.py`. `conftest.py` is currently scoped tightly to isolation concerns (Hypothesis storage, profile, env-var stripping); adding a workspace-fixture builder for a single consumer would expand its surface prematurely. When a second consumer materializes, the helper imports cleanly from the test module or can be lifted then.
+
+- **Phase-1 + Phase-2 critic-and-ALT pattern is the right tool for high-stakes shippables** — used for issues #73, #74, #75. For each: spawn 3 critics (global-adoption, repo-conventions, failure-modes lens), synthesize consensus spec, implement, then spawn 5 parallel ALT implementations in worktrees and judge. Phase 1 won every time, but the ALTs surfaced real concerns (e.g., ALT 1 in PR #112 caught a `Path.home()` regression that's now scheduled for follow-up via remote agent on May 8 / fired ad hoc 2026-05-01). For smaller single-issue feature slices (PRD #104 chain: #107 / #108 / #109 / #110), pure TDD in a single session was sufficient — tests-first / red-green-refactor / lint / pytest / open PR. The Phase 1+2 fortress pattern is overkill for slices that touch <300 lines of production code.
+
+- **Three retag cycles for v1.0.0 (release-engineering tax)** — pages.yml mike collision → publish.yml TestPyPI bundle issue → publish.yml PyPI bundle issue (same fix, missed PyPI step in the first patch) → TestPyPI duplicate filename. Each fix unblocked the next stage and exposed the next gotcha. v1.0.1 onward will be one-shot because the workflows now match the actual artifact shape. Captured in CHANGELOG `[Unreleased] / Fixed`.
+
+**Next**: hold the v1.0 surface; address the remote-agent-fired #74 portability follow-up if it opens a PR; consider closing the Node.js 20 GitHub Actions deprecation gap by merging dependabot PRs #82 and #83.
 
 ## Session Checkpoints
 

@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
 - Docs: example Session Log demonstrating the `checkpoint --message` workflow with 7 real v1.0.0 session decisions. Documents the canonical decision-capture pattern so adopters can see what a populated `## Session Log` looks like in practice.
 
 ### Changed
-<!-- none -->
+- `README.md` and `specs/README.md` refreshed to reflect the v1.0.0 ship: install snippet, badge row, USP framing, and the closed PRD #68 + PRD #104 milestones. No code or behavior change.
 
 ### Deprecated
 <!-- none -->
