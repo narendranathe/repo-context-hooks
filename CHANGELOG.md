@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Docs: example Session Log demonstrating the `checkpoint --message` workflow with 7 real v1.0.0 session decisions. Documents the canonical decision-capture pattern so adopters can see what a populated `## Session Log` looks like in practice.
 - `specs/README.md`: new "Product Positioning (USPs)" section. 10 falsifiable USPs (each pinned to a CLI command, file path, or metric) plus the defensible-angle note and the hard non-goals list. Source of truth for external positioning so future blog posts, README sections, and PR descriptions anchor to the same claims.
+- `marketing/posts/`: phased launch drafts for the v1.0.0 publicity push. Five posts (teaser, problem, solution+USPs, metrics, roadmap+contribute) each with Substack long-form + LinkedIn short-form variants, a posting schedule, a hashtag inventory, and per-post image-generation prompts. Drafts only; not part of the public stability contract.
 
 ### Changed
 - `README.md` and `specs/README.md` refreshed to reflect the v1.0.0 ship: install snippet, badge row, USP framing, and the closed PRD #68 + PRD #104 milestones. No code or behavior change.
