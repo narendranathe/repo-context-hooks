@@ -75,6 +75,7 @@ def introspect_surface() -> dict[str, Any]:
         "cli_commands": cli_commands,
         "platform_choices": platform_choices,
         "env_vars": env_vars,
+        "top_level_flags": _extract_top_level_flags(parser),
     }
 
 
@@ -96,6 +97,20 @@ def _extract_flags(parser: argparse.ArgumentParser) -> list[str]:
                     continue
                 flags.add(opt)
     return sorted(flags)
+
+
+def _extract_top_level_flags(parser: argparse.ArgumentParser) -> list[str]:
+    """Return the root parser's public option strings.
+
+    Mirrors ``_extract_flags`` but applied to the root parser so we pin
+    flags like ``--version`` and ``--debug`` that live above the
+    subcommand dispatch. Issue #97 — sibling PR #76 added ``--version``
+    at the root and the gate did not pin it; this closes that hole.
+    The same private-attribute walk over ``parser._actions`` is used so
+    drift in argparse internals surfaces here in one place rather than
+    in every subparser walker.
+    """
+    return _extract_flags(parser)
 
 
 def _extract_subcommands(parser: argparse.ArgumentParser) -> list[dict[str, Any]]:
@@ -175,7 +190,13 @@ def diff_surface(snapshot: dict[str, Any], current: dict[str, Any]) -> list[str]
     """Return a list of human-readable drift messages. Empty list = no drift."""
     msgs: list[str] = []
     snap_norm = _normalize(snapshot)
-    for pillar in ("all", "console_scripts", "platform_choices", "env_vars"):
+    for pillar in (
+        "all",
+        "console_scripts",
+        "platform_choices",
+        "env_vars",
+        "top_level_flags",
+    ):
         s = set(snap_norm.get(pillar) or [])
         c = set(current.get(pillar) or [])
         for added in sorted(c - s):
@@ -233,7 +254,13 @@ def removed_symbols_vs_baseline(baseline_snap: dict[str, Any], current_snap: dic
     removed: list[str] = []
     snap_a = _normalize(baseline_snap)
     snap_b = _normalize(current_snap)
-    for pillar in ("all", "console_scripts", "platform_choices", "env_vars"):
+    for pillar in (
+        "all",
+        "console_scripts",
+        "platform_choices",
+        "env_vars",
+        "top_level_flags",
+    ):
         a = set(snap_a.get(pillar) or [])
         b = set(snap_b.get(pillar) or [])
         for sym in sorted(a - b):

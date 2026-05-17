@@ -38,7 +38,8 @@ All notable changes to this project will be documented in this file.
 <!-- none -->
 
 ### Tests
-<!-- none -->
+- `tests/test_dependabot_policy.py`: tightened `test_security_md_documents_both_ecosystems` so the cross-link guard checks for a standalone bullet (``- `<name>` …``) under the `## Supply-Chain Updates` H2 section rather than an incidental token anywhere in the file. A future PR that adds `npm` to `.github/dependabot.yml` + `tests/contract/dependabot_policy.json` but forgets to revise the policy doc no longer slips through just because the literal string `"npm"` appears elsewhere. New helpers `_supply_chain_section` / `_missing_ecosystem_bullets` plus a parametrised meta-test drive the assertion through every leakage path (prose-only mention, code-fence occurrence, unwrapped bullet, empty section). (#101)
+- `scripts/check_public_surface.py`: introspection now returns a fifth pillar `top_level_flags` extracted from the root parser (today: `--debug`, `--version`). `diff_surface` and `removed_symbols_vs_baseline` treat it on the same footing as `all`/`console_scripts`/`platform_choices`/`env_vars`. A future PR that drops `--version` or renames `--debug` is now a contract event, not a silent break. `tests/contract/public_surface.json` adds the `top_level_flags` field. New Hypothesis-fuzzed property tests in `tests/contract/test_public_surface_properties.py` drive synthetic argparse graphs (depth 0-2, flag names matching `^--[a-z][a-z0-9-]{1,15}$`) through the walker and assert determinism, dedup, sort-stability, JSON byte-round-tripping, and top-vs-subparser disjointness — the bug class flagged in PR #95 phase-2 review. Regression unit tests added to `tests/contract/test_public_surface.py`. `docs/stability.md` gains a `### Top-level flags` subsection naming both flags as stable. (#97)
 
 ## [1.0.0] - 2026-05-01
 

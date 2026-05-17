@@ -143,5 +143,9 @@
     "openclaw",
     "replit",
     "windsurf"
+  ],
+  "top_level_flags": [
+    "--debug",
+    "--version"
   ]
 }

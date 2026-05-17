@@ -446,3 +446,52 @@ def test_can_resolve_prior_tag_self_reports():
 
 def test_load_snapshot_at_missing_ref_returns_none():
     assert gate.load_snapshot_at_ref("definitely-not-a-real-ref-12345") is None
+
+
+# ---------------------------------------------------------------------------
+# Top-level flags (issue #97 — close the `--version`/`--debug` walker hole)
+# ---------------------------------------------------------------------------
+
+
+def test_top_level_flag_picked_up_when_coexisting_with_subparsers():
+    """Regression pin for the bug class flagged in issue #97.
+
+    Sibling PR #76 added ``--version`` directly on the root parser. The
+    original walker only descended into ``_SubParsersAction.choices`` and
+    silently skipped root-parser flags. Build a parser with both shapes
+    and assert the introspection helper picks the root flag up under
+    ``top_level_flags``.
+    """
+    import argparse as _ap
+
+    p = _ap.ArgumentParser(prog="t")
+    p.add_argument("--frob", action="store_true")
+    p.add_argument("--mode", choices=["a", "b"])
+    subs = p.add_subparsers(dest="cmd")
+    sp = subs.add_parser("run")
+    sp.add_argument("--inner", action="store_true")
+
+    flags = gate._extract_top_level_flags(p)
+    assert flags == ["--frob", "--mode"], flags
+    # Sanity: subparser flags must NOT bleed into top_level_flags.
+    assert "--inner" not in flags
+
+
+def test_top_level_flags_excludes_dash_h_and_help():
+    """``-h`` / ``--help`` is structural, not part of the public contract."""
+    import argparse as _ap
+
+    p = _ap.ArgumentParser(prog="t")
+    assert gate._extract_top_level_flags(p) == []
+
+
+def test_snapshot_pins_known_top_level_flags():
+    """The committed snapshot must list every root-level flag the live
+    parser exposes today. If a future PR adds a new top-level flag (or
+    drops one), this assertion catches it.
+    """
+    snapshot = gate.load_snapshot()
+    pinned = set(snapshot.get("top_level_flags") or [])
+    assert {"--version", "--debug"} <= pinned, (
+        f"Expected --version and --debug pinned as top-level flags; got {sorted(pinned)}."
+    )
