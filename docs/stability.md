@@ -44,6 +44,15 @@ Every documented flag on the subcommands above is part of the contract. Renaming
 
 Adding a new flag is non-breaking. Adding a new subcommand is non-breaking.
 
+### Top-level flags
+
+Flags declared on the root parser — above the subcommand dispatch — are part of the contract too. Today this includes:
+
+- `--version` — print version + git sha + python + platform + install method and exit.
+- `--debug` — promote stderr logging to DEBUG and write full tracebacks to the error log.
+
+These are pinned in `tests/contract/public_surface.json::top_level_flags` and enforced by `scripts/check_public_surface.py`. Renaming or removing one requires a deprecation cycle on the same terms as a subcommand flag.
+
 ### `--platform` choices
 
 The accepted values for `--platform` (`claude`, `cursor`, `codex`, `replit`, `windsurf`, `lovable`, `openclaw`, `ollama`, `kimi`) are part of the contract. Removing a platform from this list is a breaking change and follows the deprecation policy: the value continues to be accepted for one MINOR cycle, emits a `DeprecationWarning`, and points the user to the replacement (or `none`).
