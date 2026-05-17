@@ -708,6 +708,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#top-level-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Top-level flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#-platform-choices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1051,6 +1062,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#top-level-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Top-level flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#-platform-choices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1195,6 +1217,13 @@
 <h3 id="cli-flags">CLI flags</h3>
 <p>Every documented flag on the subcommands above is part of the contract. Renaming, removing, or changing the type of a flag requires a deprecation cycle.</p>
 <p>Adding a new flag is non-breaking. Adding a new subcommand is non-breaking.</p>
+<h3 id="top-level-flags">Top-level flags</h3>
+<p>Flags declared on the root parser — above the subcommand dispatch — are part of the contract too. Today this includes:</p>
+<ul>
+<li><code>--version</code> — print version + git sha + python + platform + install method and exit.</li>
+<li><code>--debug</code> — promote stderr logging to DEBUG and write full tracebacks to the error log.</li>
+</ul>
+<p>These are pinned in <code>tests/contract/public_surface.json::top_level_flags</code> and enforced by <code>scripts/check_public_surface.py</code>. Renaming or removing one requires a deprecation cycle on the same terms as a subcommand flag.</p>
 <h3 id="-platform-choices"><code>--platform</code> choices</h3>
 <p>The accepted values for <code>--platform</code> (<code>claude</code>, <code>cursor</code>, <code>codex</code>, <code>replit</code>, <code>windsurf</code>, <code>lovable</code>, <code>openclaw</code>, <code>ollama</code>, <code>kimi</code>) are part of the contract. Removing a platform from this list is a breaking change and follows the deprecation policy: the value continues to be accepted for one MINOR cycle, emits a <code>DeprecationWarning</code>, and points the user to the replacement (or <code>none</code>).</p>
 <p>Adding a new platform is non-breaking.</p>
