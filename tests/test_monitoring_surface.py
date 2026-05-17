@@ -72,6 +72,12 @@ def test_readme_hero_visual_exists_and_carries_core_story() -> None:
 
 def test_readme_embeds_monitoring_brand_assets() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    # Pull live values from the same history.json the README is sourced from,
+    # so a `measure --snapshot-dir docs/monitoring` refresh does not require
+    # touching this test. The snapshot-aware sibling test
+    # (`test_readme_uses_latest_local_telemetry_proof_values`) follows the
+    # same pattern.
+    history = json.loads((ROOT / "docs" / "monitoring" / "history.json").read_text(encoding="utf-8"))
 
     assert "assets/brand/repo-context-hooks-logo.png" in readme
     assert "assets/diagrams/context-continuity-engine.svg" in readme
@@ -81,9 +87,9 @@ def test_readme_embeds_monitoring_brand_assets() -> None:
     assert "Telemetry Visibility" in readme
     assert "Observable Plot" in readme
     assert "Vega-Lite" in readme
-    assert "90 / 100" in readme
-    assert "+70 points" in readme
-    assert "108" in readme
+    assert f"{history['score']} / 100" in readme
+    assert f"+{history['uplift']} points" in readme
+    assert str(history["observed_events"]) in readme
     assert "Local operational telemetry" in readme
 
 
