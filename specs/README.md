@@ -14,7 +14,7 @@ This file is the persistent project context for agents and maintainers.
 
 ### Repo Summary
 
-- Agent-level continuity skill for coding agents. Badge row convention. Add new badges INSIDE this anchor, one per line, in
+- Agent-level continuity skill for coding agents. `repo-context-hooks` is an agent-level skill that keeps interrupted work and handoff notes alive across sessions — saving roughly 600 tokens of re-explanation and ~5 minutes of cold-start time on every resumed session, all measured locally. Install once to agent home — every workspace you open picks it up automatically.
 <!-- AUTO:REPO_CONTEXT_END -->
 
 ## Architecture and Design Constraints

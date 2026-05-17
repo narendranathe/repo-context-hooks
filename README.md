@@ -156,6 +156,8 @@ If your team needs this, leave a +1 on that issue.
 
 ## Supported Platforms
 
+![Platform support overview showing Claude with native lifecycle hooks alongside eight other platforms with partial repo-contract support](assets/diagrams/platform-support.svg)
+
 | Platform | Support | Notes |
 |----------|---------|-------|
 | Claude | `native` | Full lifecycle hooks, session transitions, continuity checkpoints |
@@ -249,26 +251,23 @@ repo-context-hooks measure --badge-out docs/badge.svg
 ![context score](docs/badge.svg)
 ```
 
-### Live telemetry (this repo, v1.0.0)
+### Local operational telemetry
 
-`measure` compares the current repo contract score against an estimated no-continuity baseline and shows token savings, lifecycle health, and branch drift in one view.
+The numbers below come from this repo's own local telemetry log (`docs/monitoring/history.json`), produced by `repo-context-hooks measure` on the maintainer's machine. Nothing leaves the machine; this is the same evidence the tool surfaces for any repo you install it in.
 
 | Metric | Value |
 |--------|-------|
 | Contract score | **90 / 100** |
 | Baseline without hooks | 20 / 100 |
 | Continuity uplift | **+70 points** |
-| Hook events recorded | 85 |
-| Sessions instrumented | ~48 |
-| Active days | 2 |
-| Lifecycle coverage | 25% (session-start firing; session-end populates after longer sessions) |
-| Branches monitored | 3 — main, feat/telemetry-reliability, feat/agent-level-skill-runtime |
-| Tokens injected | ~237,000 (4,950 tok/session × 48 sessions) |
-| Est. tokens saved | ~28,800 (30% of sessions skip 2,000-tok re-orientation) |
-| Est. cost saved | ~$0.09 at current scale ($3/M input, Claude Sonnet) |
-| Engineering memory | 11 sections across specs/README.md |
+| Hook events recorded | 108 |
+| Active days | 3 |
+| Lifecycle coverage | 25% |
+| Session-start events | 107 |
+| Decision events | 1 |
+| Checkpoint/reload/session-end events | 0 |
 
-At 30-day scale (~50 sessions/day): ~72,000 tokens saved/day, ~$65/year per developer.
+Shape of the data: session-start continuity is strong; compact/end coverage is not yet evidenced because `PreCompact`, `PostCompact`, and `SessionEnd` hooks have not fired during the sampling window. As compact-heavy sessions accumulate, those rows fill in and lifecycle coverage climbs above 25%.
 
 - Monitoring view: [docs/monitoring/index.html](docs/monitoring/index.html)
 - Time-series data: [docs/monitoring/history.json](docs/monitoring/history.json)
