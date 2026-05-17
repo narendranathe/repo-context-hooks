@@ -17,12 +17,15 @@ Failure modes covered (per Phase 1 critic-C lens):
 - Block missing/typo'd cadence            → ``test_block_has_supported_interval``
 - Sane PR-limit (1..10)                   → ``test_block_has_sane_pr_limit``
 - Doc/config drift in either direction    → ``test_security_md_documents_both_ecosystems``
+- Section-scoped ecosystem mention drift  → ``test_security_md_ecosystem_bullet_per_required``
+                                            (issue #101 tightening)
 """
 from __future__ import annotations
 
 import json
 import re
 from pathlib import Path
+from typing import Iterable
 
 import pytest
 
@@ -184,13 +187,58 @@ def test_block_has_sane_pr_limit(
         )
 
 
-# ─── Doc cross-link guard (critic-C #9) ────────────────────────────────────
+# ─── Doc cross-link guard (critic-C #9, issue #101 tightening) ─────────────
+
+_SUPPLY_CHAIN_HEADING_RE = re.compile(
+    r"^##\s+Supply-Chain Updates\s*$", re.MULTILINE
+)
+_NEXT_H2_RE = re.compile(r"^##\s+\S", re.MULTILINE)
+
+
+def _supply_chain_section(text: str) -> str:
+    """Return the body of the ``## Supply-Chain Updates`` H2 section.
+
+    Sliced between its own heading and the next H2 (or EOF). Returns the
+    empty string if the section is missing. The slice is the unit the
+    bullet-count guard operates on — without it, ``"npm"`` appearing in
+    an unrelated section would mask a missing entry in this one.
+    """
+    match = _SUPPLY_CHAIN_HEADING_RE.search(text)
+    if not match:
+        return ""
+    rest = text[match.end():]
+    next_h2 = _NEXT_H2_RE.search(rest)
+    return rest[: next_h2.start()] if next_h2 else rest
+
+
+def _missing_ecosystem_bullets(
+    section_text: str, ecosystems: Iterable[str]
+) -> list[str]:
+    """Return ecosystems lacking a standalone bullet mention in ``section_text``.
+
+    A standalone mention is a bullet line whose first non-whitespace tokens
+    are ``- `` followed by an inline-code-wrapped ecosystem name (``- `pip` …``).
+    Plain prose containing the word, or a fenced-code occurrence, does not
+    count — that is the leakage path #101 was filed to close.
+    """
+    missing: list[str] = []
+    for eco in ecosystems:
+        pattern = re.compile(
+            rf"^\s*-\s+`{re.escape(eco)}`(?:\s|$)", re.MULTILINE
+        )
+        if not pattern.search(section_text):
+            missing.append(eco)
+    return sorted(missing)
+
 
 def test_security_md_documents_both_ecosystems() -> None:
-    """SECURITY.md must reference both ecosystems by exact name.
+    """SECURITY.md must reference every required ecosystem by exact name
+    somewhere in the file.
 
     Catches the failure mode where someone adds an ecosystem to YAML but
-    forgets to update the policy doc, or vice-versa.
+    forgets to update the policy doc, or vice-versa. The
+    ``test_security_md_ecosystem_bullet_per_required`` guard below tightens
+    this to a section-scoped, bullet-shaped mention.
     """
     text = SECURITY_MD.read_text(encoding="utf-8")
     assert "Supply-Chain Updates" in text, (
@@ -200,3 +248,102 @@ def test_security_md_documents_both_ecosystems() -> None:
         assert ecosystem in text, (
             f"SECURITY.md does not mention ecosystem {ecosystem!r}"
         )
+
+
+def test_security_md_ecosystem_bullet_per_required() -> None:
+    """Each required ecosystem must appear as a standalone bullet inside
+    ``## Supply-Chain Updates`` — not just anywhere in the file (issue #101).
+
+    Closes the leakage path flagged in PR #98's phase-2 review: a future PR
+    that adds ``npm`` to ``dependabot.yml`` + the contract JSON but forgets
+    to add ``- `npm` —`` under the section would slip past the looser guard
+    above as long as the literal token ``npm`` appeared *anywhere* (an
+    unrelated example, a code fence, a sentence). The bullet-shape check
+    here is the smaller of the two options in #101 and matches the existing
+    ``- `pip` — …`` / ``- `github-actions` — …`` doc layout.
+    """
+    text = SECURITY_MD.read_text(encoding="utf-8")
+    section = _supply_chain_section(text)
+    assert section, (
+        "SECURITY.md is missing the `## Supply-Chain Updates` section heading"
+    )
+    missing = _missing_ecosystem_bullets(section, _expected_ecosystems())
+    assert not missing, (
+        "SECURITY.md `## Supply-Chain Updates` is missing a standalone "
+        f"bullet (``- `<name>` …``) for: {missing}. Each ecosystem listed in "
+        f"{CONTRACT_PATH.relative_to(REPO_ROOT)} must appear as its own "
+        "bullet inside that section so an adopter scanning the policy doc "
+        "sees every ecosystem at a glance — not just incidental prose."
+    )
+
+
+# ─── Meta-test: the bullet-count guard can actually fail ────────────────────
+
+def test_supply_chain_section_slice_isolates_h2_block() -> None:
+    """The slicer must return only the ``## Supply-Chain Updates`` body —
+    if it leaked into the previous or next H2 section, an incidental
+    mention there would silently satisfy the guard.
+    """
+    fake = (
+        "# Title\n"
+        "## Supported Versions\n"
+        "- `pip` mentioned incidentally here.\n"
+        "## Supply-Chain Updates\n"
+        "- `pip` — bullet present.\n"
+        "## Reporting\n"
+        "- `github-actions` — present but outside the watched section.\n"
+    )
+    section = _supply_chain_section(fake)
+    assert "- `pip` — bullet present." in section
+    assert "Supported Versions" not in section
+    assert "Reporting" not in section
+    assert "github-actions" not in section
+
+
+@pytest.mark.parametrize(
+    "section_text,ecosystems,expected_missing",
+    [
+        pytest.param(
+            "- `pip` — runtime deps.\n- `github-actions` — workflow actions.\n",
+            ["pip", "github-actions"],
+            [],
+            id="both-bullets-present-pass",
+        ),
+        pytest.param(
+            "- `pip` — runtime deps. github-actions is also watched.\n",
+            ["pip", "github-actions"],
+            ["github-actions"],
+            id="prose-only-mention-fails-just-like-the-leakage-path",
+        ),
+        pytest.param(
+            "```\nnpm install pip\n```\n",
+            ["pip"],
+            ["pip"],
+            id="code-fence-occurrence-does-not-count",
+        ),
+        pytest.param(
+            "- adds pip support somewhere\n",
+            ["pip"],
+            ["pip"],
+            id="unwrapped-name-in-bullet-does-not-count",
+        ),
+        pytest.param(
+            "",
+            ["pip"],
+            ["pip"],
+            id="empty-section-reports-every-missing",
+        ),
+    ],
+)
+def test_missing_ecosystem_bullets_detects_each_failure_mode(
+    section_text: str,
+    ecosystems: list[str],
+    expected_missing: list[str],
+) -> None:
+    """Drives the helper through every shape #101 flagged as a leakage
+    path — proves the new assertion would red-X with the right diagnostic
+    rather than silently passing.
+    """
+    assert (
+        _missing_ecosystem_bullets(section_text, ecosystems) == expected_missing
+    )
