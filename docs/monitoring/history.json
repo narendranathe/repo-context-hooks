@@ -2,27 +2,27 @@
   "baseline": 20,
   "event_counts": {
     "decision": 1,
-    "session-start": 107
+    "session-start": 109
   },
   "first_seen": "2026-04-26T19:57:31.854624+00:00",
   "forecast": {
     "confidence": "medium",
-    "daily_rate": 36.0,
+    "daily_rate": 27.5,
     "projected_active_days": 30,
-    "projected_events": 1080,
+    "projected_events": 825,
     "week_series": [
-      252,
-      252,
-      252,
-      252,
-      72
+      192,
+      192,
+      192,
+      192,
+      55
     ]
   },
-  "latest_seen": "2026-04-28T04:39:16.846104+00:00",
-  "observed_events": 108,
+  "latest_seen": "2026-05-17T02:25:15.546097+00:00",
+  "observed_events": 110,
   "repo": "repo-context-hooks",
   "score": 90,
-  "snapshot_at": "2026-04-29T14:24:07Z",
+  "snapshot_at": "2026-05-17T03:06:53Z",
   "time_series": [
     {
       "date": "2026-04-26",
@@ -38,20 +38,25 @@
       "date": "2026-04-28",
       "events": 15,
       "score": 90
+    },
+    {
+      "date": "2026-05-17",
+      "events": 2,
+      "score": 90
     }
   ],
   "uplift": 70,
   "usability": {
-    "active_days": 3,
+    "active_days": 4,
     "avg_session_duration_minutes": null,
     "checkpoint_events": 0,
     "cold_start_time_saved_minutes": 0,
     "lifecycle_coverage": 25,
     "max_session_duration_minutes": null,
-    "readiness_minutes_since_last_event": 2025,
+    "readiness_minutes_since_last_event": 42,
     "reload_events": 0,
-    "resume_events": 107,
-    "score_week1_uplift": null,
+    "resume_events": 109,
+    "score_week1_uplift": 0,
     "session_end_events": 0
   }
 }

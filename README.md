@@ -260,10 +260,10 @@ The numbers below come from this repo's own local telemetry log (`docs/monitorin
 | Contract score | **90 / 100** |
 | Baseline without hooks | 20 / 100 |
 | Continuity uplift | **+70 points** |
-| Hook events recorded | 108 |
-| Active days | 3 |
+| Hook events recorded | 110 |
+| Active days | 4 |
 | Lifecycle coverage | 25% |
-| Session-start events | 107 |
+| Session-start events | 109 |
 | Decision events | 1 |
 | Checkpoint/reload/session-end events | 0 |
 

@@ -18,6 +18,10 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - `README.md` and `specs/README.md` refreshed to reflect the v1.0.0 ship: install snippet, badge row, USP framing, and the closed PRD #68 + PRD #104 milestones. No code or behavior change.
+- `docs/monitoring/history.json` + `docs/monitoring/index.html` regenerated via `repo-context-hooks measure --snapshot-dir docs/monitoring`. Snapshot moves forward from `2026-04-29` to `2026-05-17`: observed events 108 → 110, session-start events 107 → 109, active days 3 → 4, latest_seen advances to today. Score, baseline, uplift, and lifecycle coverage unchanged (90/20/+70/25%). README telemetry table updated to match. Also exercises `pages.yml` end-to-end under the newly-bumped `actions/checkout@v6` (PR #83) — this is the first docs-path push since that bump merged.
+
+### Tests
+- `tests/test_monitoring_surface.py::test_readme_embeds_monitoring_brand_assets` now derives the `observed_events`, `score`, and `uplift` assertions from `docs/monitoring/history.json` instead of hard-coding `108`/`90`/`70` literals. Mirrors the snapshot-aware sibling test `test_readme_uses_latest_local_telemetry_proof_values`. Without this, every `measure --snapshot-dir docs/monitoring` refresh would red-X CI until someone bumped a magic number in the test.
 
 ### Deprecated
 <!-- none -->
