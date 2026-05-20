@@ -67,7 +67,7 @@ jobs:
         if: github.repository == env.CANONICAL_REPO && matrix.os == env.PRIMARY_OS && matrix.python-version == env.PRIMARY_PYTHON
         # Pinned to a 40-char SHA (v4.6.0) so a moved tag cannot inject malicious
         # JS into our CI. Bump via Dependabot or manual SHA refresh.
-        uses: codecov/codecov-action@0f8570b1a125f4937846a11fcfa3bcd548bd8c97  # v4.6.0
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238  # v4.6.0
         # Locked-down corporate / mirrored CI runners can hard-fail on TLS to
         # codecov.io. The gate is informational, not load-bearing — never block
         # a green test run on the upload.
