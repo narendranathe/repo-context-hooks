@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v6
         with:
@@ -139,7 +139,7 @@ jobs:
       # Runs ONLY after PyPI publish succeeds. Failure here does not retract
       # the published artifact — a maintainer can re-run this job or manually
       # `gh release edit "$TAG" --notes-file -` from a local checkout.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v6
         with:

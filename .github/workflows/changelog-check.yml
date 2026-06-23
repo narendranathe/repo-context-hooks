@@ -38,7 +38,7 @@ jobs:
       !contains(github.event.pull_request.labels.*.name, 'chore') &&
       !contains(github.event.pull_request.labels.*.name, 'dependencies')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         # `fetch-depth: 0` is required so `git diff BASE...HEAD` can resolve
         # the merge-base. The default shallow checkout breaks the gate.
         with:
