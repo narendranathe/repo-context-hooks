@@ -22,7 +22,7 @@ Agent-level continuity skill for coding agents.
 
 ![Context Continuity Engine showing README.md, specs/README.md, AGENTS.md, hook events, impact monitor, Score 90, and +70 uplift](assets/diagrams/context-continuity-engine.svg)
 
-`repo-context-hooks` is an agent-level skill that keeps interrupted work and handoff notes alive across sessions — saving roughly 600 tokens of re-explanation and ~5 minutes of cold-start time on every resumed session, all measured locally. Install once to agent home — every workspace you open picks it up automatically.
+`repo-context-hooks` is an agent-level skill that keeps interrupted work and handoff notes alive across sessions, saving roughly 600 tokens of re-explanation and ~5 minutes of cold-start time on every resumed session, all measured locally. Install once to agent home and every workspace you open picks it up automatically.
 
 The goal: a new agent session should start with full project context without rediscovering everything from scratch.
 
@@ -35,7 +35,7 @@ The goal: a new agent session should start with full project context without red
 pip install repo-context-hooks
 repo-context-hooks install --platform claude
 
-# 2. Confirm the plumbing — synthesises a hook event end-to-end and
+# 2. Confirm the plumbing: synthesises a hook event end-to-end and
 #    prints a receipt. Exits 0 healthy, 1 broken, 2 cold-start.
 repo-context-hooks verify --platform claude
 
@@ -76,6 +76,8 @@ repo-context-hooks install --platform claude --also-repo-hooks
 
 `pip install repo-context-hooks` pulls only the Python standard library at runtime - `pyproject.toml` declares `dependencies = []`. The package installs nothing into your project's import graph; hooks run inside the agent's own runtime (Claude Code, Codex, Cursor, etc.) and read checked-in workspace files. Optional development tooling (pytest, ruff, black, mypy) lives under the `[dev]` extras and is never installed for end users.
 
+The suite is 330+ tests: unit, contract tests on the public surface, and Hypothesis property tests for sampling boundaries, `repo_id` shape, and hook dedup idempotency.
+
 ## Set Up a Workspace Contract (per-repo)
 
 ```bash
@@ -98,7 +100,7 @@ repo-context-hooks checkpoint --message "Built X. Decided Y because Z. Next: W."
 Entries are written to the `## Session Log` section of `specs/README.md` with a timestamp and branch name. The format that works best:
 
 ```
-Built: JWT refresh endpoint + migration 0014. Decided: Redis over DB for refresh tokens — DB showed 3x latency under load. Reverted: DB-backed approach (latency spike). Next: wire validation into auth middleware.
+Built: JWT refresh endpoint + migration 0014. Decided: Redis over DB for refresh tokens; DB showed 3x latency under load. Reverted: DB-backed approach (latency spike). Next: wire validation into auth middleware.
 ```
 
 Fields:
@@ -318,7 +320,7 @@ Without a checked-in continuity contract, teams repeat themselves. With one, the
 
 ## What's New in v1.0.0
 
-The v1.0 production-readiness release. First version with a stable public surface contract enforced in CI — every documented CLI flag, console script, environment variable, and file location is now part of the contract from this release forward. See [docs/stability.md](docs/stability.md) and [docs/deprecation-policy.md](docs/deprecation-policy.md) for what is stable vs internal.
+The v1.0 production-readiness release. First version with a stable public surface contract enforced in CI: every documented CLI flag, console script, environment variable, and file location is now part of the contract from this release forward. See [docs/stability.md](docs/stability.md) and [docs/deprecation-policy.md](docs/deprecation-policy.md) for what is stable vs internal.
 
 **Closes PRD #68 (production-readiness, 10 vertical slices) and PRD #104 (cross-workspace rollup, 5 slices).**
 
@@ -377,7 +379,7 @@ If a thread goes quiet past these windows, please bump the issue or PR - it has 
 
 ## Stability
 
-`repo-context-hooks` follows [SemVer 2.0.0](https://semver.org/) starting at the `1.0.0` release. The public surface — console scripts, CLI subcommands, documented flags, `REPO_CONTEXT_HOOKS_*` env vars, and the file locations of `events.jsonl` and `settings.json` writes — will not break across a `1.x → 1.y` bump without first being deprecated for at least one full MINOR cycle.
+`repo-context-hooks` follows [SemVer 2.0.0](https://semver.org/) starting at the `1.0.0` release. The public surface (console scripts, CLI subcommands, documented flags, `REPO_CONTEXT_HOOKS_*` env vars, and the file locations of `events.jsonl` and `settings.json` writes) will not break across a `1.x → 1.y` bump without first being deprecated for at least one full MINOR cycle.
 
 - [Stability contract](docs/stability.md) — full list of stable vs internal surfaces
 - [Deprecation policy](docs/deprecation-policy.md) — how we remove things from the surface above
